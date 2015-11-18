@@ -220,6 +220,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
 
+	/*调用每个核心模块的create_conf*/
     for (i = 0; ngx_modules[i]; i++) 
 	{
         if (ngx_modules[i]->type != NGX_CORE_MODULE) 
@@ -301,9 +302,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         module = ngx_modules[i]->ctx;
 
-        if (module->init_conf) {
-            if (module->init_conf(cycle, cycle->conf_ctx[ngx_modules[i]->index])
-                == NGX_CONF_ERROR)
+        if (module->init_conf) 
+		{
+            if (module->init_conf(cycle, cycle->conf_ctx[ngx_modules[i]->index]) == NGX_CONF_ERROR)
             {
                 environ = senv;
                 ngx_destroy_cycle_pools(&conf);

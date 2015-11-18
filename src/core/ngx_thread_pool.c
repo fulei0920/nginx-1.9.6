@@ -11,8 +11,9 @@
 #include <ngx_thread_pool.h>
 
 
-typedef struct {
-    ngx_array_t               pools;
+typedef struct 
+{
+    ngx_array_t               pools;  //ngx_thread_pool_t类型的数组
 } ngx_thread_pool_conf_t;
 
 
@@ -26,7 +27,8 @@ typedef struct {
     (q)->last = &(q)->first
 
 
-struct ngx_thread_pool_s {
+struct ngx_thread_pool_s 
+{
     ngx_thread_mutex_t        mtx;
     ngx_thread_pool_queue_t   queue;
     ngx_int_t                 waiting;
@@ -73,7 +75,8 @@ static ngx_command_t  ngx_thread_pool_commands[] = {
 };
 
 
-static ngx_core_module_t  ngx_thread_pool_module_ctx = {
+static ngx_core_module_t  ngx_thread_pool_module_ctx = 
+{
     ngx_string("thread_pool"),
     ngx_thread_pool_create_conf,
     ngx_thread_pool_init_conf
@@ -389,13 +392,12 @@ ngx_thread_pool_create_conf(ngx_cycle_t *cycle)
     ngx_thread_pool_conf_t  *tcf;
 
     tcf = ngx_pcalloc(cycle->pool, sizeof(ngx_thread_pool_conf_t));
-    if (tcf == NULL) {
+    if (tcf == NULL)
+	{
         return NULL;
     }
 
-    if (ngx_array_init(&tcf->pools, cycle->pool, 4,
-                       sizeof(ngx_thread_pool_t *))
-        != NGX_OK)
+    if (ngx_array_init(&tcf->pools, cycle->pool, 4, sizeof(ngx_thread_pool_t *)) != NGX_OK)
     {
         return NULL;
     }

@@ -68,7 +68,7 @@ struct ngx_cycle_s
     ngx_cycle_t              *old_cycle;
 
     ngx_str_t                 conf_file;			//nginx.confÅäÖÃÎÄ¼şÂ·¾¶
-    ngx_str_t                 conf_param;
+    ngx_str_t                 conf_param;			//´æ´¢Æô¶¯²ÎÊı-gÉèÖÃµÄÖµå??
     ngx_str_t                 conf_prefix;
     ngx_str_t                 prefix;
     ngx_str_t                 lock_file;
@@ -104,7 +104,7 @@ typedef struct
      ngx_str_t                pid;
      ngx_str_t                oldpid;
 
-     ngx_array_t              env;    		//ngx_str_tÀàĞÍµÄÊı×é
+     ngx_array_t              env;    		//ngx_str_tÀàĞÍµÄÊı×é, ´æ´¢»·¾³±äÁ¿
      char                   **environment;
 } ngx_core_conf_t;
 

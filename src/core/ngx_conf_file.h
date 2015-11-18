@@ -146,7 +146,8 @@ typedef struct
 } ngx_core_module_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_file_t            file;
     ngx_buf_t            *buffer;
     ngx_buf_t            *dump;

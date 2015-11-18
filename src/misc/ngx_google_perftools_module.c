@@ -22,7 +22,8 @@ static void *ngx_google_perftools_create_conf(ngx_cycle_t *cycle);
 static ngx_int_t ngx_google_perftools_worker(ngx_cycle_t *cycle);
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t  profiles;
 } ngx_google_perftools_conf_t;
 
@@ -40,7 +41,8 @@ static ngx_command_t  ngx_google_perftools_commands[] = {
 };
 
 
-static ngx_core_module_t  ngx_google_perftools_module_ctx = {
+static ngx_core_module_t  ngx_google_perftools_module_ctx = 
+{
     ngx_string("google_perftools"),
     ngx_google_perftools_create_conf,
     NULL
