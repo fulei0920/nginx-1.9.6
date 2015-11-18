@@ -273,14 +273,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-
+	/*解析启动-g参数*/
     if (ngx_conf_param(&conf) != NGX_CONF_OK) 
 	{
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-
+	/*解析nginx.conf配置文件*/
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) 
 	{
         environ = senv;
@@ -288,9 +288,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    if (ngx_test_config && !ngx_quiet_mode) {
-        ngx_log_stderr(0, "the configuration file %s syntax is ok",
-                       cycle->conf_file.data);
+    if (ngx_test_config && !ngx_quiet_mode) 
+	{
+        ngx_log_stderr(0, "the configuration file %s syntax is ok", cycle->conf_file.data);
     }
 
     for (i = 0; ngx_modules[i]; i++) 

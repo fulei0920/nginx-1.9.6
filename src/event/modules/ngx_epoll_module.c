@@ -94,7 +94,8 @@ struct io_event {
 #endif /* NGX_TEST_BUILD_EPOLL */
 
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t  events;
     ngx_uint_t  aio_requests;
 } ngx_epoll_conf_t;
@@ -168,7 +169,8 @@ static ngx_command_t  ngx_epoll_commands[] = {
 };
 
 
-ngx_event_module_t  ngx_epoll_module_ctx = {
+ngx_event_module_t  ngx_epoll_module_ctx = 
+{
     &epoll_name,
     ngx_epoll_create_conf,               /* create configuration */
     ngx_epoll_init_conf,                 /* init configuration */
@@ -947,7 +949,8 @@ ngx_epoll_create_conf(ngx_cycle_t *cycle)
     ngx_epoll_conf_t  *epcf;
 
     epcf = ngx_palloc(cycle->pool, sizeof(ngx_epoll_conf_t));
-    if (epcf == NULL) {
+    if (epcf == NULL) 
+	{
         return NULL;
     }
 

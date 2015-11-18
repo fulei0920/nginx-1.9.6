@@ -58,7 +58,7 @@ struct ngx_cycle_s
     ngx_list_t                open_files;		/*ngx_open_file_t 类型的链表*/
     ngx_list_t                shared_memory;    /*ngx_shm_zone_t 类型的链表*/
 
-    ngx_uint_t                connection_n;
+    ngx_uint_t                connection_n;			
     ngx_uint_t                files_n;
 
     ngx_connection_t         *connections;
@@ -83,7 +83,7 @@ typedef struct
 
      ngx_msec_t               timer_resolution;
 
-     ngx_int_t                worker_processes;
+     ngx_int_t                worker_processes;			/*工作进程的个数*/
      ngx_int_t                debug_points;
 
      ngx_int_t                rlimit_nofile;
@@ -91,8 +91,8 @@ typedef struct
 
      int                      priority;
 
-     ngx_uint_t               cpu_affinity_n;
-     uint64_t                *cpu_affinity;
+     ngx_uint_t               cpu_affinity_n;			/*CPU亲和性掩码个数*/
+     uint64_t                *cpu_affinity;  			/*工作进程CPU亲和性掩码*/
 
      char                    *username;
      ngx_uid_t                user;
@@ -104,7 +104,7 @@ typedef struct
      ngx_str_t                pid;
      ngx_str_t                oldpid;
 
-     ngx_array_t              env;    		//ngx_str_t类型的数组, 存储环境变量
+     ngx_array_t              env;    						//ngx_str_t类型的数组, 存储环境变量
      char                   **environment;
 } ngx_core_conf_t;
 

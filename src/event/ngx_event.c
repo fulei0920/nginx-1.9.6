@@ -38,7 +38,7 @@ static char *ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf);
 static ngx_uint_t     ngx_timer_resolution;
 sig_atomic_t          ngx_event_timer_alarm;
 
-static ngx_uint_t     ngx_event_max_module;
+static ngx_uint_t     ngx_event_max_module;   	/*NGX_EVENT_MODULE类型模块的总个数*/
 
 ngx_uint_t            ngx_event_flags;
 ngx_event_actions_t   ngx_event_actions;
@@ -78,16 +78,18 @@ ngx_atomic_t  *ngx_stat_waiting = &ngx_stat_waiting0;
 
 
 
-static ngx_command_t  ngx_events_commands[] = {
+static ngx_command_t  ngx_events_commands[] = 
+{
+    { 
+		ngx_string("events"),
+		NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+		ngx_events_block,
+		0,
+		0,
+		NULL 
+	},
 
-    { ngx_string("events"),
-      NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_events_block,
-      0,
-      0,
-      NULL },
-
-      ngx_null_command
+	ngx_null_command
 };
 
 
@@ -119,7 +121,8 @@ ngx_module_t  ngx_events_module =
 static ngx_str_t  event_core_name = ngx_string("event_core");
 
 
-static ngx_command_t  ngx_event_core_commands[] = {
+static ngx_command_t  ngx_event_core_commands[] = 
+{
 
     { ngx_string("worker_connections"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -167,7 +170,8 @@ static ngx_command_t  ngx_event_core_commands[] = {
 };
 
 
-ngx_event_module_t  ngx_event_core_module_ctx = {
+ngx_event_module_t  ngx_event_core_module_ctx = 
+{
     &event_core_name,
     ngx_event_core_create_conf,            /* create configuration */
     ngx_event_core_init_conf,              /* init configuration */
@@ -176,7 +180,8 @@ ngx_event_module_t  ngx_event_core_module_ctx = {
 };
 
 
-ngx_module_t  ngx_event_core_module = {
+ngx_module_t  ngx_event_core_module = 
+{
     NGX_MODULE_V1,
     &ngx_event_core_module_ctx,            /* module context */
     ngx_event_core_commands,               /* module directives */
@@ -879,7 +884,16 @@ ngx_send_lowat(ngx_connection_t *c, size_t lowat)
     return NGX_OK;
 }
 
+/*
+events
 
+配置例子:
+events {
+    worker_connections  1024;
+}
+
+
+*/
 static char *
 ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -889,43 +903,56 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_conf_t            pcf;
     ngx_event_module_t   *m;
 
-    if (*(void **) conf) {
+    if (*(void **) conf) 
+	{
         return "is duplicate";
     }
 
     /* count the number of the event modules and set up their indices */
-
     ngx_event_max_module = 0;
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
+    for (i = 0; ngx_modules[i]; i++) 
+	{
+        if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
+		{
             continue;
         }
 
         ngx_modules[i]->ctx_index = ngx_event_max_module++;
     }
 
+	/*
+	为所有的NGX_EVENT_MODULE模块分配存储上下文的空间 void***--->void **--->array of void*     
+	*/
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
     *ctx = ngx_pcalloc(cf->pool, ngx_event_max_module * sizeof(void *));
-    if (*ctx == NULL) {
+    if (*ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
     *(void **) conf = ctx;
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
+
+	/*调用模块的create_conf初始化分配的空间*/
+    for (i = 0; ngx_modules[i]; i++) 
+	{
+        if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
+		{
             continue;
         }
 
         m = ngx_modules[i]->ctx;
 
-        if (m->create_conf) {
-            (*ctx)[ngx_modules[i]->ctx_index] = m->create_conf(cf->cycle);
-            if ((*ctx)[ngx_modules[i]->ctx_index] == NULL) {
+        if (m->create_conf)
+		{
+			(*ctx)[ngx_modules[i]->ctx_index] = m->create_conf(cf->cycle);
+            if ((*ctx)[ngx_modules[i]->ctx_index] == NULL)
+			{
                 return NGX_CONF_ERROR;
             }
         }
@@ -935,25 +962,30 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->ctx = ctx;
     cf->module_type = NGX_EVENT_MODULE;
     cf->cmd_type = NGX_EVENT_CONF;
-
+	/*分析events{}配置中的参数*/
     rv = ngx_conf_parse(cf, NULL);
 
     *cf = pcf;
 
-    if (rv != NGX_CONF_OK) {
+    if (rv != NGX_CONF_OK) 
+	{
         return rv;
     }
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
+    for (i = 0; ngx_modules[i]; i++)
+	{
+        if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
+		{
             continue;
         }
 
         m = ngx_modules[i]->ctx;
 
-        if (m->init_conf) {
+        if (m->init_conf) 
+		{
             rv = m->init_conf(cf->cycle, (*ctx)[ngx_modules[i]->ctx_index]);
-            if (rv != NGX_CONF_OK) {
+            if (rv != NGX_CONF_OK) 
+			{
                 return rv;
             }
         }
@@ -962,7 +994,14 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
+/*
 
+配置例子:
+events {
+    worker_connections  1024;  
+}
+
+*/
 static char *
 ngx_event_connections(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -970,16 +1009,16 @@ ngx_event_connections(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (ecf->connections != NGX_CONF_UNSET_UINT) {
+    if (ecf->connections != NGX_CONF_UNSET_UINT) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
     ecf->connections = ngx_atoi(value[1].data, value[1].len);
-    if (ecf->connections == (ngx_uint_t) NGX_ERROR) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid number \"%V\"", &value[1]);
-
+    if (ecf->connections == (ngx_uint_t) NGX_ERROR)
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid number \"%V\"", &value[1]);
         return NGX_CONF_ERROR;
     }
 
@@ -1161,7 +1200,8 @@ ngx_event_core_create_conf(ngx_cycle_t *cycle)
     ngx_event_conf_t  *ecf;
 
     ecf = ngx_palloc(cycle->pool, sizeof(ngx_event_conf_t));
-    if (ecf == NULL) {
+    if (ecf == NULL) 
+	{
         return NULL;
     }
 
@@ -1174,8 +1214,7 @@ ngx_event_core_create_conf(ngx_cycle_t *cycle)
 
 #if (NGX_DEBUG)
 
-    if (ngx_array_init(&ecf->debug_connection, cycle->pool, 4,
-                       sizeof(ngx_cidr_t)) == NGX_ERROR)
+    if (ngx_array_init(&ecf->debug_connection, cycle->pool, 4, sizeof(ngx_cidr_t)) == NGX_ERROR)
     {
         return NULL;
     }

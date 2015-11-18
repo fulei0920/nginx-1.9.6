@@ -17,14 +17,15 @@ typedef void *            ngx_buf_tag_t;
 
 typedef struct ngx_buf_s  ngx_buf_t;
 
-struct ngx_buf_s {
-    u_char          *pos;
-    u_char          *last;
+struct ngx_buf_s 
+{
+    u_char          *pos;			/*处理到的位置*/
+    u_char          *last;			/*buffer中数据的结束位置， buffer中数据的起始位置与buffer的起始位置相同*/
     off_t            file_pos;
     off_t            file_last;
 
-    u_char          *start;         /* start of buffer */
-    u_char          *end;           /* end of buffer */
+    u_char          *start;         /* buffer的起始位置 */
+    u_char          *end;           /* buffer的结束位置*/
     ngx_buf_tag_t    tag;
     ngx_file_t      *file;
     ngx_buf_t       *shadow;

@@ -163,8 +163,9 @@ typedef struct
 } ngx_http_phase_t;
 
 
-typedef struct {
-    ngx_array_t                servers;         /* ngx_http_core_srv_conf_t */
+typedef struct 
+{
+    ngx_array_t                servers;         /* ngx_http_core_srv_conf_t */ 
 
     ngx_http_phase_engine_t    phase_engine;
 
@@ -191,9 +192,9 @@ typedef struct {
 } ngx_http_core_main_conf_t;
 
 
-typedef struct {
-    /* array of the ngx_http_server_name_t, "server_name" directive */
-    ngx_array_t                 server_names;
+typedef struct 
+{
+    ngx_array_t                 server_names;  /* ngx_http_server_name_t,  "server_name" directive  */
 
     /* server ctx */
     ngx_http_conf_ctx_t        *ctx;
@@ -324,7 +325,8 @@ typedef struct {
 } ngx_http_try_file_t;
 
 
-struct ngx_http_core_loc_conf_s {
+struct ngx_http_core_loc_conf_s 
+{
     ngx_str_t     name;          /* location name */
 
 #if (NGX_PCRE)

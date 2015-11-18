@@ -102,8 +102,8 @@ struct ngx_open_file_s
 
 struct ngx_module_s 
 {
-    ngx_uint_t            ctx_index;
-    ngx_uint_t            index;         /*该模块在ngx_modules中的索引位置*/
+    ngx_uint_t            ctx_index;	 /*相同模块类型在其父模块上下文中的索引*/
+    ngx_uint_t            index;         /*该模块在全局上下文中的索引位置*/
 
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
@@ -114,7 +114,7 @@ struct ngx_module_s
 
     void                 *ctx;
     ngx_command_t        *commands;
-    ngx_uint_t            type;
+    ngx_uint_t            type;						/*模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE*/
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
 
@@ -145,13 +145,13 @@ typedef struct
     char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);
 } ngx_core_module_t;
 
-
+/*表示一个配置文件*/
 typedef struct 
 {
     ngx_file_t            file;
     ngx_buf_t            *buffer;
     ngx_buf_t            *dump;
-    ngx_uint_t            line;
+    ngx_uint_t            line;  
 } ngx_conf_file_t;
 
 
@@ -167,27 +167,27 @@ typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf, ngx_command_t *dummy, void 
 struct ngx_conf_s 
 {
     char                 *name;
-    ngx_array_t          *args;  		//ngx_str_t类型的数组
+    ngx_array_t          *args;  			//ngx_str_t类型的数组
 
     ngx_cycle_t          *cycle;
-    ngx_pool_t           *pool;
+    ngx_pool_t           *pool;				/*指向cycle的pool*/
     ngx_pool_t           *temp_pool;
-    ngx_conf_file_t      *conf_file;
+    ngx_conf_file_t      *conf_file;		/*配置文件*/
     ngx_log_t            *log;
 
-    void                 *ctx;
-    ngx_uint_t            module_type;
-    ngx_uint_t            cmd_type;
+    void                 *ctx;				/*指向上下文???*/
+    ngx_uint_t            module_type;		/*指定当前解析的模块类型*/
+    ngx_uint_t            cmd_type;			/*指定当前解析的命令类型*/
 
     ngx_conf_handler_pt   handler;
     char                 *handler_conf;
 };
 
 
-typedef char *(*ngx_conf_post_handler_pt) (ngx_conf_t *cf,
-    void *data, void *conf);
+typedef char *(*ngx_conf_post_handler_pt) (ngx_conf_t *cf, void *data, void *conf);
 
-typedef struct {
+typedef struct 
+{
     ngx_conf_post_handler_pt  post_handler;
 } ngx_conf_post_t;
 

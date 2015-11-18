@@ -31,16 +31,17 @@ struct ngx_http_log_op_s {
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                   name;
     ngx_array_t                *flushes;
-    ngx_array_t                *ops;        /* array of ngx_http_log_op_t */
+    ngx_array_t                *ops;        	/* array of ngx_http_log_op_t */
 } ngx_http_log_fmt_t;
 
-
-typedef struct {
-    ngx_array_t                 formats;    /* array of ngx_http_log_fmt_t */
-    ngx_uint_t                  combined_used; /* unsigned  combined_used:1 */
+typedef struct
+{
+    ngx_array_t                 formats;    	/* array of ngx_http_log_fmt_t */
+    ngx_uint_t                  combined_used; 	/* unsigned  combined_used:1 */
 } ngx_http_log_main_conf_t;
 
 
@@ -72,7 +73,8 @@ typedef struct {
 } ngx_http_log_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_array_t                *logs;       /* array of ngx_http_log_t */
 
     ngx_open_file_cache_t      *open_file_cache;
@@ -1036,18 +1038,19 @@ ngx_http_log_create_main_conf(ngx_conf_t *cf)
     ngx_http_log_fmt_t  *fmt;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_log_main_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL)
+	{
         return NULL;
     }
 
-    if (ngx_array_init(&conf->formats, cf->pool, 4, sizeof(ngx_http_log_fmt_t))
-        != NGX_OK)
+    if (ngx_array_init(&conf->formats, cf->pool, 4, sizeof(ngx_http_log_fmt_t)) != NGX_OK)
     {
         return NULL;
     }
 
     fmt = ngx_array_push(&conf->formats);
-    if (fmt == NULL) {
+    if (fmt == NULL)
+	{
         return NULL;
     }
 
@@ -1056,7 +1059,8 @@ ngx_http_log_create_main_conf(ngx_conf_t *cf)
     fmt->flushes = NULL;
 
     fmt->ops = ngx_array_create(cf->pool, 16, sizeof(ngx_http_log_op_t));
-    if (fmt->ops == NULL) {
+    if (fmt->ops == NULL)
+	{
         return NULL;
     }
 
@@ -1070,7 +1074,8 @@ ngx_http_log_create_loc_conf(ngx_conf_t *cf)
     ngx_http_log_loc_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_log_loc_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 

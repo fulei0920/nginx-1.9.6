@@ -20,10 +20,8 @@ static char *ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf);
 static char *ngx_set_user(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_set_env(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_set_priority(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-static char *ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
-static char *ngx_set_worker_processes(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_set_worker_processes(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
 static ngx_conf_enum_t  ngx_debug_points[] = {
@@ -70,12 +68,14 @@ static ngx_command_t  ngx_core_commands[] = {
       offsetof(ngx_core_conf_t, lock_file),
       NULL },
 
-    { ngx_string("worker_processes"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_set_worker_processes,
-      0,
-      0,
-      NULL },
+    { 
+    	ngx_string("worker_processes"),
+      	NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+      	ngx_set_worker_processes,
+      	0,
+      	0,
+      	NULL 
+ 	},
 
     { ngx_string("debug_points"),
       NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -1173,15 +1173,17 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
     return NGX_CONF_OK;
 }
 
-
+/*
+设置uid
+配置例子: 
+//user  hello
+*/
 static char *
 ngx_set_user(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
 #if (NGX_WIN32)
 
-    ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                       "\"user\" is not supported, ignored");
-
+    ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "\"user\" is not supported, ignored");
     return NGX_CONF_OK;
 
 #else
@@ -1193,15 +1195,14 @@ ngx_set_user(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     struct group     *grp;
     ngx_str_t        *value;
 
-    if (ccf->user != (uid_t) NGX_CONF_UNSET_UINT) {
+    if (ccf->user != (uid_t) NGX_CONF_UNSET_UINT)
+	{
         return "is duplicate";
     }
 
-    if (geteuid() != 0) {
-        ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                           "the \"user\" directive makes sense only "
-                           "if the master process runs "
-                           "with super-user privileges, ignored");
+    if (geteuid() != 0)
+	{
+        ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "the \"user\" directive makes sense only if the master process runs with super-user privileges, ignored");
         return NGX_CONF_OK;
     }
 
@@ -1236,7 +1237,12 @@ ngx_set_user(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
 }
 
-
+/*
+设置环境变量
+配置例子: 
+env  hello
+env  hello=world   --截取到等号为止相当于 env  hello
+*/
 static char *
 ngx_set_env(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1246,19 +1252,20 @@ ngx_set_env(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_uint_t   i;
 
     var = ngx_array_push(&ccf->env);
-    if (var == NULL) {
+    if (var == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
     value = cf->args->elts;
     *var = value[1];
 
-    for (i = 0; i < value[1].len; i++) {
+    for (i = 0; i < value[1].len; i++) 
+	{
 
-        if (value[1].data[i] == '=') {
-
+        if (value[1].data[i] == '=') 
+		{
             var->len = i;
-
             return NGX_CONF_OK;
         }
     }
@@ -1266,7 +1273,12 @@ ngx_set_env(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+/*
+配置例子: 
+worker_priority  5    --优先级为 5
+worker_priority +5    --优先级为 5
+worker_priority -5    --优先级为-5  
+*/
 static char *
 ngx_set_priority(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1275,38 +1287,49 @@ ngx_set_priority(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_str_t        *value;
     ngx_uint_t        n, minus;
 
-    if (ccf->priority != 0) {
+    if (ccf->priority != 0) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    if (value[1].data[0] == '-') {
+    if (value[1].data[0] == '-')
+	{
         n = 1;
         minus = 1;
 
-    } else if (value[1].data[0] == '+') {
+    } 
+	else if (value[1].data[0] == '+') 
+   	{
         n = 1;
         minus = 0;
 
-    } else {
+    } 
+	else
+	{
         n = 0;
         minus = 0;
     }
 
     ccf->priority = ngx_atoi(&value[1].data[n], value[1].len - n);
-    if (ccf->priority == NGX_ERROR) {
+    if (ccf->priority == NGX_ERROR)
+	{
         return "invalid number";
     }
 
-    if (minus) {
+    if (minus) 
+	{
         ccf->priority = -ccf->priority;
     }
 
     return NGX_CONF_OK;
 }
 
-
+/*
+设定工作进程的CPU亲和性
+配置例子: worker_cpu_affinity 100 10 1000
+*/
 static char *
 ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1318,12 +1341,14 @@ ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_str_t        *value;
     ngx_uint_t        i, n;
 
-    if (ccf->cpu_affinity) {
+    if (ccf->cpu_affinity)
+	{
         return "is duplicate";
     }
 
     mask = ngx_palloc(cf->pool, (cf->args->nelts - 1) * sizeof(uint64_t));
-    if (mask == NULL) {
+    if (mask == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -1332,47 +1357,48 @@ ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    for (n = 1; n < cf->args->nelts; n++) {
+    for (n = 1; n < cf->args->nelts; n++) 
+	{
 
-        if (value[n].len > 64) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                         "\"worker_cpu_affinity\" supports up to 64 CPUs only");
+        if (value[n].len > 64) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"worker_cpu_affinity\" supports up to 64 CPUs only");
             return NGX_CONF_ERROR;
         }
 
+		/*将字符串"0001000"装换为对应的整型值*/
         mask[n - 1] = 0;
-
-        for (i = 0; i < value[n].len; i++) {
+        for (i = 0; i < value[n].len; i++) 
+		{
 
             ch = value[n].data[i];
 
-            if (ch == ' ') {
+            if (ch == ' ')
+			{
                 continue;
             }
 
             mask[n - 1] <<= 1;
 
-            if (ch == '0') {
+            if (ch == '0') 
+			{
                 continue;
             }
 
-            if (ch == '1') {
+            if (ch == '1') 
+			{
                 mask[n - 1] |= 1;
                 continue;
             }
 
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                          "invalid character \"%c\" in \"worker_cpu_affinity\"",
-                          ch);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid character \"%c\" in \"worker_cpu_affinity\"", ch);
             return NGX_CONF_ERROR;
         }
     }
 
 #else
 
-    ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                       "\"worker_cpu_affinity\" is not supported "
-                       "on this platform, ignored");
+    ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "\"worker_cpu_affinity\" is not supported on this platform, ignored");
 #endif
 
     return NGX_CONF_OK;
@@ -1384,10 +1410,10 @@ ngx_get_cpu_affinity(ngx_uint_t n)
 {
     ngx_core_conf_t  *ccf;
 
-    ccf = (ngx_core_conf_t *) ngx_get_conf(ngx_cycle->conf_ctx,
-                                           ngx_core_module);
+    ccf = (ngx_core_conf_t *) ngx_get_conf(ngx_cycle->conf_ctx, ngx_core_module);
 
-    if (ccf->cpu_affinity == NULL) {
+    if (ccf->cpu_affinity == NULL) 
+	{
         return 0;
     }
 
@@ -1398,7 +1424,12 @@ ngx_get_cpu_affinity(ngx_uint_t n)
     return ccf->cpu_affinity[ccf->cpu_affinity_n - 1];
 }
 
-
+/*
+设置工作worker process个数
+参数例子:
+worker_processes auto   --设定进程个数与机器cpu核数相同
+worker_processes 2
+*/
 static char *
 ngx_set_worker_processes(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1407,20 +1438,23 @@ ngx_set_worker_processes(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ccf = (ngx_core_conf_t *) conf;
 
-    if (ccf->worker_processes != NGX_CONF_UNSET) {
+    if (ccf->worker_processes != NGX_CONF_UNSET)
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    if (ngx_strcmp(value[1].data, "auto") == 0) {
+    if (ngx_strcmp(value[1].data, "auto") == 0) 
+	{
         ccf->worker_processes = ngx_ncpu;
         return NGX_CONF_OK;
     }
 
     ccf->worker_processes = ngx_atoi(value[1].data, value[1].len);
 
-    if (ccf->worker_processes == NGX_ERROR) {
+    if (ccf->worker_processes == NGX_ERROR) 
+	{
         return "invalid value";
     }
 

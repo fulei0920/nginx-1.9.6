@@ -745,7 +745,8 @@ static ngx_command_t  ngx_http_core_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_core_module_ctx = {
+static ngx_http_module_t  ngx_http_core_module_ctx = 
+{
     ngx_http_core_preconfiguration,        /* preconfiguration */
     ngx_http_core_postconfiguration,       /* postconfiguration */
 
@@ -3408,13 +3409,12 @@ ngx_http_core_create_main_conf(ngx_conf_t *cf)
     ngx_http_core_main_conf_t  *cmcf;
 
     cmcf = ngx_pcalloc(cf->pool, sizeof(ngx_http_core_main_conf_t));
-    if (cmcf == NULL) {
+    if (cmcf == NULL) 
+	{
         return NULL;
     }
 
-    if (ngx_array_init(&cmcf->servers, cf->pool, 4,
-                       sizeof(ngx_http_core_srv_conf_t *))
-        != NGX_OK)
+    if (ngx_array_init(&cmcf->servers, cf->pool, 4, sizeof(ngx_http_core_srv_conf_t *)) != NGX_OK)
     {
         return NULL;
     }
@@ -3462,7 +3462,8 @@ ngx_http_core_create_srv_conf(ngx_conf_t *cf)
     ngx_http_core_srv_conf_t  *cscf;
 
     cscf = ngx_pcalloc(cf->pool, sizeof(ngx_http_core_srv_conf_t));
-    if (cscf == NULL) {
+    if (cscf == NULL) 
+	{
         return NULL;
     }
 
@@ -3472,9 +3473,7 @@ ngx_http_core_create_srv_conf(ngx_conf_t *cf)
      *     conf->client_large_buffers.num = 0;
      */
 
-    if (ngx_array_init(&cscf->server_names, cf->temp_pool, 4,
-                       sizeof(ngx_http_server_name_t))
-        != NGX_OK)
+    if (ngx_array_init(&cscf->server_names, cf->temp_pool, 4, sizeof(ngx_http_server_name_t)) != NGX_OK)
     {
         return NULL;
     }
@@ -3570,7 +3569,8 @@ ngx_http_core_create_loc_conf(ngx_conf_t *cf)
     ngx_http_core_loc_conf_t  *clcf;
 
     clcf = ngx_pcalloc(cf->pool, sizeof(ngx_http_core_loc_conf_t));
-    if (clcf == NULL) {
+    if (clcf == NULL) 
+	{
         return NULL;
     }
 

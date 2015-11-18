@@ -5911,13 +5911,12 @@ ngx_http_upstream_create_main_conf(ngx_conf_t *cf)
     ngx_http_upstream_main_conf_t  *umcf;
 
     umcf = ngx_pcalloc(cf->pool, sizeof(ngx_http_upstream_main_conf_t));
-    if (umcf == NULL) {
+    if (umcf == NULL) 
+	{
         return NULL;
     }
 
-    if (ngx_array_init(&umcf->upstreams, cf->pool, 4,
-                       sizeof(ngx_http_upstream_srv_conf_t *))
-        != NGX_OK)
+    if (ngx_array_init(&umcf->upstreams, cf->pool, 4, sizeof(ngx_http_upstream_srv_conf_t *)) != NGX_OK)
     {
         return NULL;
     }

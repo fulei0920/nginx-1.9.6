@@ -69,8 +69,8 @@ typedef struct {
 
 typedef struct {
     ngx_hash_t                       headers_in_hash;
-    ngx_array_t                      upstreams;
-                                             /* ngx_http_upstream_srv_conf_t */
+    ngx_array_t                      upstreams;		 	/* array of ngx_http_upstream_srv_conf_t* */
+                                            
 } ngx_http_upstream_main_conf_t;
 
 typedef struct ngx_http_upstream_srv_conf_s  ngx_http_upstream_srv_conf_t;
@@ -135,7 +135,8 @@ typedef struct {
 } ngx_http_upstream_local_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_upstream_srv_conf_t    *upstream;
 
     ngx_msec_t                       connect_timeout;
@@ -218,7 +219,7 @@ typedef struct {
     ngx_flag_t                       ssl_verify;
 #endif
 
-    ngx_str_t                        module;
+    ngx_str_t                        module;				/* "proxy" */
 } ngx_http_upstream_conf_t;
 
 

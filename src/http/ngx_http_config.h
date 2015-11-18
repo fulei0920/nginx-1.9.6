@@ -22,7 +22,8 @@ typedef struct
 } ngx_http_conf_ctx_t;
 
 
-typedef struct {
+typedef struct
+{
     ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
     ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
 

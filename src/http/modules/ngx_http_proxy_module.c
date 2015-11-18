@@ -10,8 +10,9 @@
 #include <ngx_http.h>
 
 
-typedef struct {
-    ngx_array_t                    caches;  /* ngx_http_file_cache_t * */
+typedef struct 
+{
+    ngx_array_t                    caches;  /* array of ngx_http_file_cache_t* */
 } ngx_http_proxy_main_conf_t;
 
 
@@ -52,7 +53,8 @@ typedef struct {
 } ngx_http_proxy_headers_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_upstream_conf_t       upstream;
 
     ngx_array_t                   *body_flushes;
@@ -2744,14 +2746,13 @@ ngx_http_proxy_create_main_conf(ngx_conf_t *cf)
     ngx_http_proxy_main_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_proxy_main_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 
 #if (NGX_HTTP_CACHE)
-    if (ngx_array_init(&conf->caches, cf->pool, 4,
-                       sizeof(ngx_http_file_cache_t *))
-        != NGX_OK)
+    if (ngx_array_init(&conf->caches, cf->pool, 4, sizeof(ngx_http_file_cache_t *)) != NGX_OK)
     {
         return NULL;
     }
@@ -2767,7 +2768,8 @@ ngx_http_proxy_create_loc_conf(ngx_conf_t *cf)
     ngx_http_proxy_loc_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_proxy_loc_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 

@@ -13,19 +13,19 @@
 #include <ngx_core.h>
 
 
-struct ngx_file_s {
-    ngx_fd_t                   fd;
-    ngx_str_t                  name;
-    ngx_file_info_t            info;
+struct ngx_file_s 
+{
+    ngx_fd_t                   fd;			/*文件描述符*/
+    ngx_str_t                  name;		/*文件名*/
+    ngx_file_info_t            info;		/*文件属性*/
 
     off_t                      offset;
-    off_t                      sys_offset;
+    off_t                      sys_offset;	/*系统读写偏移指针位置*/
 
     ngx_log_t                 *log;
 
 #if (NGX_THREADS)
-    ngx_int_t                (*thread_handler)(ngx_thread_task_t *task,
-                                               ngx_file_t *file);
+    ngx_int_t                (*thread_handler)(ngx_thread_task_t *task, ngx_file_t *file);
     void                      *thread_ctx;
 #endif
 

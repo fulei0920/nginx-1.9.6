@@ -425,7 +425,8 @@ extern ngx_os_io_t  ngx_io;
 #define NGX_EVENT_CONF        0x02000000
 
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t    connections;
     ngx_uint_t    use;
 
@@ -437,17 +438,16 @@ typedef struct {
     u_char       *name;
 
 #if (NGX_DEBUG)
-    ngx_array_t   debug_connection;
+    ngx_array_t   debug_connection;		//ngx_cidr_t类型的数组
 #endif
 } ngx_event_conf_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t              *name;
-
     void                 *(*create_conf)(ngx_cycle_t *cycle);
     char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
-
     ngx_event_actions_t     actions;
 } ngx_event_module_t;
 

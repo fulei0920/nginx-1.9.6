@@ -116,7 +116,13 @@ ngx_module_t  ngx_http_module =
     NGX_MODULE_V1_PADDING
 };
 
+/*
+ÅäÖÃÀý×Ó:
+http {
+   
+}
 
+*/
 static char *
 ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -129,14 +135,15 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_core_srv_conf_t   **cscfp;
     ngx_http_core_main_conf_t   *cmcf;
 
-    if (*(ngx_http_conf_ctx_t **) conf) {
+    if (*(ngx_http_conf_ctx_t **) conf)
+	{
         return "is duplicate";
     }
 
     /* the main http context */
-
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -144,10 +151,11 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* count the number of the http modules and set up their indices */
-
     ngx_http_max_module = 0;
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
+    for (m = 0; ngx_modules[m]; m++)
+	{
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
+		{
             continue;
         }
 
@@ -156,32 +164,29 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* the http main_conf context, it is the same in the all http contexts */
-
-    ctx->main_conf = ngx_pcalloc(cf->pool,
-                                 sizeof(void *) * ngx_http_max_module);
-    if (ctx->main_conf == NULL) {
+    ctx->main_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+    if (ctx->main_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
 
     /*
-     * the http null srv_conf context, it is used to merge
-     * the server{}s' srv_conf's
+     * the http null srv_conf context, it is used to merge the server{}s' srv_conf's
      */
-
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->srv_conf == NULL) {
+    if (ctx->srv_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
 
     /*
-     * the http null loc_conf context, it is used to merge
-     * the server{}s' loc_conf's
+     * the http null loc_conf context, it is used to merge the server{}s' loc_conf's
      */
-
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->loc_conf == NULL) {
+    if (ctx->loc_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -190,32 +195,39 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * create the main_conf's, the null srv_conf's, and the null loc_conf's
      * of the all http modules
      */
-
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
+    for (m = 0; ngx_modules[m]; m++) 
+	{
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
+		{
             continue;
         }
 
         module = ngx_modules[m]->ctx;
         mi = ngx_modules[m]->ctx_index;
 
-        if (module->create_main_conf) {
+        if (module->create_main_conf) 
+		{
             ctx->main_conf[mi] = module->create_main_conf(cf);
-            if (ctx->main_conf[mi] == NULL) {
+            if (ctx->main_conf[mi] == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
         }
 
-        if (module->create_srv_conf) {
+        if (module->create_srv_conf)
+		{
             ctx->srv_conf[mi] = module->create_srv_conf(cf);
-            if (ctx->srv_conf[mi] == NULL) {
+            if (ctx->srv_conf[mi] == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
         }
 
-        if (module->create_loc_conf) {
+        if (module->create_loc_conf) 
+		{
             ctx->loc_conf[mi] = module->create_loc_conf(cf);
-            if (ctx->loc_conf[mi] == NULL) {
+            if (ctx->loc_conf[mi] == NULL)
+			{
                 return NGX_CONF_ERROR;
             }
         }

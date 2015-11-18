@@ -83,7 +83,8 @@ static ngx_core_module_t  ngx_thread_pool_module_ctx =
 };
 
 
-ngx_module_t  ngx_thread_pool_module = {
+ngx_module_t  ngx_thread_pool_module = 
+{
     NGX_MODULE_V1,
     &ngx_thread_pool_module_ctx,           /* module context */
     ngx_thread_pool_commands,              /* module directives */
