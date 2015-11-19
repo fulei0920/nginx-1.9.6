@@ -12,8 +12,7 @@
 
 
 static char *ngx_mail_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-static ngx_int_t ngx_mail_add_ports(ngx_conf_t *cf, ngx_array_t *ports,
-    ngx_mail_listen_t *listen);
+static ngx_int_t ngx_mail_add_ports(ngx_conf_t *cf, ngx_array_t *ports, ngx_mail_listen_t *listen);
 static char *ngx_mail_optimize_servers(ngx_conf_t *cf, ngx_array_t *ports);
 static ngx_int_t ngx_mail_add_addrs(ngx_conf_t *cf, ngx_mail_port_t *mport,
     ngx_mail_conf_addr_t *addr);
