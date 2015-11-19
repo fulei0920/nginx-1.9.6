@@ -632,15 +632,14 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         }
     }
 
-    if (ngx_ssl_create(&conf->ssl, conf->protocols, conf) != NGX_OK) {
+    if (ngx_ssl_create(&conf->ssl, conf->protocols, conf) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
 
-    if (SSL_CTX_set_tlsext_servername_callback(conf->ssl.ctx,
-                                               ngx_http_ssl_servername)
-        == 0)
+    if (SSL_CTX_set_tlsext_servername_callback(conf->ssl.ctx, ngx_http_ssl_servername) == 0)
     {
         ngx_log_error(NGX_LOG_WARN, cf->log, 0,
             "nginx was built with SNI support, however, now it is linked "
@@ -655,8 +654,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 #endif
 
 #ifdef TLSEXT_TYPE_next_proto_neg
-    SSL_CTX_set_next_protos_advertised_cb(conf->ssl.ctx,
-                                          ngx_http_ssl_npn_advertised, NULL);
+    SSL_CTX_set_next_protos_advertised_cb(conf->ssl.ctx, ngx_http_ssl_npn_advertised, NULL);
 #endif
 
     cln = ngx_pool_cleanup_add(cf->pool, 0);
@@ -667,15 +665,12 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     cln->handler = ngx_ssl_cleanup_ctx;
     cln->data = &conf->ssl;
 
-    if (ngx_ssl_certificate(cf, &conf->ssl, &conf->certificate,
-                            &conf->certificate_key, conf->passwords)
-        != NGX_OK)
+    if (ngx_ssl_certificate(cf, &conf->ssl, &conf->certificate, &conf->certificate_key, conf->passwords) != NGX_OK)
     {
         return NGX_CONF_ERROR;
     }
 
-    if (SSL_CTX_set_cipher_list(conf->ssl.ctx,
-                                (const char *) conf->ciphers.data)
+    if (SSL_CTX_set_cipher_list(conf->ssl.ctx, (const char *) conf->ciphers.data)
         == 0)
     {
         ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,

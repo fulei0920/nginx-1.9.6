@@ -193,14 +193,15 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
 {
     ssl->ctx = SSL_CTX_new(SSLv23_method());
 
-    if (ssl->ctx == NULL) {
+    if (ssl->ctx == NULL) 
+	{
         ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_new() failed");
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_ssl_server_conf_index, data) == 0) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_set_ex_data() failed");
+    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_ssl_server_conf_index, data) == 0)
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_set_ex_data() failed");
         return NGX_ERROR;
     }
 
