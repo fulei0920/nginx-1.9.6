@@ -115,7 +115,8 @@ ngx_crc32_table_init(void)
     }
 
     p = ngx_alloc(16 * sizeof(uint32_t) + ngx_cacheline_size, ngx_cycle->log);
-    if (p == NULL) {
+    if (p == NULL)
+    {
         return NGX_ERROR;
     }
 
