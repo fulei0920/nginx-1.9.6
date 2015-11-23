@@ -632,16 +632,17 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
     c = rev->data;
     hc = c->data;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0,
-                   "http check ssl handshake");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http check ssl handshake");
 
-    if (rev->timedout) {
+    if (rev->timedout) 
+	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         ngx_http_close_connection(c);
         return;
     }
 
-    if (c->close) {
+    if (c->close) 
+	{
         ngx_http_close_connection(c);
         return;
     }
@@ -704,15 +705,15 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
         buf[0] = *p;
     }
 
-    if (n == 1) {
-        if (buf[0] & 0x80 /* SSLv2 */ || buf[0] == 0x16 /* SSLv3/TLSv1 */) {
-            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, rev->log, 0,
-                           "https ssl handshake: 0x%02Xd", buf[0]);
+    if (n == 1)
+	{
+        if (buf[0] & 0x80 /* SSLv2 */ || buf[0] == 0x16 /* SSLv3/TLSv1 */) 
+		{
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, rev->log, 0, "https ssl handshake: 0x%02Xd", buf[0]);
 
             sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
 
-            if (ngx_ssl_create_connection(&sscf->ssl, c, NGX_SSL_BUFFER)
-                != NGX_OK)
+            if (ngx_ssl_create_connection(&sscf->ssl, c, NGX_SSL_BUFFER) != NGX_OK)
             {
                 ngx_http_close_connection(c);
                 return;
@@ -720,7 +721,8 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
             rc = ngx_ssl_handshake(c);
 
-            if (rc == NGX_AGAIN) {
+            if (rc == NGX_AGAIN) 
+			{
 
                 if (!rev->timer_set) {
                     ngx_add_timer(rev, c->listening->post_accept_timeout);
