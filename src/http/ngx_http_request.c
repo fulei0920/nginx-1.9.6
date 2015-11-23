@@ -315,7 +315,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->write->handler = ngx_http_empty_handler;
 
 #if (NGX_HTTP_V2)
-    if (hc->addr_conf->http2) {
+    if (hc->addr_conf->http2) 
+	{
         rev->handler = ngx_http_v2_init;
     }
 #endif
@@ -689,7 +690,8 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
         size = p - buf;
 
-        if (c->recv(c, buf, size) != (ssize_t) size) {
+        if (c->recv(c, buf, size) != (ssize_t) size)
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -724,7 +726,8 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
             if (rc == NGX_AGAIN) 
 			{
 
-                if (!rev->timer_set) {
+                if (!rev->timer_set) 
+				{
                     ngx_add_timer(rev, c->listening->post_accept_timeout);
                 }
 
@@ -757,7 +760,8 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 static void
 ngx_http_ssl_handshake_handler(ngx_connection_t *c)
 {
-    if (c->ssl->handshaked) {
+    if (c->ssl->handshaked) 
+	{
 
         /*
          * The majority of browsers do not send the "close notify" alert.
@@ -799,7 +803,8 @@ ngx_http_ssl_handshake_handler(ngx_connection_t *c)
         c->log->action = "waiting for request";
 
         c->read->handler = ngx_http_wait_request_handler;
-        /* STUB: epoll edge */ c->write->handler = ngx_http_empty_handler;
+        /* STUB: epoll edge */ 
+		c->write->handler = ngx_http_empty_handler;
 
         ngx_reusable_connection(c, 1);
 
@@ -808,7 +813,8 @@ ngx_http_ssl_handshake_handler(ngx_connection_t *c)
         return;
     }
 
-    if (c->read->timedout) {
+    if (c->read->timedout) 
+	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
     }
 

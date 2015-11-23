@@ -16,7 +16,9 @@ static ngx_atomic_t   temp_number = 0;
 ngx_atomic_t         *ngx_temp_number = &temp_number;
 ngx_atomic_int_t      ngx_random_number = 123456;
 
-//链接prefix和name组成全路径
+/*
+获取prefix和name字符串组成的全路径名
+*/
 ngx_int_t
 ngx_get_full_name(ngx_pool_t *pool, ngx_str_t *prefix, ngx_str_t *name)
 {
@@ -24,13 +26,14 @@ ngx_get_full_name(ngx_pool_t *pool, ngx_str_t *prefix, ngx_str_t *name)
     u_char     *p, *n;
     ngx_int_t   rc;
 
+	//若name本身就是全路径名，直接返回
     rc = ngx_test_full_name(name);
-
     if (rc == NGX_OK) 
 	{
         return rc;
     }
 
+	//否则链接prefix和name组成全路径
     len = prefix->len;
 
 #if (NGX_WIN32)
