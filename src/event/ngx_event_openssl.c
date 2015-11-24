@@ -256,18 +256,22 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
                           SSL_OP_NO_SSLv2|SSL_OP_NO_SSLv3|SSL_OP_NO_TLSv1);
 #endif
 
-    if (!(protocols & NGX_SSL_SSLv2)) {
+    if (!(protocols & NGX_SSL_SSLv2))
+	{
         SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_SSLv2);
     }
-    if (!(protocols & NGX_SSL_SSLv3)) {
+    if (!(protocols & NGX_SSL_SSLv3))
+	{
         SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_SSLv3);
     }
-    if (!(protocols & NGX_SSL_TLSv1)) {
+    if (!(protocols & NGX_SSL_TLSv1)) 
+	{
         SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_TLSv1);
     }
 #ifdef SSL_OP_NO_TLSv1_1
     SSL_CTX_clear_options(ssl->ctx, SSL_OP_NO_TLSv1_1);
-    if (!(protocols & NGX_SSL_TLSv1_1)) {
+    if (!(protocols & NGX_SSL_TLSv1_1)) 
+	{
         SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_TLSv1_1);
     }
 #endif
@@ -297,10 +301,11 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
     return NGX_OK;
 }
 
-
+/*
+cert -- 证书文件路径
+*/
 ngx_int_t
-ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
-    ngx_str_t *key, ngx_array_t *passwords)
+ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_str_t *key, ngx_array_t *passwords)
 {
     BIO         *bio;
     X509        *x509;
@@ -308,7 +313,8 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
     ngx_str_t   *pwd;
     ngx_uint_t   tries;
 
-    if (ngx_conf_full_name(cf->cycle, cert, 1) != NGX_OK) {
+    if (ngx_conf_full_name(cf->cycle, cert, 1) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -319,33 +325,31 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
      */
 
     bio = BIO_new_file((char *) cert->data, "r");
-    if (bio == NULL) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "BIO_new_file(\"%s\") failed", cert->data);
+    if (bio == NULL)
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "BIO_new_file(\"%s\") failed", cert->data);
         return NGX_ERROR;
     }
 
     x509 = PEM_read_bio_X509_AUX(bio, NULL, NULL, NULL);
-    if (x509 == NULL) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "PEM_read_bio_X509_AUX(\"%s\") failed", cert->data);
+    if (x509 == NULL)
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "PEM_read_bio_X509_AUX(\"%s\") failed", cert->data);
         BIO_free(bio);
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_use_certificate(ssl->ctx, x509) == 0) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_use_certificate(\"%s\") failed", cert->data);
+    if (SSL_CTX_use_certificate(ssl->ctx, x509) == 0)
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_use_certificate(\"%s\") failed", cert->data);
         X509_free(x509);
         BIO_free(bio);
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_ssl_certificate_index, x509)
-        == 0)
+    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_ssl_certificate_index, x509) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_set_ex_data() failed");
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_set_ex_data() failed");
         X509_free(x509);
         BIO_free(bio);
         return NGX_ERROR;
@@ -355,14 +359,15 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
     /* read rest of the chain */
 
-    for ( ;; ) {
+    for ( ;; )
+	{
 
         x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
-        if (x509 == NULL) {
+        if (x509 == NULL) 
+		{
             n = ERR_peek_last_error();
 
-            if (ERR_GET_LIB(n) == ERR_LIB_PEM
-                && ERR_GET_REASON(n) == PEM_R_NO_START_LINE)
+            if (ERR_GET_LIB(n) == ERR_LIB_PEM && ERR_GET_REASON(n) == PEM_R_NO_START_LINE)
             {
                 /* end of file */
                 ERR_clear_error();
@@ -371,16 +376,14 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
             /* some real error */
 
-            ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                          "PEM_read_bio_X509(\"%s\") failed", cert->data);
+            ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "PEM_read_bio_X509(\"%s\") failed", cert->data);
             BIO_free(bio);
             return NGX_ERROR;
         }
 
-        if (SSL_CTX_add_extra_chain_cert(ssl->ctx, x509) == 0) {
-            ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                          "SSL_CTX_add_extra_chain_cert(\"%s\") failed",
-                          cert->data);
+        if (SSL_CTX_add_extra_chain_cert(ssl->ctx, x509) == 0) 
+		{
+            ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_add_extra_chain_cert(\"%s\") failed", cert->data);
             X509_free(x509);
             BIO_free(bio);
             return NGX_ERROR;
@@ -389,7 +392,8 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
     BIO_free(bio);
 
-    if (ngx_strncmp(key->data, "engine:", sizeof("engine:") - 1) == 0) {
+    if (ngx_strncmp(key->data, "engine:", sizeof("engine:") - 1) == 0)
+	{
 
 #ifndef OPENSSL_NO_ENGINE
 
@@ -429,9 +433,9 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
         ENGINE_free(engine);
 
-        if (SSL_CTX_use_PrivateKey(ssl->ctx, pkey) == 0) {
-            ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                          "SSL_CTX_use_PrivateKey(\"%s\") failed", last);
+        if (SSL_CTX_use_PrivateKey(ssl->ctx, pkey) == 0)
+		{
+            ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_use_PrivateKey(\"%s\") failed", last);
             EVP_PKEY_free(pkey);
             return NGX_ERROR;
         }
@@ -442,49 +446,49 @@ ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
 #else
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "loading \"engine:...\" certificate keys "
-                           "is not supported");
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "loading \"engine:...\" certificate keys is not supported");
         return NGX_ERROR;
 
 #endif
     }
 
-    if (ngx_conf_full_name(cf->cycle, key, 1) != NGX_OK) {
+    if (ngx_conf_full_name(cf->cycle, key, 1) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
-    if (passwords) {
+    if (passwords) 
+	{
         tries = passwords->nelts;
         pwd = passwords->elts;
 
         SSL_CTX_set_default_passwd_cb(ssl->ctx, ngx_ssl_password_callback);
         SSL_CTX_set_default_passwd_cb_userdata(ssl->ctx, pwd);
 
-    } else {
+    }
+	else
+	{
         tries = 1;
 #if (NGX_SUPPRESS_WARN)
         pwd = NULL;
 #endif
     }
 
-    for ( ;; ) {
-
-        if (SSL_CTX_use_PrivateKey_file(ssl->ctx, (char *) key->data,
-                                        SSL_FILETYPE_PEM)
-            != 0)
+    for ( ;; )
+	{
+        if (SSL_CTX_use_PrivateKey_file(ssl->ctx, (char *) key->data, SSL_FILETYPE_PEM) != 0)
         {
             break;
         }
 
-        if (--tries) {
+        if (--tries)
+		{
             ERR_clear_error();
             SSL_CTX_set_default_passwd_cb_userdata(ssl->ctx, ++pwd);
             continue;
         }
 
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_use_PrivateKey_file(\"%s\") failed", key->data);
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_use_PrivateKey_file(\"%s\") failed", key->data);
         return NGX_ERROR;
     }
 
@@ -499,16 +503,18 @@ ngx_ssl_password_callback(char *buf, int size, int rwflag, void *userdata)
 {
     ngx_str_t *pwd = userdata;
 
-    if (rwflag) {
-        ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
-                      "ngx_ssl_password_callback() is called for encryption");
+    if (rwflag)
+	{
+        ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0, "ngx_ssl_password_callback() is called for encryption");
         return 0;
     }
 
-    if (pwd->len > (size_t) size) {
-        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0,
-                      "password is truncated to %d bytes", size);
-    } else {
+    if (pwd->len > (size_t) size)
+	{
+        ngx_log_error(NGX_LOG_ERR, ngx_cycle->log, 0, "password is truncated to %d bytes", size);
+    } 
+	else 
+	{
         size = pwd->len;
     }
 
@@ -519,8 +525,7 @@ ngx_ssl_password_callback(char *buf, int size, int rwflag, void *userdata)
 
 
 ngx_int_t
-ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
-    ngx_int_t depth)
+ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_int_t depth)
 {
     STACK_OF(X509_NAME)  *list;
 
@@ -536,8 +541,7 @@ ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_load_verify_locations(ssl->ctx, (char *) cert->data, NULL)
-        == 0)
+    if (SSL_CTX_load_verify_locations(ssl->ctx, (char *) cert->data, NULL) == 0)
     {
         ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
                       "SSL_CTX_load_verify_locations(\"%s\") failed",
@@ -574,25 +578,23 @@ ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
 
 
 ngx_int_t
-ngx_ssl_trusted_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert,
-    ngx_int_t depth)
+ngx_ssl_trusted_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_int_t depth)
 {
     SSL_CTX_set_verify_depth(ssl->ctx, depth);
 
-    if (cert->len == 0) {
+    if (cert->len == 0)
+	{
         return NGX_OK;
     }
 
-    if (ngx_conf_full_name(cf->cycle, cert, 1) != NGX_OK) {
+    if (ngx_conf_full_name(cf->cycle, cert, 1) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_load_verify_locations(ssl->ctx, (char *) cert->data, NULL)
-        == 0)
+    if (SSL_CTX_load_verify_locations(ssl->ctx, (char *) cert->data, NULL) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_load_verify_locations(\"%s\") failed",
-                      cert->data);
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_load_verify_locations(\"%s\") failed", cert->data);
         return NGX_ERROR;
     }
 
@@ -645,8 +647,7 @@ ngx_ssl_crl(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *crl)
         return NGX_ERROR;
     }
 
-    X509_STORE_set_flags(store,
-                         X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
+    X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
 
     return NGX_OK;
 }
@@ -663,8 +664,7 @@ ngx_ssl_verify_callback(int ok, X509_STORE_CTX *x509_store)
     ngx_connection_t  *c;
     ngx_ssl_conn_t    *ssl_conn;
 
-    ssl_conn = X509_STORE_CTX_get_ex_data(x509_store,
-                                          SSL_get_ex_data_X509_STORE_CTX_idx());
+    ssl_conn = X509_STORE_CTX_get_ex_data(x509_store, SSL_get_ex_data_X509_STORE_CTX_idx());
 
     c = ngx_ssl_get_connection(ssl_conn);
 
@@ -702,7 +702,8 @@ ngx_ssl_info_callback(const ngx_ssl_conn_t *ssl_conn, int where, int ret)
     BIO               *rbio, *wbio;
     ngx_connection_t  *c;
 
-    if (where & SSL_CB_HANDSHAKE_START) {
+    if (where & SSL_CB_HANDSHAKE_START)
+	{
         c = ngx_ssl_get_connection((ngx_ssl_conn_t *) ssl_conn);
 
         if (c->ssl->handshaked) {
@@ -1033,6 +1034,7 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c, ngx_uint_t flags)
 
     sc = ngx_pcalloc(c->pool, sizeof(ngx_ssl_connection_t));
     if (sc == NULL) 
+    if (sc == NULL)
 	{
         return NGX_ERROR;
     }
@@ -1065,7 +1067,8 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c, ngx_uint_t flags)
         SSL_set_accept_state(sc->connection);
     }
 
-    if (SSL_set_ex_data(sc->connection, ngx_ssl_connection_index, c) == 0) {
+    if (SSL_set_ex_data(sc->connection, ngx_ssl_connection_index, c) == 0)
+	{
         ngx_ssl_error(NGX_LOG_ALERT, c->log, 0, "SSL_set_ex_data() failed");
         return NGX_ERROR;
     }
@@ -1102,13 +1105,16 @@ ngx_ssl_handshake(ngx_connection_t *c)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL_do_handshake: %d", n);
 
-    if (n == 1) {
+    if (n == 1) 
+	{
 
-        if (ngx_handle_read_event(c->read, 0) != NGX_OK) {
+        if (ngx_handle_read_event(c->read, 0) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
-        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+        if (ngx_handle_write_event(c->write, 0) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
@@ -1170,7 +1176,8 @@ ngx_ssl_handshake(ngx_connection_t *c)
 #ifdef SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS
 
         /* initial handshake done, disable renegotiation (CVE-2009-3555) */
-        if (c->ssl->connection->s3) {
+        if (c->ssl->connection->s3)
+		{
             c->ssl->connection->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
         }
 
@@ -1184,16 +1191,19 @@ ngx_ssl_handshake(ngx_connection_t *c)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL_get_error: %d", sslerr);
 
-    if (sslerr == SSL_ERROR_WANT_READ) {
+    if (sslerr == SSL_ERROR_WANT_READ) 
+	{
         c->read->ready = 0;
         c->read->handler = ngx_ssl_handshake_handler;
         c->write->handler = ngx_ssl_handshake_handler;
 
-        if (ngx_handle_read_event(c->read, 0) != NGX_OK) {
+        if (ngx_handle_read_event(c->read, 0) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
-        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+        if (ngx_handle_write_event(c->write, 0) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
@@ -1222,9 +1232,9 @@ ngx_ssl_handshake(ngx_connection_t *c)
     c->ssl->no_send_shutdown = 1;
     c->read->eof = 1;
 
-    if (sslerr == SSL_ERROR_ZERO_RETURN || ERR_peek_error() == 0) {
-        ngx_connection_error(c, err,
-                             "peer closed connection in SSL handshake");
+    if (sslerr == SSL_ERROR_ZERO_RETURN || ERR_peek_error() == 0) 
+	{
+        ngx_connection_error(c, err, "peer closed connection in SSL handshake");
 
         return NGX_ERROR;
     }
@@ -3205,7 +3215,8 @@ ngx_ssl_get_raw_certificate(ngx_connection_t *c, ngx_pool_t *pool, ngx_str_t *s)
         return NGX_ERROR;
     }
 
-    if (PEM_write_bio_X509(bio, cert) == 0) {
+    if (PEM_write_bio_X509(bio, cert) == 0) 
+	{
         ngx_ssl_error(NGX_LOG_ALERT, c->log, 0, "PEM_write_bio_X509() failed");
         goto failed;
     }

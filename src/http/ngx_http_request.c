@@ -317,7 +317,7 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->write->handler = ngx_http_empty_handler;
 
 #if (NGX_HTTP_V2)
-    if (hc->addr_conf->http2)
+    if (hc->addr_conf->http2) 
 	{
         rev->handler = ngx_http_v2_init;
     }
@@ -636,13 +636,15 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http check ssl handshake");
 
-    if (rev->timedout) {
+    if (rev->timedout) 
+	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         ngx_http_close_connection(c);
         return;
     }
 
-    if (c->close) {
+    if (c->close) 
+	{
         ngx_http_close_connection(c);
         return;
     }
@@ -689,7 +691,8 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
         size = p - buf;
 
-        if (c->recv(c, buf, size) != (ssize_t) size) {
+        if (c->recv(c, buf, size) != (ssize_t) size)
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -705,15 +708,15 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
         buf[0] = *p;
     }
 
-    if (n == 1) {
-        if (buf[0] & 0x80 /* SSLv2 */ || buf[0] == 0x16 /* SSLv3/TLSv1 */) {
-            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, rev->log, 0,
-                           "https ssl handshake: 0x%02Xd", buf[0]);
+    if (n == 1)
+	{
+        if (buf[0] & 0x80 /* SSLv2 */ || buf[0] == 0x16 /* SSLv3/TLSv1 */) 
+		{
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, rev->log, 0, "https ssl handshake: 0x%02Xd", buf[0]);
 
             sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
 
-            if (ngx_ssl_create_connection(&sscf->ssl, c, NGX_SSL_BUFFER)
-                != NGX_OK)
+            if (ngx_ssl_create_connection(&sscf->ssl, c, NGX_SSL_BUFFER) != NGX_OK)
             {
                 ngx_http_close_connection(c);
                 return;
@@ -721,9 +724,11 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
             rc = ngx_ssl_handshake(c);
 
-            if (rc == NGX_AGAIN) {
+            if (rc == NGX_AGAIN) 
+			{
 
-                if (!rev->timer_set) {
+                if (!rev->timer_set) 
+				{
                     ngx_add_timer(rev, c->listening->post_accept_timeout);
                 }
 
@@ -756,7 +761,8 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 static void
 ngx_http_ssl_handshake_handler(ngx_connection_t *c)
 {
-    if (c->ssl->handshaked) {
+    if (c->ssl->handshaked) 
+	{
 
         /*
          * The majority of browsers do not send the "close notify" alert.
@@ -798,7 +804,8 @@ ngx_http_ssl_handshake_handler(ngx_connection_t *c)
         c->log->action = "waiting for request";
 
         c->read->handler = ngx_http_wait_request_handler;
-        /* STUB: epoll edge */ c->write->handler = ngx_http_empty_handler;
+        /* STUB: epoll edge */ 
+		c->write->handler = ngx_http_empty_handler;
 
         ngx_reusable_connection(c, 1);
 
@@ -807,7 +814,8 @@ ngx_http_ssl_handshake_handler(ngx_connection_t *c)
         return;
     }
 
-    if (c->read->timedout) {
+    if (c->read->timedout) 
+	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
     }
 

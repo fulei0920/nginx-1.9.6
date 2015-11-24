@@ -550,11 +550,15 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_pool_cleanup_t  *cln;
 
-    if (conf->enable == NGX_CONF_UNSET) {
-        if (prev->enable == NGX_CONF_UNSET) {
+    if (conf->enable == NGX_CONF_UNSET) 
+	{
+        if (prev->enable == NGX_CONF_UNSET)
+		{
             conf->enable = 0;
 
-        } else {
+        } 
+		else
+		{
             conf->enable = prev->enable;
             conf->file = prev->file;
             conf->line = prev->line;
@@ -673,38 +677,29 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    if (SSL_CTX_set_cipher_list(conf->ssl.ctx, (const char *) conf->ciphers.data)
-        == 0)
+    if (SSL_CTX_set_cipher_list(conf->ssl.ctx, (const char *) conf->ciphers.data) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
-                      "SSL_CTX_set_cipher_list(\"%V\") failed",
-                      &conf->ciphers);
+        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0, "SSL_CTX_set_cipher_list(\"%V\") failed", &conf->ciphers);
         return NGX_CONF_ERROR;
     }
 
     conf->ssl.buffer_size = conf->buffer_size;
 
-    if (conf->verify) {
-
-        if (conf->client_certificate.len == 0 && conf->verify != 3) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no ssl_client_certificate for ssl_client_verify");
+    if (conf->verify) 
+	{
+        if (conf->client_certificate.len == 0 && conf->verify != 3)
+		{
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no ssl_client_certificate for ssl_client_verify");
             return NGX_CONF_ERROR;
         }
 
-        if (ngx_ssl_client_certificate(cf, &conf->ssl,
-                                       &conf->client_certificate,
-                                       conf->verify_depth)
-            != NGX_OK)
+        if (ngx_ssl_client_certificate(cf, &conf->ssl, &conf->client_certificate, conf->verify_depth) != NGX_OK)
         {
             return NGX_CONF_ERROR;
         }
     }
 
-    if (ngx_ssl_trusted_certificate(cf, &conf->ssl,
-                                    &conf->trusted_certificate,
-                                    conf->verify_depth)
-        != NGX_OK)
+    if (ngx_ssl_trusted_certificate(cf, &conf->ssl, &conf->trusted_certificate, conf->verify_depth) != NGX_OK)
     {
         return NGX_CONF_ERROR;
     }

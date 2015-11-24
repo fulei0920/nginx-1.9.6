@@ -25,7 +25,7 @@ typedef struct
     ngx_uint_t                      protocols;
 
     ngx_uint_t                      verify;
-    ngx_uint_t                      verify_depth;
+    ngx_uint_t                      verify_depth;		/*证书验证深度*/
 
     size_t                          buffer_size;
 
@@ -33,15 +33,17 @@ typedef struct
 
     time_t                          session_timeout;
 
-    ngx_str_t                       certificate;
+    ngx_str_t                       certificate;			/*证书文件路径*/
     ngx_str_t                       certificate_key;
     ngx_str_t                       dhparam;
     ngx_str_t                       ecdh_curve;
     ngx_str_t                       client_certificate;
-    ngx_str_t                       trusted_certificate;
+    ngx_str_t                       trusted_certificate;	/*包含PEM格式编码的一个或多个受信任的CA证书的文件路径*/
     ngx_str_t                       crl;
-
-    ngx_str_t                       ciphers;
+	/*表示允许使用的密码组列表， 列表的各部分以冒号分隔，
+	如"RC4-SHA; DES-CBC3-SHA",表示可使用密码组TLS_RSA_WITH_RC4_128_SHA和TLS_RSA_WITH_3DES_EDE_CBC_SHA*/
+    ngx_str_t                       ciphers;		
+													
 
     ngx_array_t                    *passwords;
 
