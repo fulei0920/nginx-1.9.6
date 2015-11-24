@@ -614,7 +614,8 @@ ngx_hash_key(u_char *data, size_t len)
 
     key = 0;
 
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len; i++) 
+	{
         key = ngx_hash(key, data[i]);
     }
 
@@ -711,8 +712,7 @@ ngx_hash_keys_array_init(ngx_hash_keys_arrays_t *ha, ngx_uint_t type)
 
 
 ngx_int_t
-ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value,
-    ngx_uint_t flags)
+ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_uint_t flags)
 {
     size_t           len;
     u_char          *p;
@@ -723,7 +723,8 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value,
 
     last = key->len;
 
-    if (flags & NGX_HASH_WILDCARD_KEY) {
+    if (flags & NGX_HASH_WILDCARD_KEY) 
+	{
 
         /*
          * supported wildcards:
@@ -818,7 +819,8 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value,
     *name = *key;
 
     hk = ngx_array_push(&ha->keys);
-    if (hk == NULL) {
+    if (hk == NULL)
+	{
         return NGX_ERROR;
     }
 

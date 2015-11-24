@@ -16,7 +16,7 @@
 
 typedef struct 
 {
-    void        **main_conf;
+    void        **main_conf;		/*void指针数组，每个元素指向一个NGX_HTTP_MODULE模块的xxx*/
     void        **srv_conf;
     void        **loc_conf;
 } ngx_http_conf_ctx_t;

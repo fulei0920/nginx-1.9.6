@@ -20,19 +20,22 @@ typedef struct {
 } ngx_hash_elt_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_hash_elt_t  **buckets;
     ngx_uint_t        size;
 } ngx_hash_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_hash_t        hash;
     void             *value;
 } ngx_hash_wildcard_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t         key;
     ngx_uint_t        key_hash;
     void             *value;
@@ -72,13 +75,14 @@ typedef struct {
 #define NGX_HASH_READONLY_KEY     2
 
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t        hsize;
 
     ngx_pool_t       *pool;
     ngx_pool_t       *temp_pool;
 
-    ngx_array_t       keys;
+    ngx_array_t       keys;		/*array of ngx_hash_key_t, 以列表形式记录所有结点*/
     ngx_array_t      *keys_hash;
 
     ngx_array_t       dns_wc_head;

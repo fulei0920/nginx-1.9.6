@@ -47,8 +47,7 @@ static ngx_http_location_tree_node_t *
     size_t prefix);
 
 static ngx_int_t ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_array_t *ports);
-static ngx_int_t ngx_http_server_names(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf, ngx_http_conf_addr_t *addr);
+static ngx_int_t ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http_conf_addr_t *addr);
 static ngx_int_t ngx_http_cmp_conf_addrs(const void *one, const void *two);
 static int ngx_libc_cdecl ngx_http_cmp_dns_wildcards(const void *one,
     const void *two);
@@ -171,9 +170,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
 
-    /*
-     * the http null srv_conf context, it is used to merge the server{}s' srv_conf's
-     */
+    /* the http null srv_conf context, it is used to merge the server{}s' srv_conf's */
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->srv_conf == NULL)
 	{
@@ -181,9 +178,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
 
-    /*
-     * the http null loc_conf context, it is used to merge the server{}s' loc_conf's
-     */
+    /* the http null loc_conf context, it is used to merge the server{}s' loc_conf's */
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL)
 	{
@@ -191,10 +186,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
 
-    /*
-     * create the main_conf's, the null srv_conf's, and the null loc_conf's
-     * of the all http modules
-     */
+    /* create the main_conf's, the null srv_conf's, and the null loc_conf's of the all http modules */
     for (m = 0; ngx_modules[m]; m++) 
 	{
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
@@ -236,40 +228,42 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     pcf = *cf;
     cf->ctx = ctx;
 
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
+    for (m = 0; ngx_modules[m]; m++) 
+	{
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
+		{
             continue;
         }
 
         module = ngx_modules[m]->ctx;
 
-        if (module->preconfiguration) {
-            if (module->preconfiguration(cf) != NGX_OK) {
+        if (module->preconfiguration)
+		{
+            if (module->preconfiguration(cf) != NGX_OK)
+			{
                 return NGX_CONF_ERROR;
             }
         }
     }
 
     /* parse inside the http{} block */
-
     cf->module_type = NGX_HTTP_MODULE;
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
     rv = ngx_conf_parse(cf, NULL);
 
-    if (rv != NGX_CONF_OK) {
+    if (rv != NGX_CONF_OK) 
+	{
         goto failed;
     }
 
-    /*
-     * init http{} main_conf's, merge the server{}s' srv_conf's
-     * and its location{}s' loc_conf's
-     */
-
+    /* init http{} main_conf's, merge the server{}s' srv_conf's and its location{}s' loc_conf's */
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
     cscfp = cmcf->servers.elts;
 
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
+    for (m = 0; ngx_modules[m]; m++) 
+	{
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
+		{
             continue;
         }
 
@@ -278,23 +272,26 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         /* init http{} main_conf's */
 
-        if (module->init_main_conf) {
+        if (module->init_main_conf) 
+		{
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
-            if (rv != NGX_CONF_OK) {
+            if (rv != NGX_CONF_OK) 
+			{
                 goto failed;
             }
         }
 
         rv = ngx_http_merge_servers(cf, cmcf, module, mi);
-        if (rv != NGX_CONF_OK) {
+        if (rv != NGX_CONF_OK) 
+		{
             goto failed;
         }
     }
 
 
     /* create location trees */
-
-    for (s = 0; s < cmcf->servers.nelts; s++) {
+    for (s = 0; s < cmcf->servers.nelts; s++) 
+	{
 
         clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
 
@@ -335,7 +332,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    if (ngx_http_variables_init_vars(cf) != NGX_OK) {
+    if (ngx_http_variables_init_vars(cf) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -347,7 +345,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     *cf = pcf;
 
 
-    if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) {
+    if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -1441,7 +1440,8 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_a
     ngx_http_conf_port_t  *port;
     ngx_http_conf_addr_t  *addr;
 
-    if (ports == NULL) {
+    if (ports == NULL) 
+	{
         return NGX_OK;
     }
 
@@ -1449,8 +1449,7 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_a
     for (p = 0; p < ports->nelts; p++)
 	{
 
-        ngx_sort(port[p].addrs.elts, (size_t) port[p].addrs.nelts,
-                 sizeof(ngx_http_conf_addr_t), ngx_http_cmp_conf_addrs);
+        ngx_sort(port[p].addrs.elts, (size_t) port[p].addrs.nelts, sizeof(ngx_http_conf_addr_t), ngx_http_cmp_conf_addrs);
 
         /*
          * check whether all name-based servers have the same
@@ -1702,11 +1701,14 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
      * implicit bindings go, and wildcard binding is in the end.
      */
 
-    if (addr[last - 1].opt.wildcard) {
+    if (addr[last - 1].opt.wildcard) 
+	{
         addr[last - 1].opt.bind = 1;
         bind_wildcard = 1;
 
-    } else {
+    } 
+	else 
+   	{
         bind_wildcard = 0;
     }
 

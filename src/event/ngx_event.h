@@ -27,7 +27,8 @@ typedef struct {
 #endif
 
 
-struct ngx_event_s {
+struct ngx_event_s 
+{
     void            *data;
 
     unsigned         write:1;

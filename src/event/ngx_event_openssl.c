@@ -1032,7 +1032,8 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c, ngx_uint_t flags)
     ngx_ssl_connection_t  *sc;
 
     sc = ngx_pcalloc(c->pool, sizeof(ngx_ssl_connection_t));
-    if (sc == NULL) {
+    if (sc == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -1043,20 +1044,24 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c, ngx_uint_t flags)
 
     sc->connection = SSL_new(ssl->ctx);
 
-    if (sc->connection == NULL) {
+    if (sc->connection == NULL)
+	{
         ngx_ssl_error(NGX_LOG_ALERT, c->log, 0, "SSL_new() failed");
         return NGX_ERROR;
     }
 
-    if (SSL_set_fd(sc->connection, c->fd) == 0) {
+    if (SSL_set_fd(sc->connection, c->fd) == 0)
+	{
         ngx_ssl_error(NGX_LOG_ALERT, c->log, 0, "SSL_set_fd() failed");
         return NGX_ERROR;
     }
 
-    if (flags & NGX_SSL_CLIENT) {
+    if (flags & NGX_SSL_CLIENT) 
+	{
         SSL_set_connect_state(sc->connection);
-
-    } else {
+    }
+	else 
+	{
         SSL_set_accept_state(sc->connection);
     }
 

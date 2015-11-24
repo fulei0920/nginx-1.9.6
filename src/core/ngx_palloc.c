@@ -326,7 +326,8 @@ ngx_pcalloc(ngx_pool_t *pool, size_t size)
     void *p;
 
     p = ngx_palloc(pool, size);
-    if (p) {
+    if (p) 
+	{
         ngx_memzero(p, size);
     }
 

@@ -165,7 +165,7 @@ typedef struct
 
 typedef struct 
 {
-    ngx_array_t                servers;         /* ngx_http_core_srv_conf_t */ 
+    ngx_array_t                servers;       	/* array of ngx_http_core_srv_conf_t* */ 
 
     ngx_http_phase_engine_t    phase_engine;
 
@@ -173,7 +173,7 @@ typedef struct
 
     ngx_hash_t                 variables_hash;
 
-    ngx_array_t                variables;       /* ngx_http_variable_t */
+    ngx_array_t                variables;       /* array of ngx_http_variable_t */
     ngx_uint_t                 ncaptures;
 
     ngx_uint_t                 server_names_hash_max_size;
@@ -182,7 +182,7 @@ typedef struct
     ngx_uint_t                 variables_hash_max_size;
     ngx_uint_t                 variables_hash_bucket_size;
 
-    ngx_hash_keys_arrays_t    *variables_keys;
+    ngx_hash_keys_arrays_t    *variables_keys;  /* 以name为key，以ngx_http_variable_t为value的表*/
 
     ngx_array_t               *ports;
 
@@ -194,11 +194,8 @@ typedef struct
 
 typedef struct 
 {
-    ngx_array_t                 server_names;  /* ngx_http_server_name_t,  "server_name" directive  */
-
-    /* server ctx */
-    ngx_http_conf_ctx_t        *ctx;
-
+    ngx_array_t                 server_names;  			/* ngx_http_server_name_t,  "server_name" directive  */
+    ngx_http_conf_ctx_t        *ctx;					/* server ctx */
     ngx_str_t                   server_name;
 
     size_t                      connection_pool_size;
@@ -282,14 +279,16 @@ typedef struct
 } ngx_http_port_t;
 
 
-typedef struct {
+typedef struct
+{
     ngx_int_t                  family;
     in_port_t                  port;
     ngx_array_t                addrs;     /* array of ngx_http_conf_addr_t */
 } ngx_http_conf_port_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_listen_opt_t      opt;
 
     ngx_hash_t                 hash;
@@ -303,7 +302,7 @@ typedef struct {
 
     /* the default server configuration for this address:port */
     ngx_http_core_srv_conf_t  *default_server;
-    ngx_array_t                servers;  /* array of ngx_http_core_srv_conf_t */
+    ngx_array_t                servers;  	/* array of ngx_http_core_srv_conf_t */
 } ngx_http_conf_addr_t;
 
 

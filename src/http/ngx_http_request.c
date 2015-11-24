@@ -228,12 +228,14 @@ ngx_http_init_connection(ngx_connection_t *c)
          * is required to determine a server address
          */
 
-        if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK) {
+        if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK)
+		{
             ngx_http_close_connection(c);
             return;
         }
 
-        switch (c->local_sockaddr->sa_family) {
+        switch (c->local_sockaddr->sa_family) 
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
@@ -315,35 +317,34 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->write->handler = ngx_http_empty_handler;
 
 #if (NGX_HTTP_V2)
-    if (hc->addr_conf->http2) {
+    if (hc->addr_conf->http2)
+	{
         rev->handler = ngx_http_v2_init;
     }
 #endif
 
 #if (NGX_HTTP_SSL)
     {
-    ngx_http_ssl_srv_conf_t  *sscf;
+    	ngx_http_ssl_srv_conf_t  *sscf;
 
-    sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
+    	sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
 
-    if (sscf->enable || hc->addr_conf->ssl)
-	{
-
-        c->log->action = "SSL handshaking";
-
-        if (hc->addr_conf->ssl && sscf->ssl.ctx == NULL) 
+		if (sscf->enable || hc->addr_conf->ssl)
 		{
-            ngx_log_error(NGX_LOG_ERR, c->log, 0,
-                          "no \"ssl_certificate\" is defined "
-                          "in server listening on SSL port");
-            ngx_http_close_connection(c);
-            return;
-        }
 
-        hc->ssl = 1;
+			c->log->action = "SSL handshaking";
 
-        rev->handler = ngx_http_ssl_handshake;
-    }
+			if (hc->addr_conf->ssl && sscf->ssl.ctx == NULL) 
+			{
+				ngx_log_error(NGX_LOG_ERR, c->log, 0, "no \"ssl_certificate\" is defined in server listening on SSL port");
+				ngx_http_close_connection(c);
+				return;
+			}
+
+			hc->ssl = 1;
+
+			rev->handler = ngx_http_ssl_handshake;
+		}
     }
 #endif
 
@@ -352,7 +353,8 @@ ngx_http_init_connection(ngx_connection_t *c)
         c->log->action = "reading PROXY protocol";
     }
 
-    if (rev->ready) {
+    if (rev->ready)
+	{
         /* the deferred accept(), iocp */
 
         if (ngx_use_accept_mutex) {
@@ -632,8 +634,7 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
     c = rev->data;
     hc = c->data;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0,
-                   "http check ssl handshake");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http check ssl handshake");
 
     if (rev->timedout) {
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");

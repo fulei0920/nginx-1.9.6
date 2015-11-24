@@ -270,7 +270,8 @@ ngx_module_t  ngx_http_ssl_module =
 };
 
 
-static ngx_http_variable_t  ngx_http_ssl_vars[] = {
+static ngx_http_variable_t  ngx_http_ssl_vars[] = 
+{
 
     { ngx_string("ssl_protocol"), NULL, ngx_http_ssl_static_variable,
       (uintptr_t) ngx_ssl_get_protocol, NGX_HTTP_VAR_CHANGEABLE, 0 },
@@ -481,9 +482,11 @@ ngx_http_ssl_add_variables(ngx_conf_t *cf)
 {
     ngx_http_variable_t  *var, *v;
 
-    for (v = ngx_http_ssl_vars; v->name.len; v++) {
+    for (v = ngx_http_ssl_vars; v->name.len; v++)
+	{
         var = ngx_http_add_variable(cf, &v->name, v->flags);
-        if (var == NULL) {
+        if (var == NULL) 
+		{
             return NGX_ERROR;
         }
 

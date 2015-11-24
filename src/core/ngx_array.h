@@ -15,7 +15,7 @@
 
 typedef struct 
 {
-    void        *elts;
+    void        *elts;		//数组的起始地址
     ngx_uint_t   nelts;		//数组当前元素的个数
     size_t       size;		//数组中每个元素的大小
     ngx_uint_t   nalloc;  	//数组能够容纳的最多的元素个数
