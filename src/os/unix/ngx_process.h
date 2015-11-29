@@ -19,12 +19,14 @@ typedef pid_t       ngx_pid_t;
 
 typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
 
-typedef struct {
-    ngx_pid_t           pid;
+/*描述子进程的信息*/
+typedef struct 
+{
+    ngx_pid_t           pid;			/*进程pid*/
     int                 status;
-    ngx_socket_t        channel[2];
+    ngx_socket_t        channel[2];  	/*套接字对*/
 
-    ngx_spawn_proc_pt   proc;
+    ngx_spawn_proc_pt   proc;   		/*进程执行的函数*/
     void               *data;
     char               *name;
 

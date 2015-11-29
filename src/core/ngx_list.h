@@ -18,16 +18,16 @@ typedef struct ngx_list_part_s  ngx_list_part_t;
 struct ngx_list_part_s 
 {
     void             *elts;		
-    ngx_uint_t        nelts;	//节点中所包含的元素个数
-    ngx_list_part_t  *next;  	//指向下一个节点
+    ngx_uint_t        nelts;	/*节点中所包含的元素个数*/
+    ngx_list_part_t  *next;  	/*指向下一个节点*/
 };
 
 
 typedef struct
 {
     ngx_list_part_t  *last;
-    ngx_list_part_t   part;  //链表的第一个节点(至少有一个节点)
-    size_t            size;
+    ngx_list_part_t   part;  	/*链表的第一个节点(至少有一个节点)*/
+    size_t            size;		/*每个元素的大小*/
     ngx_uint_t        nalloc;
     ngx_pool_t       *pool;
 } ngx_list_t;
@@ -39,7 +39,8 @@ static ngx_inline ngx_int_t
 ngx_list_init(ngx_list_t *list, ngx_pool_t *pool, ngx_uint_t n, size_t size)
 {
     list->part.elts = ngx_palloc(pool, n * size);
-    if (list->part.elts == NULL) {
+    if (list->part.elts == NULL)
+	{
         return NGX_ERROR;
     }
 

@@ -2674,14 +2674,13 @@ ngx_http_fastcgi_create_main_conf(ngx_conf_t *cf)
     ngx_http_fastcgi_main_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_fastcgi_main_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 
 #if (NGX_HTTP_CACHE)
-    if (ngx_array_init(&conf->caches, cf->pool, 4,
-                       sizeof(ngx_http_file_cache_t *))
-        != NGX_OK)
+    if (ngx_array_init(&conf->caches, cf->pool, 4, sizeof(ngx_http_file_cache_t *)) != NGX_OK)
     {
         return NULL;
     }

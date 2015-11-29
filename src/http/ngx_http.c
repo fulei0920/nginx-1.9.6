@@ -61,7 +61,7 @@ static ngx_int_t ngx_http_add_addrs6(ngx_conf_t *cf, ngx_http_port_t *hport,
     ngx_http_conf_addr_t *addr);
 #endif
 
-ngx_uint_t   ngx_http_max_module;
+ngx_uint_t   ngx_http_max_module;  /*NGX_HTTP_MODULE类型模块数目*/
 
 
 ngx_http_output_header_filter_pt  ngx_http_top_header_filter;
@@ -80,11 +80,11 @@ static ngx_command_t  ngx_http_commands[] =
 
     {
 		ngx_string("http"),
-      NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_http_block,
-      0,
-      0,
-      NULL 
+		NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+		ngx_http_block,
+		0,
+		0,
+		NULL 
     },
 
       ngx_null_command
@@ -271,7 +271,6 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         mi = ngx_modules[m]->ctx_index;
 
         /* init http{} main_conf's */
-
         if (module->init_main_conf) 
 		{
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
@@ -352,7 +351,6 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* optimize the lists of ports, addresses and server names */
-
     if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK)
 	{
         return NGX_CONF_ERROR;
@@ -568,8 +566,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
 
 static char *
-ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
-    ngx_http_module_t *module, ngx_uint_t ctx_index)
+ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http_module_t *module, ngx_uint_t ctx_index)
 {
     char                        *rv;
     ngx_uint_t                   s;
@@ -582,21 +579,23 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
     saved = *ctx;
     rv = NGX_CONF_OK;
 
-    for (s = 0; s < cmcf->servers.nelts; s++) {
+    for (s = 0; s < cmcf->servers.nelts; s++) 
+	{
 
         /* merge the server{}s' srv_conf's */
-
         ctx->srv_conf = cscfp[s]->ctx->srv_conf;
 
-        if (module->merge_srv_conf) {
-            rv = module->merge_srv_conf(cf, saved.srv_conf[ctx_index],
-                                        cscfp[s]->ctx->srv_conf[ctx_index]);
-            if (rv != NGX_CONF_OK) {
+        if (module->merge_srv_conf) 
+		{
+            rv = module->merge_srv_conf(cf, saved.srv_conf[ctx_index], cscfp[s]->ctx->srv_conf[ctx_index]);
+            if (rv != NGX_CONF_OK)
+			{
                 goto failed;
             }
         }
 
-        if (module->merge_loc_conf) {
+        if (module->merge_loc_conf) 
+		{
 
             /* merge the server{}'s loc_conf */
 
@@ -850,15 +849,15 @@ ngx_http_init_static_location_trees(ngx_conf_t *cf,
 
 
 ngx_int_t
-ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
-    ngx_http_core_loc_conf_t *clcf)
+ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations, ngx_http_core_loc_conf_t *clcf)
 {
     ngx_http_location_queue_t  *lq;
 
-    if (*locations == NULL) {
-        *locations = ngx_palloc(cf->temp_pool,
-                                sizeof(ngx_http_location_queue_t));
-        if (*locations == NULL) {
+    if (*locations == NULL) 
+	{
+        *locations = ngx_palloc(cf->temp_pool, sizeof(ngx_http_location_queue_t));
+        if (*locations == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -866,7 +865,8 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
     }
 
     lq = ngx_palloc(cf->temp_pool, sizeof(ngx_http_location_queue_t));
-    if (lq == NULL) {
+    if (lq == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -879,7 +879,9 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations,
         lq->exact = clcf;
         lq->inclusive = NULL;
 
-    } else {
+    }
+	else 
+   	{
         lq->exact = NULL;
         lq->inclusive = clcf;
     }
@@ -1148,8 +1150,7 @@ inclusive:
 
 
 ngx_int_t
-ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_listen_opt_t *lsopt)
+ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_listen_opt_t *lsopt)
 {
     in_port_t                   p;
     ngx_uint_t                  i;
@@ -1161,19 +1162,21 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     struct sockaddr_in6        *sin6;
 #endif
 
+	/*若端口存储空间未分配，则分配*/
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
-
-    if (cmcf->ports == NULL) {
-        cmcf->ports = ngx_array_create(cf->temp_pool, 2,
-                                       sizeof(ngx_http_conf_port_t));
-        if (cmcf->ports == NULL) {
+    if (cmcf->ports == NULL) 
+	{
+        cmcf->ports = ngx_array_create(cf->temp_pool, 2, sizeof(ngx_http_conf_port_t));
+        if (cmcf->ports == NULL) 
+		{
             return NGX_ERROR;
         }
     }
 
+	/*获取端口*/
     sa = &lsopt->u.sockaddr;
-
-    switch (sa->sa_family) {
+    switch (sa->sa_family)
+	{
 
 #if (NGX_HAVE_INET6)
     case AF_INET6:
@@ -1194,22 +1197,23 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
         break;
     }
 
+	/*查看该端口是否已经存在列表中*/
     port = cmcf->ports->elts;
-    for (i = 0; i < cmcf->ports->nelts; i++) {
-
-        if (p != port[i].port || sa->sa_family != port[i].family) {
+    for (i = 0; i < cmcf->ports->nelts; i++)
+	{
+        if (p != port[i].port || sa->sa_family != port[i].family)
+		{
             continue;
         }
 
         /* a port is already in the port list */
-
         return ngx_http_add_addresses(cf, cscf, &port[i], lsopt);
     }
 
     /* add a port to the port list */
-
     port = ngx_array_push(cmcf->ports);
-    if (port == NULL) {
+    if (port == NULL)
+	{
         return NGX_ERROR;
     }
 
@@ -1222,8 +1226,7 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
 
 static ngx_int_t
-ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
+ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
 {
     u_char                *p;
     size_t                 len, off;
@@ -1247,7 +1250,8 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
     sa = &lsopt->u.sockaddr;
 
-    switch (sa->sa_family) {
+    switch (sa->sa_family) 
+	{
 
 #if (NGX_HAVE_INET6)
     case AF_INET6:
@@ -1273,7 +1277,8 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
     addr = port->addrs.elts;
 
-    for (i = 0; i < port->addrs.nelts; i++) {
+    for (i = 0; i < port->addrs.nelts; i++) 
+	{
 
         if (ngx_memcmp(p, addr[i].opt.u.sockaddr_data + off, len) != 0) {
             continue;
@@ -1344,17 +1349,14 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
  * add the server address, the server names and the server core module
  * configurations to the port list
  */
-
 static ngx_int_t
-ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
+ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port, ngx_http_listen_opt_t *lsopt)
 {
     ngx_http_conf_addr_t  *addr;
 
-    if (port->addrs.elts == NULL) {
-        if (ngx_array_init(&port->addrs, cf->temp_pool, 4,
-                           sizeof(ngx_http_conf_addr_t))
-            != NGX_OK)
+    if (port->addrs.elts == NULL) 
+	{
+        if (ngx_array_init(&port->addrs, cf->temp_pool, 4, sizeof(ngx_http_conf_addr_t)) != NGX_OK)
         {
             return NGX_ERROR;
         }
@@ -1364,7 +1366,8 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
      && !defined TLSEXT_TYPE_application_layer_protocol_negotiation           \
      && !defined TLSEXT_TYPE_next_proto_neg)
 
-    if (lsopt->http2 && lsopt->ssl) {
+    if (lsopt->http2 && lsopt->ssl)
+	{
         ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
                            "nginx was built with OpenSSL that lacks ALPN "
                            "and NPN support, HTTP/2 is not enabled for %s",
@@ -1374,7 +1377,8 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 #endif
 
     addr = ngx_array_push(&port->addrs);
-    if (addr == NULL) {
+    if (addr == NULL)
+	{
         return NGX_ERROR;
     }
 
@@ -1397,33 +1401,36 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 /* add the server core module configuration to the address:port */
 
 static ngx_int_t
-ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_conf_addr_t *addr)
+ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_conf_addr_t *addr)
 {
     ngx_uint_t                  i;
     ngx_http_core_srv_conf_t  **server;
 
-    if (addr->servers.elts == NULL) {
-        if (ngx_array_init(&addr->servers, cf->temp_pool, 4,
-                           sizeof(ngx_http_core_srv_conf_t *))
+    if (addr->servers.elts == NULL) 
+	{
+        if (ngx_array_init(&addr->servers, cf->temp_pool, 4, sizeof(ngx_http_core_srv_conf_t *))
             != NGX_OK)
         {
             return NGX_ERROR;
         }
 
-    } else {
+    } 
+	else
+	{
         server = addr->servers.elts;
-        for (i = 0; i < addr->servers.nelts; i++) {
-            if (server[i] == cscf) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "a duplicate listen %s", addr->opt.addr);
+        for (i = 0; i < addr->servers.nelts; i++) 
+		{
+            if (server[i] == cscf)
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "a duplicate listen %s", addr->opt.addr);
                 return NGX_ERROR;
             }
         }
     }
 
     server = ngx_array_push(&addr->servers);
-    if (server == NULL) {
+    if (server == NULL)
+	{
         return NGX_ERROR;
     }
 

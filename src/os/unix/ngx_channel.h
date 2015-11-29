@@ -14,7 +14,8 @@
 #include <ngx_event.h>
 
 
-typedef struct {
+typedef struct 
+{
      ngx_uint_t  command;
      ngx_pid_t   pid;
      ngx_int_t   slot;

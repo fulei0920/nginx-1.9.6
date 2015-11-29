@@ -74,13 +74,14 @@ typedef struct {
 } ngx_addr_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                 url;
     ngx_str_t                 host;
-    ngx_str_t                 port_text;
+    ngx_str_t                 port_text;  	/*端口字符串表示*/
     ngx_str_t                 uri;
 
-    in_port_t                 port;
+    in_port_t                 port;			/*端口(主机字节序)*/
     in_port_t                 default_port;
     int                       family;
 

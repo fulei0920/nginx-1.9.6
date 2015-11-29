@@ -14,21 +14,20 @@
 
 
 typedef struct ngx_listening_s  ngx_listening_t;
-
+/*
+描述一个监听套接字
+*/
 struct ngx_listening_s 
 {
-    ngx_socket_t        fd;					/* 文件描述符,即socket */  
-
+    ngx_socket_t        fd;			/* 文件描述符,即socket */  
     struct sockaddr    *sockaddr;
     socklen_t           socklen;    		/* size of sockaddr */
     size_t              addr_text_max_len;
     ngx_str_t           addr_text;
-
-    int                 type;
-
+    int                 type;		/*指定socket类型*/	
     int                 backlog;
-    int                 rcvbuf;				/* 接收缓冲区 */  
-    int                 sndbuf;				/* 发送缓冲区 */  
+    int                 rcvbuf;				/*接收缓冲区大小*/  
+    int                 sndbuf;				/*发送缓冲区大小*/  
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
     int                 keepidle;
     int                 keepintvl;
@@ -39,7 +38,6 @@ struct ngx_listening_s
     ngx_connection_handler_pt   handler;
 
     void               *servers;  /* array of ngx_http_in_addr_t, for example */
-
     ngx_log_t           log;
     ngx_log_t          *logp;
 
@@ -128,7 +126,7 @@ struct ngx_connection_s
     ngx_event_t        *read;
     ngx_event_t        *write;
 
-    ngx_socket_t        fd;
+    ngx_socket_t        fd;    /*该连接对应的描述符*/
 
     ngx_recv_pt         recv;
     ngx_send_pt         send;

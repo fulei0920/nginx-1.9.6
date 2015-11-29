@@ -57,8 +57,10 @@ typedef struct ngx_http_location_tree_node_s  ngx_http_location_tree_node_t;
 typedef struct ngx_http_core_loc_conf_s  ngx_http_core_loc_conf_t;
 
 
-typedef struct {
-    union {
+typedef struct 
+{
+    union 
+	{
         struct sockaddr        sockaddr;
         struct sockaddr_in     sockaddr_in;
 #if (NGX_HAVE_INET6)
@@ -112,7 +114,7 @@ typedef struct {
 #if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
     ngx_uint_t                 deferred_accept;
 #endif
-
+	/*ip地址和端口的字符串表示 -- "192.18.1.2:80"*/
     u_char                     addr[NGX_SOCKADDR_STRLEN + 1];
 } ngx_http_listen_opt_t;
 
@@ -165,7 +167,7 @@ typedef struct
 
 typedef struct 
 {
-    ngx_array_t                servers;       	/* array of ngx_http_core_srv_conf_t* */ 
+    ngx_array_t                servers;       	/* array of (ngx_http_core_srv_conf_t*) */ 
 
     ngx_http_phase_engine_t    phase_engine;
 
@@ -184,7 +186,7 @@ typedef struct
 
     ngx_hash_keys_arrays_t    *variables_keys;  /* 以name为key，以ngx_http_variable_t为value的表*/
 
-    ngx_array_t               *ports;
+    ngx_array_t               *ports;			/* array of ngx_http_conf_port_t */
 
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
 
@@ -222,7 +224,8 @@ typedef struct
 /* list of structures to find core_srv_conf quickly at run time */
 
 
-typedef struct {
+typedef struct
+{
 #if (NGX_PCRE)
     ngx_http_regex_t          *regex;
 #endif
@@ -282,8 +285,8 @@ typedef struct
 typedef struct
 {
     ngx_int_t                  family;
-    in_port_t                  port;
-    ngx_array_t                addrs;     /* array of ngx_http_conf_addr_t */
+    in_port_t                  port;		/*端口号(网络字节序)*/
+    ngx_array_t                addrs;     	/* array of ngx_http_conf_addr_t */
 } ngx_http_conf_port_t;
 
 
@@ -302,7 +305,7 @@ typedef struct
 
     /* the default server configuration for this address:port */
     ngx_http_core_srv_conf_t  *default_server;
-    ngx_array_t                servers;  	/* array of ngx_http_core_srv_conf_t */
+    ngx_array_t                servers;  	/* array of (ngx_http_core_srv_conf_t*) */
 } ngx_http_conf_addr_t;
 
 
@@ -327,7 +330,6 @@ typedef struct {
 struct ngx_http_core_loc_conf_s 
 {
     ngx_str_t     name;          /* location name */
-
 #if (NGX_PCRE)
     ngx_http_regex_t  *regex;
 #endif
@@ -352,8 +354,8 @@ struct ngx_http_core_loc_conf_s
     ngx_http_core_loc_conf_t       **regex_locations;
 #endif
 
-    /* pointer to the modules' loc_conf */
-    void        **loc_conf;
+    
+    void        **loc_conf;	/* pointer to the modules' loc_conf */
 
     uint32_t      limit_except;
     void        **limit_except_loc_conf;
@@ -367,10 +369,15 @@ struct ngx_http_core_loc_conf_s
 
     ngx_array_t  *root_lengths;
     ngx_array_t  *root_values;
-
-    ngx_array_t  *types;
+	/* array of ngx_hash_key_t 
+	[config] text/html   html htm shtml;
+	[result] key -- html value -- text/html 
+	[result] key -- htm value -- text/html
+	[result] key -- shtml value -- text/html
+	*/
+    ngx_array_t  *types;       			
     ngx_hash_t    types_hash;
-    ngx_str_t     default_type;
+    ngx_str_t     default_type;   /*[config]defatult_type  application/octet-stream*/
 
     off_t         client_max_body_size;    /* client_max_body_size */
     off_t         directio;                /* directio */
@@ -459,7 +466,7 @@ struct ngx_http_core_loc_conf_s
     ngx_uint_t    types_hash_max_size;
     ngx_uint_t    types_hash_bucket_size;
 
-    ngx_queue_t  *locations;
+    ngx_queue_t  *locations;   			/* ngx_http_location_queue_t */
 
 #if 0
     ngx_http_core_loc_conf_t  *prev_location;
@@ -467,7 +474,8 @@ struct ngx_http_core_loc_conf_s
 };
 
 
-typedef struct {
+typedef struct
+{
     ngx_queue_t                      queue;
     ngx_http_core_loc_conf_t        *exact;
     ngx_http_core_loc_conf_t        *inclusive;

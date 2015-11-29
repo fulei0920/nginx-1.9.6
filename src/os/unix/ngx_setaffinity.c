@@ -31,11 +31,9 @@ ngx_setaffinity(uint64_t cpu_affinity, ngx_log_t *log)
         cpu_affinity >>= 1;
     } while (cpu_affinity);
 
-    if (cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1,
-                           sizeof(cpuset_t), &mask) == -1)
+    if (cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof(cpuset_t), &mask) == -1)
     {
-        ngx_log_error(NGX_LOG_ALERT, log, ngx_errno,
-                      "cpuset_setaffinity() failed");
+        ngx_log_error(NGX_LOG_ALERT, log, ngx_errno, "cpuset_setaffinity() failed");
     }
 }
 

@@ -31,42 +31,53 @@ static ngx_conf_enum_t  ngx_debug_points[] = {
 };
 
 
-static ngx_command_t  ngx_core_commands[] = {
+static ngx_command_t  ngx_core_commands[] = 
+{
 
-    { ngx_string("daemon"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      0,
-      offsetof(ngx_core_conf_t, daemon),
-      NULL },
+    {
+		ngx_string("daemon"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		0,
+		offsetof(ngx_core_conf_t, daemon),
+		NULL 
+    },
 
-    { ngx_string("master_process"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      0,
-      offsetof(ngx_core_conf_t, master),
-      NULL },
+    { 
+		ngx_string("master_process"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		0,
+		offsetof(ngx_core_conf_t, master),
+		NULL 
+    },
 
-    { ngx_string("timer_resolution"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_msec_slot,
-      0,
-      offsetof(ngx_core_conf_t, timer_resolution),
-      NULL },
+	{ 
+		ngx_string("timer_resolution"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_msec_slot,
+		0,
+		offsetof(ngx_core_conf_t, timer_resolution),
+		NULL 
+	},
 
-    { ngx_string("pid"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      0,
-      offsetof(ngx_core_conf_t, pid),
-      NULL },
+	{ 
+		ngx_string("pid"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		0,
+		offsetof(ngx_core_conf_t, pid),
+		NULL 
+	},
 
-    { ngx_string("lock_file"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      0,
-      offsetof(ngx_core_conf_t, lock_file),
-      NULL },
+	{ 
+		ngx_string("lock_file"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		0,
+		offsetof(ngx_core_conf_t, lock_file),
+		NULL 
+    },
 
     { 
     	ngx_string("worker_processes"),
@@ -84,12 +95,14 @@ static ngx_command_t  ngx_core_commands[] = {
       offsetof(ngx_core_conf_t, debug_points),
       &ngx_debug_points },
 
-    { ngx_string("user"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE12,
-      ngx_set_user,
-      0,
-      0,
-      NULL },
+    { 
+		ngx_string("user"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE12,
+		ngx_set_user,
+		0,
+		0,
+		NULL 
+     },
 
     { ngx_string("worker_priority"),
       NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -119,12 +132,14 @@ static ngx_command_t  ngx_core_commands[] = {
       offsetof(ngx_core_conf_t, rlimit_core),
       NULL },
 
-    { ngx_string("working_directory"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      0,
-      offsetof(ngx_core_conf_t, working_directory),
-      NULL },
+    { 
+		ngx_string("working_directory"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		0,
+		offsetof(ngx_core_conf_t, working_directory),
+		NULL 
+	},
 
     { ngx_string("env"),
       NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -212,8 +227,8 @@ main(int argc, char *const *argv)
 	ngx_max_sockets = -1;
 
     ngx_time_init();
-//Nginx中的pcre主要是用来支持URL Rewrite的，
-//URL Rewrite主要是为了满足代理模式下，对请求访问的URL地址进行rewrite操作，来实现定向访问。
+	//Nginx中的pcre主要是用来支持URL Rewrite的，
+	//URL Rewrite主要是为了满足代理模式下，对请求访问的URL地址进行rewrite操作，来实现定向访问。
 #if (NGX_PCRE)
     ngx_regex_init();
 #endif
@@ -260,10 +275,7 @@ main(int argc, char *const *argv)
         return 1;
     }
 
-    /*
-     * ngx_crc32_table_init() requires ngx_cacheline_size set in ngx_os_init()
-     */
-
+     //ngx_crc32_table_init() requires ngx_cacheline_size set in ngx_os_init()
     if (ngx_crc32_table_init() != NGX_OK) 
 	{
         return 1;
@@ -336,8 +348,9 @@ main(int argc, char *const *argv)
     }
 
 #if !(NGX_WIN32)
-
-    if (ngx_init_signals(cycle->log) != NGX_OK) {
+	/*设置信号处理函数*/
+    if (ngx_init_signals(cycle->log) != NGX_OK)
+	{
         return 1;
     }
 
@@ -356,18 +369,21 @@ main(int argc, char *const *argv)
 
 #endif
 
-    if (ngx_create_pidfile(&ccf->pid, cycle->log) != NGX_OK) {
+    if (ngx_create_pidfile(&ccf->pid, cycle->log) != NGX_OK) 
+	{
         return 1;
     }
 
-    if (ngx_log_redirect_stderr(cycle) != NGX_OK) {
+    if (ngx_log_redirect_stderr(cycle) != NGX_OK)
+	{
         return 1;
     }
 
-    if (log->file->fd != ngx_stderr) {
-        if (ngx_close_file(log->file->fd) == NGX_FILE_ERROR) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          ngx_close_file_n " built-in log failed");
+    if (log->file->fd != ngx_stderr) 
+	{
+        if (ngx_close_file(log->file->fd) == NGX_FILE_ERROR)
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, ngx_close_file_n " built-in log failed");
         }
     }
 
@@ -1052,58 +1068,56 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
 {
     ngx_core_conf_t  *ccf = conf;
 
+	/*若没有设置，则设置为默认值*/
     ngx_conf_init_value(ccf->daemon, 1);
     ngx_conf_init_value(ccf->master, 1);
     ngx_conf_init_msec_value(ccf->timer_resolution, 0);
-
     ngx_conf_init_value(ccf->worker_processes, 1);
     ngx_conf_init_value(ccf->debug_points, 0);
 
 #if (NGX_HAVE_CPU_AFFINITY)
 
-    if (ccf->cpu_affinity_n
-        && ccf->cpu_affinity_n != 1
-        && ccf->cpu_affinity_n != (ngx_uint_t) ccf->worker_processes)
+    if (ccf->cpu_affinity_n && ccf->cpu_affinity_n != 1 
+		&& ccf->cpu_affinity_n != (ngx_uint_t) ccf->worker_processes)
     {
-        ngx_log_error(NGX_LOG_WARN, cycle->log, 0,
-                      "the number of \"worker_processes\" is not equal to "
-                      "the number of \"worker_cpu_affinity\" masks, "
-                      "using last mask for remaining worker processes");
+        ngx_log_error(NGX_LOG_WARN, cycle->log, 0, the number of \"worker_processes\" is not equal to "
+			"the number of \"worker_cpu_affinity\" masks, using last mask for remaining worker processes");
     }
 
 #endif
 
 
-    if (ccf->pid.len == 0) {
+    if (ccf->pid.len == 0) 
+	{
         ngx_str_set(&ccf->pid, NGX_PID_PATH);
     }
-
-    if (ngx_conf_full_name(cycle, &ccf->pid, 0) != NGX_OK) {
+    if (ngx_conf_full_name(cycle, &ccf->pid, 0) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 
     ccf->oldpid.len = ccf->pid.len + sizeof(NGX_OLDPID_EXT);
 
     ccf->oldpid.data = ngx_pnalloc(cycle->pool, ccf->oldpid.len);
-    if (ccf->oldpid.data == NULL) {
+    if (ccf->oldpid.data == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
-
-    ngx_memcpy(ngx_cpymem(ccf->oldpid.data, ccf->pid.data, ccf->pid.len),
-               NGX_OLDPID_EXT, sizeof(NGX_OLDPID_EXT));
+    ngx_memcpy(ngx_cpymem(ccf->oldpid.data, ccf->pid.data, ccf->pid.len), NGX_OLDPID_EXT, sizeof(NGX_OLDPID_EXT));
 
 
 #if !(NGX_WIN32)
 
-    if (ccf->user == (uid_t) NGX_CONF_UNSET_UINT && geteuid() == 0) {
+    if (ccf->user == (uid_t) NGX_CONF_UNSET_UINT && geteuid() == 0)
+	{
         struct group   *grp;
         struct passwd  *pwd;
 
         ngx_set_errno(0);
         pwd = getpwnam(NGX_USER);
-        if (pwd == NULL) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "getpwnam(\"" NGX_USER "\") failed");
+        if (pwd == NULL)
+		{
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, "getpwnam(\"" NGX_USER "\") failed");
             return NGX_CONF_ERROR;
         }
 
@@ -1112,9 +1126,9 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
 
         ngx_set_errno(0);
         grp = getgrnam(NGX_GROUP);
-        if (grp == NULL) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "getgrnam(\"" NGX_GROUP "\") failed");
+        if (grp == NULL) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, "getgrnam(\"" NGX_GROUP "\") failed");
             return NGX_CONF_ERROR;
         }
 
@@ -1122,11 +1136,12 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
     }
 
 
-    if (ccf->lock_file.len == 0) {
+    if (ccf->lock_file.len == 0)
+	{
         ngx_str_set(&ccf->lock_file, NGX_LOCK_PATH);
     }
-
-    if (ngx_conf_full_name(cycle, &ccf->lock_file, 0) != NGX_OK) {
+    if (ngx_conf_full_name(cycle, &ccf->lock_file, 0) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -1135,15 +1150,13 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
 
     lock_file = cycle->old_cycle->lock_file;
 
-    if (lock_file.len) {
+    if (lock_file.len) 
+	{
         lock_file.len--;
 
-        if (ccf->lock_file.len != lock_file.len
-            || ngx_strncmp(ccf->lock_file.data, lock_file.data, lock_file.len)
-               != 0)
+        if (ccf->lock_file.len != lock_file.len || ngx_strncmp(ccf->lock_file.data, lock_file.data, lock_file.len) != 0)
         {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-                          "\"lock_file\" could not be changed, ignored");
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "\"lock_file\" could not be changed, ignored");
         }
 
         cycle->lock_file.len = lock_file.len + 1;
@@ -1154,17 +1167,18 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
             return NGX_CONF_ERROR;
         }
 
-    } else {
+    }
+	else 
+	{
         cycle->lock_file.len = ccf->lock_file.len + 1;
-        cycle->lock_file.data = ngx_pnalloc(cycle->pool,
-                                      ccf->lock_file.len + sizeof(".accept"));
-        if (cycle->lock_file.data == NULL) {
+        cycle->lock_file.data = ngx_pnalloc(cycle->pool, ccf->lock_file.len + sizeof(".accept"));
+        if (cycle->lock_file.data == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
 
-        ngx_memcpy(ngx_cpymem(cycle->lock_file.data, ccf->lock_file.data,
-                              ccf->lock_file.len),
-                   ".accept", sizeof(".accept"));
+        ngx_memcpy(ngx_cpymem(cycle->lock_file.data, ccf->lock_file.data, 
+			ccf->lock_file.len), ".accept", sizeof(".accept"));
     }
     }
 
@@ -1417,7 +1431,8 @@ ngx_get_cpu_affinity(ngx_uint_t n)
         return 0;
     }
 
-    if (ccf->cpu_affinity_n > n) {
+    if (ccf->cpu_affinity_n > n)
+	{
         return ccf->cpu_affinity[n];
     }
 

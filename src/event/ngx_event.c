@@ -40,8 +40,8 @@ sig_atomic_t          ngx_event_timer_alarm;
 
 static ngx_uint_t     ngx_event_max_module;   	/*NGX_EVENT_MODULE类型模块的总个数*/
 
-ngx_uint_t            ngx_event_flags;
-ngx_event_actions_t   ngx_event_actions;
+ngx_uint_t            ngx_event_flags;   		/*由实际使用的io复用机制设置的标志*/
+ngx_event_actions_t   ngx_event_actions;		/*实际使用的io复用机制的action方法*/
 
 
 static ngx_atomic_t   connection_counter = 1;
@@ -131,12 +131,14 @@ static ngx_command_t  ngx_event_core_commands[] =
       0,
       NULL },
 
-    { ngx_string("use"),
-      NGX_EVENT_CONF|NGX_CONF_TAKE1,
-      ngx_event_use,
-      0,
-      0,
-      NULL },
+    { 
+		ngx_string("use"),
+		NGX_EVENT_CONF|NGX_CONF_TAKE1,
+		ngx_event_use,
+		0,
+		0,
+		NULL 
+    },
 
     { ngx_string("multi_accept"),
       NGX_EVENT_CONF|NGX_CONF_FLAG,
@@ -418,9 +420,9 @@ ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 static char *
 ngx_event_init_conf(ngx_cycle_t *cycle, void *conf)
 {
-    if (ngx_get_conf(cycle->conf_ctx, ngx_events_module) == NULL) {
-        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-                      "no \"events\" section in configuration");
+    if (ngx_get_conf(cycle->conf_ctx, ngx_events_module) == NULL) 
+	{
+        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "no \"events\" section in configuration");
         return NGX_CONF_ERROR;
     }
 
@@ -444,8 +446,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
 
     if (!ngx_test_config && ngx_process <= NGX_PROCESS_MASTER) 
 	{
-        ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
-                      "using the \"%s\" event method", ecf->name);
+        ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "using the \"%s\" event method", ecf->name);
     }
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
@@ -457,33 +458,28 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     ngx_int_t      limit;
     struct rlimit  rlmt;
 
-    if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                      "getrlimit(RLIMIT_NOFILE) failed, ignored");
-
-    } else {
-        if (ecf->connections > (ngx_uint_t) rlmt.rlim_cur
-            && (ccf->rlimit_nofile == NGX_CONF_UNSET
-                || ecf->connections > (ngx_uint_t) ccf->rlimit_nofile))
+    if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "getrlimit(RLIMIT_NOFILE) failed, ignored");
+    } 
+	else
+	{
+        if (ecf->connections > (ngx_uint_t)rlmt.rlim_cur && (ccf->rlimit_nofile == NGX_CONF_UNSET || ecf->connections > (ngx_uint_t) ccf->rlimit_nofile))
         {
-            limit = (ccf->rlimit_nofile == NGX_CONF_UNSET) ?
-                         (ngx_int_t) rlmt.rlim_cur : ccf->rlimit_nofile;
-
-            ngx_log_error(NGX_LOG_WARN, cycle->log, 0,
-                          "%ui worker_connections exceed "
-                          "open file resource limit: %i",
-                          ecf->connections, limit);
+            limit = (ccf->rlimit_nofile == NGX_CONF_UNSET) ? (ngx_int_t) rlmt.rlim_cur : ccf->rlimit_nofile;
+            ngx_log_error(NGX_LOG_WARN, cycle->log, 0, "%ui worker_connections exceed open file resource limit: %i", ecf->connections, limit);
         }
     }
     }
 #endif /* !(NGX_WIN32) */
 
-
-    if (ccf->master == 0) {
+    if (ccf->master == 0) 
+	{
         return NGX_OK;
     }
 
-    if (ngx_accept_mutex_ptr) {
+    if (ngx_accept_mutex_ptr) 
+	{
         return NGX_OK;
     }
 
@@ -513,7 +509,8 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     shm.name.data = (u_char *) "nginx_shared_zone";
     shm.log = cycle->log;
 
-    if (ngx_shm_alloc(&shm) != NGX_OK) {
+    if (ngx_shm_alloc(&shm) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -522,9 +519,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     ngx_accept_mutex_ptr = (ngx_atomic_t *) shared;
     ngx_accept_mutex.spin = (ngx_uint_t) -1;
 
-    if (ngx_shmtx_create(&ngx_accept_mutex, (ngx_shmtx_sh_t *) shared,
-                         cycle->lock_file.data)
-        != NGX_OK)
+    if (ngx_shmtx_create(&ngx_accept_mutex, (ngx_shmtx_sh_t *) shared, cycle->lock_file.data) != NGX_OK)
     {
         return NGX_ERROR;
     }
@@ -533,9 +528,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
 
     (void) ngx_atomic_cmp_set(ngx_connection_counter, 0, 1);
 
-    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                   "counter: %p, %d",
-                   ngx_connection_counter, *ngx_connection_counter);
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "counter: %p, %d", ngx_connection_counter, *ngx_connection_counter);
 
     ngx_temp_number = (ngx_atomic_t *) (shared + 2 * cl);
 
@@ -588,12 +581,15 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
 
-    if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
+    if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex)
+	{
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
         ngx_accept_mutex_delay = ecf->accept_mutex_delay;
 
-    } else {
+    } 
+	else 
+	{
         ngx_use_accept_mutex = 0;
     }
 
@@ -611,22 +607,29 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ngx_queue_init(&ngx_posted_accept_events);
     ngx_queue_init(&ngx_posted_events);
 
-    if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
+    if (ngx_event_timer_init(cycle->log) == NGX_ERROR) 
+	{
         return NGX_ERROR;
     }
 
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
+
+	/*调用当前使用的io复用机制的init函数*/
+    for (m = 0; ngx_modules[m]; m++) 
+	{
+        if (ngx_modules[m]->type != NGX_EVENT_MODULE)
+		{
             continue;
         }
 
-        if (ngx_modules[m]->ctx_index != ecf->use) {
+        if (ngx_modules[m]->ctx_index != ecf->use)
+		{
             continue;
         }
 
         module = ngx_modules[m]->ctx;
 
-        if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
+        if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK)
+		{
             /* fatal */
             exit(2);
         }
@@ -636,7 +639,8 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #if !(NGX_WIN32)
 
-    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
+    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT))
+	{
         struct sigaction  sa;
         struct itimerval  itv;
 
@@ -655,33 +659,35 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         itv.it_value.tv_sec = ngx_timer_resolution / 1000;
         itv.it_value.tv_usec = (ngx_timer_resolution % 1000 ) * 1000;
 
-        if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "setitimer() failed");
+        if (setitimer(ITIMER_REAL, &itv, NULL) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "setitimer() failed");
         }
     }
 
-    if (ngx_event_flags & NGX_USE_FD_EVENT) {
+    if (ngx_event_flags & NGX_USE_FD_EVENT) 
+	{
         struct rlimit  rlmt;
 
-        if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "getrlimit(RLIMIT_NOFILE) failed");
+        if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1)
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "getrlimit(RLIMIT_NOFILE) failed");
             return NGX_ERROR;
         }
 
         cycle->files_n = (ngx_uint_t) rlmt.rlim_cur;
 
-        cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n,
-                                  cycle->log);
-        if (cycle->files == NULL) {
+        cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n, cycle->log);
+        if (cycle->files == NULL) 
+		{
             return NGX_ERROR;
         }
     }
 
 #else
 
-    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
+    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT))
+	{
         ngx_log_error(NGX_LOG_WARN, cycle->log, 0,
                       "the \"timer_resolution\" directive is not supported "
                       "with the configured event method, ignored");
@@ -690,73 +696,74 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #endif
 
-    cycle->connections =
-        ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
-    if (cycle->connections == NULL) {
+	/*预先分配、初始化和组织所有的connection*/
+    cycle->connections = ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
+    if (cycle->connections == NULL) 
+	{
         return NGX_ERROR;
     }
 
     c = cycle->connections;
 
-    cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
-                                   cycle->log);
-    if (cycle->read_events == NULL) {
+    cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n, cycle->log);
+    if (cycle->read_events == NULL)
+	{
         return NGX_ERROR;
     }
 
     rev = cycle->read_events;
-    for (i = 0; i < cycle->connection_n; i++) {
+    for (i = 0; i < cycle->connection_n; i++) 
+	{
         rev[i].closed = 1;
         rev[i].instance = 1;
     }
 
-    cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
-                                    cycle->log);
-    if (cycle->write_events == NULL) {
+    cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n, cycle->log);
+    if (cycle->write_events == NULL) 
+	{
         return NGX_ERROR;
     }
 
     wev = cycle->write_events;
-    for (i = 0; i < cycle->connection_n; i++) {
+    for (i = 0; i < cycle->connection_n; i++) 
+	{
         wev[i].closed = 1;
     }
 
     i = cycle->connection_n;
     next = NULL;
-
-    do {
+    do
+	{
         i--;
-
         c[i].data = next;
         c[i].read = &cycle->read_events[i];
         c[i].write = &cycle->write_events[i];
         c[i].fd = (ngx_socket_t) -1;
-
         next = &c[i];
     } while (i);
-
     cycle->free_connections = next;
     cycle->free_connection_n = cycle->connection_n;
 
     /* for each listening socket */
-
     ls = cycle->listening.elts;
-    for (i = 0; i < cycle->listening.nelts; i++) {
+    for (i = 0; i < cycle->listening.nelts; i++) 
+	{
 
 #if (NGX_HAVE_REUSEPORT)
-        if (ls[i].reuseport && ls[i].worker != ngx_worker) {
+        if (ls[i].reuseport && ls[i].worker != ngx_worker) 
+		{
             continue;
         }
 #endif
 
         c = ngx_get_connection(ls[i].fd, cycle->log);
 
-        if (c == NULL) {
+        if (c == NULL)
+		{
             return NGX_ERROR;
         }
 
         c->log = &ls[i].log;
-
         c->listening = &ls[i];
         ls[i].connection = c;
 
@@ -769,8 +776,10 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         rev->deferred_accept = ls[i].deferred_accept;
 #endif
 
-        if (!(ngx_event_flags & NGX_USE_IOCP_EVENT)) {
-            if (ls[i].previous) {
+        if (!(ngx_event_flags & NGX_USE_IOCP_EVENT)) 
+		{
+            if (ls[i].previous)
+			{
 
                 /*
                  * delete the old accept events that were bound to
@@ -791,7 +800,8 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #if (NGX_WIN32)
 
-        if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
+        if (ngx_event_flags & NGX_USE_IOCP_EVENT)
+		{
             ngx_iocp_conf_t  *iocpcf;
 
             rev->handler = ngx_event_acceptex;
@@ -838,7 +848,8 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             continue;
         }
 
-        if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+        if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR)
+		{
             return NGX_ERROR;
         }
 
@@ -908,7 +919,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return "is duplicate";
     }
 
-    /* count the number of the event modules and set up their indices */
+	//统计event模块数量，并设置它们的索引值
     ngx_event_max_module = 0;
     for (i = 0; ngx_modules[i]; i++) 
 	{
@@ -919,10 +930,8 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         ngx_modules[i]->ctx_index = ngx_event_max_module++;
     }
-
-	/*
-	为所有的NGX_EVENT_MODULE模块分配存储上下文的空间 void***--->void **--->array of void*     
-	*/
+	
+	//为所有的NGX_EVENT_MODULE模块分配指向对应上下文空间的索引空间 void***--->void **--->array of void*     
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
     if (ctx == NULL) 
 	{
@@ -938,7 +947,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     *(void **) conf = ctx;
 
 
-	/*调用模块的create_conf初始化分配的空间*/
+	/*调用模块的create_conf分配模块上下文配置的空间*/
     for (i = 0; ngx_modules[i]; i++) 
 	{
         if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
@@ -958,20 +967,20 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
+
+	/*分析events{}配置中的参数,设置模块上下文配置*/
     pcf = *cf;
-    cf->ctx = ctx;
+    cf->ctx = ctx;  
     cf->module_type = NGX_EVENT_MODULE;
     cf->cmd_type = NGX_EVENT_CONF;
-	/*分析events{}配置中的参数*/
     rv = ngx_conf_parse(cf, NULL);
-
     *cf = pcf;
-
     if (rv != NGX_CONF_OK) 
 	{
         return rv;
     }
 
+	/*调用模块的init_conf将模块上下文未初始化配置设置为默认值*/
     for (i = 0; ngx_modules[i]; i++)
 	{
         if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
@@ -1038,33 +1047,39 @@ ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_event_conf_t     *old_ecf;
     ngx_event_module_t   *module;
 
-    if (ecf->use != NGX_CONF_UNSET_UINT) {
+    if (ecf->use != NGX_CONF_UNSET_UINT) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    if (cf->cycle->old_cycle->conf_ctx) {
+    if (cf->cycle->old_cycle->conf_ctx)
+	{
         old_ecf = ngx_event_get_conf(cf->cycle->old_cycle->conf_ctx, ngx_event_core_module);
-    } else {
+    } 
+	else 
+	{
         old_ecf = NULL;
     }
 
 
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
+    for (m = 0; ngx_modules[m]; m++) 
+	{
+        if (ngx_modules[m]->type != NGX_EVENT_MODULE) 
+		{
             continue;
         }
 
         module = ngx_modules[m]->ctx;
-        if (module->name->len == value[1].len) {
-            if (ngx_strcmp(module->name->data, value[1].data) == 0) {
+        if (module->name->len == value[1].len) 
+		{
+            if (ngx_strcmp(module->name->data, value[1].data) == 0)
+			{
                 ecf->use = ngx_modules[m]->ctx_index;
                 ecf->name = module->name->data;
 
-                if (ngx_process == NGX_PROCESS_SINGLE
-                    && old_ecf
-                    && old_ecf->use != ecf->use)
+                if (ngx_process == NGX_PROCESS_SINGLE && old_ecf && old_ecf->use != ecf->use)
                 {
                     ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "when the server runs without a master process "
@@ -1083,8 +1098,7 @@ ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                       "invalid event type \"%V\"", &value[1]);
+    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid event type \"%V\"", &value[1]);
 
     return NGX_CONF_ERROR;
 }

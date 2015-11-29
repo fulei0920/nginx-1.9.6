@@ -29,14 +29,10 @@ typedef struct {
 
 struct ngx_event_s 
 {
-    void            *data;
-
+    void            *data;			/*指向该event所属的connection*/
     unsigned         write:1;
-
     unsigned         accept:1;
-
-    /* used to detect the stale events in kqueue and epoll */
-    unsigned         instance:1;
+    unsigned         instance:1;	   /* used to detect the stale events in kqueue and epoll */
 
     /*
      * the event was passed or would be passed to a kernel;
@@ -109,7 +105,7 @@ struct ngx_event_s
     unsigned         available:1;
 #endif
 
-    ngx_event_handler_pt  handler;
+    ngx_event_handler_pt  handler;  	/*事件处理函数*/
 
 
 #if (NGX_HAVE_IOCP)
@@ -256,8 +252,7 @@ extern ngx_event_actions_t   ngx_event_actions;
 #define NGX_USE_IOCP_EVENT       0x00000200
 
 /*
- * The event filter has no opaque data and requires file descriptors table:
- * poll, /dev/poll.
+ * The event filter has no opaque data and requires file descriptors table: poll, /dev/poll.
  */
 #define NGX_USE_FD_EVENT         0x00000400
 
@@ -425,25 +420,22 @@ extern ngx_os_io_t  ngx_io;
 #define NGX_EVENT_MODULE      0x544E5645  /* "EVNT" */
 #define NGX_EVENT_CONF        0x02000000
 
-
+/*事件模块配置*/
 typedef struct 
 {
     ngx_uint_t    connections;
-    ngx_uint_t    use;
-
+    ngx_uint_t    use;			/*实际使用的io复用机制模块索引*/
     ngx_flag_t    multi_accept;
     ngx_flag_t    accept_mutex;
-
     ngx_msec_t    accept_mutex_delay;
-
-    u_char       *name;
-
+    u_char       *name;			/*实际使用的io复用机制名称*/
+	
 #if (NGX_DEBUG)
     ngx_array_t   debug_connection;		//ngx_cidr_t类型的数组
 #endif
 } ngx_event_conf_t;
 
-
+/*事件模块上下文*/
 typedef struct 
 {
     ngx_str_t              *name;

@@ -613,7 +613,6 @@ ngx_hash_key(u_char *data, size_t len)
     ngx_uint_t  i, key;
 
     key = 0;
-
     for (i = 0; i < len; i++) 
 	{
         key = ngx_hash(key, data[i]);
@@ -645,7 +644,8 @@ ngx_hash_strlow(u_char *dst, u_char *src, size_t n)
 
     key = 0;
 
-    while (n--) {
+    while (n--)
+	{
         *dst = ngx_tolower(*src);
         key = ngx_hash(key, *dst);
         dst++;
@@ -661,49 +661,48 @@ ngx_hash_keys_array_init(ngx_hash_keys_arrays_t *ha, ngx_uint_t type)
 {
     ngx_uint_t  asize;
 
-    if (type == NGX_HASH_SMALL) {
+    if (type == NGX_HASH_SMALL)
+	{
         asize = 4;
         ha->hsize = 107;
 
-    } else {
+    } 
+	else 
+	{
         asize = NGX_HASH_LARGE_ASIZE;
         ha->hsize = NGX_HASH_LARGE_HSIZE;
     }
 
-    if (ngx_array_init(&ha->keys, ha->temp_pool, asize, sizeof(ngx_hash_key_t))
-        != NGX_OK)
+    if (ngx_array_init(&ha->keys, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK)
     {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&ha->dns_wc_head, ha->temp_pool, asize,
-                       sizeof(ngx_hash_key_t))
-        != NGX_OK)
+    if (ngx_array_init(&ha->dns_wc_head, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK)
     {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&ha->dns_wc_tail, ha->temp_pool, asize,
-                       sizeof(ngx_hash_key_t))
-        != NGX_OK)
+    if (ngx_array_init(&ha->dns_wc_tail, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK)
     {
         return NGX_ERROR;
     }
 
     ha->keys_hash = ngx_pcalloc(ha->temp_pool, sizeof(ngx_array_t) * ha->hsize);
-    if (ha->keys_hash == NULL) {
+    if (ha->keys_hash == NULL) 
+	{
         return NGX_ERROR;
     }
 
-    ha->dns_wc_head_hash = ngx_pcalloc(ha->temp_pool,
-                                       sizeof(ngx_array_t) * ha->hsize);
-    if (ha->dns_wc_head_hash == NULL) {
+    ha->dns_wc_head_hash = ngx_pcalloc(ha->temp_pool, sizeof(ngx_array_t) * ha->hsize);
+    if (ha->dns_wc_head_hash == NULL) 
+	{
         return NGX_ERROR;
     }
 
-    ha->dns_wc_tail_hash = ngx_pcalloc(ha->temp_pool,
-                                       sizeof(ngx_array_t) * ha->hsize);
-    if (ha->dns_wc_tail_hash == NULL) {
+    ha->dns_wc_tail_hash = ngx_pcalloc(ha->temp_pool, sizeof(ngx_array_t) * ha->hsize);
+    if (ha->dns_wc_tail_hash == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -725,37 +724,40 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
 
     if (flags & NGX_HASH_WILDCARD_KEY) 
 	{
-
         /*
-         * supported wildcards:
-         *     "*.example.com", ".example.com", and "www.example.*"
+         * supported wildcards  "*.example.com", ".example.com", and "www.example.*"
          */
 
-        n = 0;
-
-        for (i = 0; i < key->len; i++) {
-
-            if (key->data[i] == '*') {
-                if (++n > 1) {
+        n = 0; 
+        for (i = 0; i < key->len; i++) 
+		{
+            if (key->data[i] == '*') 
+			{
+                if (++n > 1) 
+				{
                     return NGX_DECLINED;
                 }
             }
 
-            if (key->data[i] == '.' && key->data[i + 1] == '.') {
+            if (key->data[i] == '.' && key->data[i + 1] == '.')
+			{
                 return NGX_DECLINED;
             }
 
-            if (key->data[i] == '\0') {
+            if (key->data[i] == '\0')
+			{
                 return NGX_DECLINED;
             }
         }
 
-        if (key->len > 1 && key->data[0] == '.') {
+        if (key->len > 1 && key->data[0] == '.') 
+		{
             skip = 1;
             goto wildcard;
         }
 
-        if (key->len > 2) {
+        if (key->len > 2) 
+		{
 
             if (key->data[0] == '*' && key->data[1] == '.') {
                 skip = 2;
@@ -769,17 +771,18 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
             }
         }
 
-        if (n) {
+        if (n)
+		{
             return NGX_DECLINED;
         }
     }
 
     /* exact hash */
-
     k = 0;
-
-    for (i = 0; i < last; i++) {
-        if (!(flags & NGX_HASH_READONLY_KEY)) {
+    for (i = 0; i < last; i++) 
+	{
+        if (!(flags & NGX_HASH_READONLY_KEY))
+		{
             key->data[i] = ngx_tolower(key->data[i]);
         }
         k = ngx_hash(k, key->data[i]);
@@ -788,31 +791,34 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
     k %= ha->hsize;
 
     /* check conflicts in exact hash */
-
     name = ha->keys_hash[k].elts;
-
-    if (name) {
-        for (i = 0; i < ha->keys_hash[k].nelts; i++) {
-            if (last != name[i].len) {
+    if (name) 
+	{
+        for (i = 0; i < ha->keys_hash[k].nelts; i++)
+		{
+            if (last != name[i].len)
+			{
                 continue;
             }
 
-            if (ngx_strncmp(key->data, name[i].data, last) == 0) {
+            if (ngx_strncmp(key->data, name[i].data, last) == 0)
+			{
                 return NGX_BUSY;
             }
         }
 
-    } else {
-        if (ngx_array_init(&ha->keys_hash[k], ha->temp_pool, 4,
-                           sizeof(ngx_str_t))
-            != NGX_OK)
+    } 
+	else
+	{
+        if (ngx_array_init(&ha->keys_hash[k], ha->temp_pool, 4, sizeof(ngx_str_t)) != NGX_OK)
         {
             return NGX_ERROR;
         }
     }
 
     name = ngx_array_push(&ha->keys_hash[k]);
-    if (name == NULL) {
+    if (name == NULL)
+	{
         return NGX_ERROR;
     }
 
@@ -834,47 +840,47 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
 wildcard:
 
     /* wildcard hash */
-
     k = ngx_hash_strlow(&key->data[skip], &key->data[skip], last - skip);
-
     k %= ha->hsize;
 
-    if (skip == 1) {
-
+    if (skip == 1) 
+	{
         /* check conflicts in exact hash for ".example.com" */
-
         name = ha->keys_hash[k].elts;
-
-        if (name) {
+        if (name) 
+		{
             len = last - skip;
 
-            for (i = 0; i < ha->keys_hash[k].nelts; i++) {
-                if (len != name[i].len) {
+            for (i = 0; i < ha->keys_hash[k].nelts; i++)
+			{
+                if (len != name[i].len) 
+				{
                     continue;
                 }
-
-                if (ngx_strncmp(&key->data[1], name[i].data, len) == 0) {
+                if (ngx_strncmp(&key->data[1], name[i].data, len) == 0)
+				{
                     return NGX_BUSY;
                 }
             }
-
-        } else {
-            if (ngx_array_init(&ha->keys_hash[k], ha->temp_pool, 4,
-                               sizeof(ngx_str_t))
-                != NGX_OK)
+        } 
+		else 
+		{
+            if (ngx_array_init(&ha->keys_hash[k], ha->temp_pool, 4, sizeof(ngx_str_t)) != NGX_OK)
             {
                 return NGX_ERROR;
             }
         }
 
         name = ngx_array_push(&ha->keys_hash[k]);
-        if (name == NULL) {
+        if (name == NULL)
+		{
             return NGX_ERROR;
         }
 
         name->len = last - 1;
         name->data = ngx_pnalloc(ha->temp_pool, name->len);
-        if (name->data == NULL) {
+        if (name->data == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -882,23 +888,21 @@ wildcard:
     }
 
 
-    if (skip) {
-
-        /*
-         * convert "*.example.com" to "com.example.\0"
-         *      and ".example.com" to "com.example\0"
-         */
-
+    if (skip)
+	{
+        /* convert "*.example.com" to "com.example.\0"  and ".example.com" to "com.example\0"  */
         p = ngx_pnalloc(ha->temp_pool, last);
-        if (p == NULL) {
+        if (p == NULL)
+		{
             return NGX_ERROR;
         }
 
         len = 0;
         n = 0;
-
-        for (i = last - 1; i; i--) {
-            if (key->data[i] == '.') {
+        for (i = last - 1; i; i--) 
+		{
+            if (key->data[i] == '.') 
+			{
                 ngx_memcpy(&p[n], &key->data[i + 1], len);
                 n += len;
                 p[n++] = '.';
@@ -909,7 +913,8 @@ wildcard:
             len++;
         }
 
-        if (len) {
+        if (len) 
+		{
             ngx_memcpy(&p[n], &key->data[1], len);
             n += len;
         }
@@ -919,10 +924,10 @@ wildcard:
         hwc = &ha->dns_wc_head;
         keys = &ha->dns_wc_head_hash[k];
 
-    } else {
-
+    }
+	else 
+	{
         /* convert "www.example.*" to "www.example\0" */
-
         last++;
 
         p = ngx_pnalloc(ha->temp_pool, last);

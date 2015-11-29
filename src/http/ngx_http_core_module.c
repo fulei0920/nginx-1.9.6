@@ -299,24 +299,25 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_loc_conf_t, types_hash_bucket_size),
       NULL },
 
-    { ngx_string("types"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF
-                                          |NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_http_core_types,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+	{ 
+		ngx_string("types"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF |NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+		ngx_http_core_types,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+	},
 
     { ngx_string("default_type"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_str_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, default_type),
-      NULL },
+      NULL 
+    },
 
     { ngx_string("root"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                        |NGX_CONF_TAKE1,
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
       ngx_http_core_root,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
@@ -2949,7 +2950,8 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ngx_http_core_main_conf_t   *cmcf;
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -2957,38 +2959,43 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ctx->main_conf = http_ctx->main_conf;
 
     /* the server{}'s srv_conf */
-
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->srv_conf == NULL) {
+    if (ctx->srv_conf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
-
     /* the server{}'s loc_conf */
-
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->loc_conf == NULL) {
+    if (ctx->loc_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_HTTP_MODULE) {
+    for (i = 0; ngx_modules[i]; i++) 
+	{
+        if (ngx_modules[i]->type != NGX_HTTP_MODULE)
+		{
             continue;
         }
 
         module = ngx_modules[i]->ctx;
 
-        if (module->create_srv_conf) {
+        if (module->create_srv_conf)
+		{
             mconf = module->create_srv_conf(cf);
-            if (mconf == NULL) {
+            if (mconf == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
 
             ctx->srv_conf[ngx_modules[i]->ctx_index] = mconf;
         }
 
-        if (module->create_loc_conf) {
+        if (module->create_loc_conf) 
+		{
             mconf = module->create_loc_conf(cf);
-            if (mconf == NULL) {
+            if (mconf == NULL)
+			{
                 return NGX_CONF_ERROR;
             }
 
@@ -2998,7 +3005,6 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     /* the server configuration context */
-
     cscf = ctx->srv_conf[ngx_http_core_module.ctx_index];
     cscf->ctx = ctx;
 
@@ -3006,7 +3012,8 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
 
     cscfp = ngx_array_push(&cmcf->servers);
-    if (cscfp == NULL) {
+    if (cscfp == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -3075,7 +3082,8 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ngx_http_core_loc_conf_t  *clcf, *pclcf;
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -3084,21 +3092,25 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ctx->srv_conf = pctx->srv_conf;
 
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->loc_conf == NULL) {
+    if (ctx->loc_conf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_HTTP_MODULE) {
+    for (i = 0; ngx_modules[i]; i++) 
+	{
+        if (ngx_modules[i]->type != NGX_HTTP_MODULE) 
+		{
             continue;
         }
 
         module = ngx_modules[i]->ctx;
 
-        if (module->create_loc_conf) {
-            ctx->loc_conf[ngx_modules[i]->ctx_index] =
-                                                   module->create_loc_conf(cf);
-            if (ctx->loc_conf[ngx_modules[i]->ctx_index] == NULL) {
+        if (module->create_loc_conf) 
+		{
+            ctx->loc_conf[ngx_modules[i]->ctx_index] = module->create_loc_conf(cf);
+            if (ctx->loc_conf[ngx_modules[i]->ctx_index] == NULL) 
+			{
                  return NGX_CONF_ERROR;
             }
         }
@@ -3108,14 +3120,14 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     clcf->loc_conf = ctx->loc_conf;
 
     value = cf->args->elts;
-
-    if (cf->args->nelts == 3) {
-
+    if (cf->args->nelts == 3) 
+	{
         len = value[1].len;
         mod = value[1].data;
         name = &value[2];
 
-        if (len == 1 && mod[0] == '=') {
+        if (len == 1 && mod[0] == '=') 
+		{
 
             clcf->name = *name;
             clcf->exact_match = 1;
@@ -3143,28 +3155,33 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
             return NGX_CONF_ERROR;
         }
 
-    } else {
-
+    }
+	else 
+	{
         name = &value[1];
 
-        if (name->data[0] == '=') {
-
+        if (name->data[0] == '=') 
+		{
             clcf->name.len = name->len - 1;
             clcf->name.data = name->data + 1;
             clcf->exact_match = 1;
 
-        } else if (name->data[0] == '^' && name->data[1] == '~') {
+        } 
+		else if (name->data[0] == '^' && name->data[1] == '~')
+       	{
 
             clcf->name.len = name->len - 2;
             clcf->name.data = name->data + 2;
             clcf->noregex = 1;
 
-        } else if (name->data[0] == '~') {
-
+        }
+		else if (name->data[0] == '~') 
+		{
             name->len--;
             name->data++;
 
-            if (name->data[0] == '*') {
+            if (name->data[0] == '*')
+			{
 
                 name->len--;
                 name->data++;
@@ -3179,11 +3196,12 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
                 }
             }
 
-        } else {
-
+        }
+		else 
+		{
             clcf->name = *name;
-
-            if (name->data[0] == '@') {
+            if (name->data[0] == '@')
+			{
                 clcf->named = 1;
             }
         }
@@ -3191,15 +3209,15 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
     pclcf = pctx->loc_conf[ngx_http_core_module.ctx_index];
 
-    if (cf->cmd_type == NGX_HTTP_LOC_CONF) {
-
+    if (cf->cmd_type == NGX_HTTP_LOC_CONF)
+	{
         /* nested location */
-
 #if 0
         clcf->prev_location = pclcf;
 #endif
 
-        if (pclcf->exact_match) {
+        if (pclcf->exact_match) 
+		{
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "location \"%V\" cannot be inside "
                                "the exact location \"%V\"",
@@ -3207,7 +3225,8 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
             return NGX_CONF_ERROR;
         }
 
-        if (pclcf->named) {
+        if (pclcf->named)
+		{
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "location \"%V\" cannot be inside "
                                "the named location \"%V\"",
@@ -3239,7 +3258,8 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         }
     }
 
-    if (ngx_http_add_location(cf, &pclcf->locations, clcf) != NGX_OK) {
+    if (ngx_http_add_location(cf, &pclcf->locations, clcf) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -3295,6 +3315,10 @@ ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf,
 }
 
 
+/*
+type {}
+*/
+
 static char *
 ngx_http_core_types(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -3303,9 +3327,11 @@ ngx_http_core_types(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     char        *rv;
     ngx_conf_t   save;
 
-    if (clcf->types == NULL) {
+    if (clcf->types == NULL) 
+	{
         clcf->types = ngx_array_create(cf->pool, 64, sizeof(ngx_hash_key_t));
-        if (clcf->types == NULL) {
+        if (clcf->types == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
     }
@@ -3333,11 +3359,11 @@ ngx_http_core_type(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
 
     value = cf->args->elts;
 
-    if (ngx_strcmp(value[0].data, "include") == 0) {
-        if (cf->args->nelts != 2) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid number of arguments"
-                               " in \"include\" directive");
+    if (ngx_strcmp(value[0].data, "include") == 0)
+	{
+        if (cf->args->nelts != 2)
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid number of arguments in \"include\" directive");
             return NGX_CONF_ERROR;
         }
 
@@ -3345,34 +3371,35 @@ ngx_http_core_type(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
     }
 
     content_type = ngx_palloc(cf->pool, sizeof(ngx_str_t));
-    if (content_type == NULL) {
+    if (content_type == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
     *content_type = value[0];
 
-    for (i = 1; i < cf->args->nelts; i++) {
-
+    for (i = 1; i < cf->args->nelts; i++) 
+	{
         hash = ngx_hash_strlow(value[i].data, value[i].data, value[i].len);
 
         type = clcf->types->elts;
-        for (n = 0; n < clcf->types->nelts; n++) {
-            if (ngx_strcmp(value[i].data, type[n].key.data) == 0) {
+        for (n = 0; n < clcf->types->nelts; n++) 
+		{
+            if (ngx_strcmp(value[i].data, type[n].key.data) == 0) 
+			{
                 old = type[n].value;
                 type[n].value = content_type;
 
-                ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                                   "duplicate extension \"%V\", "
-                                   "content type: \"%V\", "
-                                   "previous content type: \"%V\"",
-                                   &value[i], content_type, old);
+                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, duplicate extension \"%V\", content type: \"%V\", "
+						"previous content type: \"%V\"", &value[i], content_type, old);
                 goto next;
             }
         }
 
 
         type = ngx_array_push(clcf->types);
-        if (type == NULL) {
+        if (type == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -3979,11 +4006,11 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.listen = 1;
     u.default_port = 80;
 
-    if (ngx_parse_url(cf->pool, &u) != NGX_OK) {
-        if (u.err) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "%s in \"%V\" of the \"listen\" directive",
-                               u.err, &u.url);
+    if (ngx_parse_url(cf->pool, &u) != NGX_OK) 
+	{
+        if (u.err)
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%s in \"%V\" of the \"listen\" directive", u.err, &u.url);
         }
 
         return NGX_CONF_ERROR;
@@ -4008,33 +4035,34 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     lsopt.ipv6only = 1;
 #endif
 
-    (void) ngx_sock_ntop(&lsopt.u.sockaddr, lsopt.socklen, lsopt.addr,
-                         NGX_SOCKADDR_STRLEN, 1);
+    (void) ngx_sock_ntop(&lsopt.u.sockaddr, lsopt.socklen, lsopt.addr, NGX_SOCKADDR_STRLEN, 1);
 
-    for (n = 2; n < cf->args->nelts; n++) {
+    for (n = 2; n < cf->args->nelts; n++)
+	{
 
-        if (ngx_strcmp(value[n].data, "default_server") == 0
-            || ngx_strcmp(value[n].data, "default") == 0)
+        if (ngx_strcmp(value[n].data, "default_server") == 0 || ngx_strcmp(value[n].data, "default") == 0)
         {
             lsopt.default_server = 1;
             continue;
         }
 
-        if (ngx_strcmp(value[n].data, "bind") == 0) {
+        if (ngx_strcmp(value[n].data, "bind") == 0)
+		{
             lsopt.set = 1;
             lsopt.bind = 1;
             continue;
         }
 
 #if (NGX_HAVE_SETFIB)
-        if (ngx_strncmp(value[n].data, "setfib=", 7) == 0) {
+        if (ngx_strncmp(value[n].data, "setfib=", 7) == 0) 
+		{
             lsopt.setfib = ngx_atoi(value[n].data + 7, value[n].len - 7);
             lsopt.set = 1;
             lsopt.bind = 1;
 
-            if (lsopt.setfib == NGX_ERROR) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid setfib \"%V\"", &value[n]);
+            if (lsopt.setfib == NGX_ERROR)
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid setfib \"%V\"", &value[n]);
                 return NGX_CONF_ERROR;
             }
 
@@ -4089,7 +4117,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strncmp(value[n].data, "sndbuf=", 7) == 0) {
+        if (ngx_strncmp(value[n].data, "sndbuf=", 7) == 0)
+		{
             size.len = value[n].len - 7;
             size.data = value[n].data + 7;
 
@@ -4106,7 +4135,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strncmp(value[n].data, "accept_filter=", 14) == 0) {
+        if (ngx_strncmp(value[n].data, "accept_filter=", 14) == 0) 
+		{
 #if (NGX_HAVE_DEFERRED_ACCEPT && defined SO_ACCEPTFILTER)
             lsopt.accept_filter = (char *) &value[n].data[14];
             lsopt.set = 1;
@@ -4317,7 +4347,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_http_add_listen(cf, cscf, &lsopt) == NGX_OK) {
+    if (ngx_http_add_listen(cf, cscf, &lsopt) == NGX_OK)
+	{
         return NGX_CONF_OK;
     }
 
@@ -4337,26 +4368,25 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    for (i = 1; i < cf->args->nelts; i++) {
+    for (i = 1; i < cf->args->nelts; i++) 
+	{
 
         ch = value[i].data[0];
 
-        if ((ch == '*' && (value[i].len < 3 || value[i].data[1] != '.'))
-            || (ch == '.' && value[i].len < 2))
+        if ((ch == '*' && (value[i].len < 3 || value[i].data[1] != '.')) || (ch == '.' && value[i].len < 2))
         {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "server name \"%V\" is invalid", &value[i]);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "server name \"%V\" is invalid", &value[i]);
             return NGX_CONF_ERROR;
         }
 
-        if (ngx_strchr(value[i].data, '/')) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                               "server name \"%V\" has suspicious symbols",
-                               &value[i]);
+        if (ngx_strchr(value[i].data, '/'))
+		{
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "server name \"%V\" has suspicious symbols", &value[i]);
         }
 
         sn = ngx_array_push(&cscf->server_names);
-        if (sn == NULL) {
+        if (sn == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -4365,14 +4395,18 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
         sn->server = cscf;
 
-        if (ngx_strcasecmp(value[i].data, (u_char *) "$hostname") == 0) {
+        if (ngx_strcasecmp(value[i].data, (u_char *) "$hostname") == 0)
+		{
             sn->name = cf->cycle->hostname;
 
-        } else {
+        }
+		else 
+        {
             sn->name = value[i];
         }
 
-        if (value[i].data[0] != '~') {
+        if (value[i].data[0] != '~') 
+		{
             ngx_strlow(sn->name.data, sn->name.data, sn->name.len);
             continue;
         }
@@ -4414,9 +4448,7 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         cscf->captures = (rc.captures > 0);
         }
 #else
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "using regex \"%V\" "
-                           "requires PCRE library", &value[i]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "using regex \"%V\" requires PCRE library", &value[i]);
 
         return NGX_CONF_ERROR;
 #endif
@@ -4438,9 +4470,11 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     alias = (cmd->name.len == sizeof("alias") - 1) ? 1 : 0;
 
-    if (clcf->root.data) {
+    if (clcf->root.data) 
+	{
 
-        if ((clcf->alias != 0) == alias) {
+        if ((clcf->alias != 0) == alias)
+		{
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "\"%V\" directive is duplicate",
                                &cmd->name);
@@ -4454,18 +4488,15 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (clcf->named && alias) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "the \"alias\" directive cannot be used "
-                           "inside the named location");
-
+    if (clcf->named && alias) 
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the \"alias\" directive cannot be used inside the named location");
         return NGX_CONF_ERROR;
     }
 
     value = cf->args->elts;
 
-    if (ngx_strstr(value[1].data, "$document_root")
-        || ngx_strstr(value[1].data, "${document_root}"))
+    if (ngx_strstr(value[1].data, "$document_root") || ngx_strstr(value[1].data, "${document_root}"))
     {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                            "the $document_root variable cannot be used "
@@ -4489,14 +4520,16 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     clcf->alias = alias ? clcf->name.len : 0;
     clcf->root = value[1];
 
-    if (!alias && clcf->root.len > 0
-        && clcf->root.data[clcf->root.len - 1] == '/')
+	/*È¥µôroot×Ö·û´®Ä©¶ËµÄ'/'×Ö·û*/
+    if (!alias && clcf->root.len > 0 && clcf->root.data[clcf->root.len - 1] == '/')
     {
         clcf->root.len--;
     }
 
-    if (clcf->root.data[0] != '$') {
-        if (ngx_conf_full_name(cf->cycle, &clcf->root, 0) != NGX_OK) {
+    if (clcf->root.data[0] != '$')
+	{
+        if (ngx_conf_full_name(cf->cycle, &clcf->root, 0) != NGX_OK) 
+		{
             return NGX_CONF_ERROR;
         }
     }
@@ -4507,13 +4540,15 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     sc.variables = n;
 
 #if (NGX_PCRE)
-    if (alias && clcf->regex) {
+    if (alias && clcf->regex) 
+	{
         clcf->alias = NGX_MAX_SIZE_T_VALUE;
         n = 1;
     }
 #endif
 
-    if (n) {
+    if (n) 
+	{
         sc.cf = cf;
         sc.source = &clcf->root;
         sc.lengths = &clcf->root_lengths;
@@ -4521,7 +4556,8 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         sc.complete_lengths = 1;
         sc.complete_values = 1;
 
-        if (ngx_http_script_compile(&sc) != NGX_OK) {
+        if (ngx_http_script_compile(&sc) != NGX_OK)
+		{
             return NGX_CONF_ERROR;
         }
     }

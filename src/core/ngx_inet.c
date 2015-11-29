@@ -176,10 +176,12 @@ ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
 
 #endif
 
-
+/*
+将套接字地址结构中网络ip地址和端口转换为点分十进制模式
+port -- 是否转换端口
+*/
 size_t
-ngx_sock_ntop(struct sockaddr *sa, socklen_t socklen, u_char *text, size_t len,
-    ngx_uint_t port)
+ngx_sock_ntop(struct sockaddr *sa, socklen_t socklen, u_char *text, size_t len, ngx_uint_t port)
 {
     u_char               *p;
     struct sockaddr_in   *sin;
@@ -191,19 +193,21 @@ ngx_sock_ntop(struct sockaddr *sa, socklen_t socklen, u_char *text, size_t len,
     struct sockaddr_un   *saun;
 #endif
 
-    switch (sa->sa_family) {
+    switch (sa->sa_family) 
+	{
 
     case AF_INET:
 
         sin = (struct sockaddr_in *) sa;
         p = (u_char *) &sin->sin_addr;
 
-        if (port) {
-            p = ngx_snprintf(text, len, "%ud.%ud.%ud.%ud:%d",
-                             p[0], p[1], p[2], p[3], ntohs(sin->sin_port));
-        } else {
-            p = ngx_snprintf(text, len, "%ud.%ud.%ud.%ud",
-                             p[0], p[1], p[2], p[3]);
+        if (port) 
+		{
+            p = ngx_snprintf(text, len, "%ud.%ud.%ud.%ud:%d", p[0], p[1], p[2], p[3], ntohs(sin->sin_port));
+        } 
+		else
+		{
+            p = ngx_snprintf(text, len, "%ud.%ud.%ud.%ud", p[0], p[1], p[2], p[3]);
         }
 
         return (p - text);
@@ -532,11 +536,13 @@ ngx_parse_url(ngx_pool_t *pool, ngx_url_t *u)
 
     p = u->url.data;
 
-    if (ngx_strncasecmp(p, (u_char *) "unix:", 5) == 0) {
+    if (ngx_strncasecmp(p, (u_char *) "unix:", 5) == 0)
+	{
         return ngx_parse_unix_domain_url(pool, u);
     }
 
-    if (p[0] == '[') {
+    if (p[0] == '[') 
+	{
         return ngx_parse_inet6_url(pool, u);
     }
 
@@ -649,14 +655,18 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
     args = ngx_strlchr(host, last, '?');
 
-    if (args) {
-        if (uri == NULL || args < uri) {
+    if (args)
+	{
+        if (uri == NULL || args < uri)
+		{
             uri = args;
         }
     }
 
-    if (uri) {
-        if (u->listen || !u->uri_part) {
+    if (uri) 
+	{
+        if (u->listen || !u->uri_part) 
+		{
             u->err = "invalid host";
             return NGX_ERROR;
         }
@@ -666,12 +676,14 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
         last = uri;
 
-        if (uri < port) {
+        if (uri < port) 
+		{
             port = NULL;
         }
     }
 
-    if (port) {
+    if (port)
+	{
         port++;
 
         len = last - port;
@@ -691,18 +703,22 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
         last = port - 1;
 
-    } else {
-        if (uri == NULL) {
-
-            if (u->listen) {
+    } 
+	else
+	{
+        if (uri == NULL) 
+		{
+            if (u->listen) 
+			{
 
                 /* test value as port only */
-
                 n = ngx_atoi(host, last - host);
 
-                if (n != NGX_ERROR) {
+                if (n != NGX_ERROR) 
+				{
 
-                    if (n < 1 || n > 65535) {
+                    if (n < 1 || n > 65535)
+					{
                         u->err = "invalid port";
                         return NGX_ERROR;
                     }

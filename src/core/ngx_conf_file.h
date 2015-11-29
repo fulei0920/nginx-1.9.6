@@ -47,7 +47,6 @@
 #define NGX_CONF_MULTI       0x00000000  /* compatibility */
 
 #define NGX_DIRECT_CONF      0x00010000
-
 #define NGX_MAIN_CONF        0x01000000
 #define NGX_ANY_CONF         0x0F000000
 
@@ -76,11 +75,11 @@
 
 struct ngx_command_s 
 {
-    ngx_str_t             name;    //配置指令的名称
-    ngx_uint_t            type;
+    ngx_str_t             name;    	/*配置指令的名称*/
+    ngx_uint_t            type;		
     char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-    ngx_uint_t            conf;
-    ngx_uint_t            offset;
+    ngx_uint_t            conf;   	/*在上下文中的偏移量*/
+    ngx_uint_t            offset;	
     void                 *post;
 };
 
@@ -91,7 +90,6 @@ struct ngx_open_file_s
 {
     ngx_fd_t              fd;			/* 标准IO文件描述符 */
     ngx_str_t             name;			/* 文件名称 */
-
     void                (*flush)(ngx_open_file_t *file, ngx_log_t *log);
     void                 *data;
 };
@@ -112,19 +110,16 @@ struct ngx_module_s
 
     ngx_uint_t            version;
 
-    void                 *ctx;
-    ngx_command_t        *commands;
-    ngx_uint_t            type;						/*模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE*/
+    void                 *ctx;			/*模块上下文*/
+    ngx_command_t        *commands;		/*模块指令*/
+    ngx_uint_t            type;			/*模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE*/
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
-
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
-
     ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
     ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
     void                (*exit_thread)(ngx_cycle_t *cycle);
     void                (*exit_process)(ngx_cycle_t *cycle);
-
     void                (*exit_master)(ngx_cycle_t *cycle);
 
     uintptr_t             spare_hook0;
@@ -137,7 +132,7 @@ struct ngx_module_s
     uintptr_t             spare_hook7;
 };
 
-
+/*核心模块上下文*/
 typedef struct 
 {
     ngx_str_t             name;
@@ -167,7 +162,7 @@ typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf, ngx_command_t *dummy, void 
 struct ngx_conf_s 
 {
     char                 *name;
-    ngx_array_t          *args;  			//ngx_str_t类型的数组
+    ngx_array_t          *args;  			//ngx_str_t类型的数组，存储解析到的命令及参数列表
 
     ngx_cycle_t          *cycle;
     ngx_pool_t           *pool;				/*指向cycle的pool*/

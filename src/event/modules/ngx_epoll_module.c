@@ -721,21 +721,27 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     err = (events == -1) ? ngx_errno : 0;
 
-    if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm) {
+    if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm)
+	{
         ngx_time_update();
     }
 
-    if (err) {
-        if (err == NGX_EINTR) {
+    if (err) 
+	{
+        if (err == NGX_EINTR) 
+		{
 
-            if (ngx_event_timer_alarm) {
+            if (ngx_event_timer_alarm) 
+			{
                 ngx_event_timer_alarm = 0;
                 return NGX_OK;
             }
 
             level = NGX_LOG_INFO;
 
-        } else {
+        } 
+		else 
+		{
             level = NGX_LOG_ALERT;
         }
 

@@ -15,16 +15,19 @@ static ngx_int_t ngx_conf_read_token(ngx_conf_t *cf);
 static void ngx_conf_flush_files(ngx_cycle_t *cycle);
 
 
-static ngx_command_t  ngx_conf_commands[] = {
+static ngx_command_t  ngx_conf_commands[] = 
+{
 
-    { ngx_string("include"),
-      NGX_ANY_CONF|NGX_CONF_TAKE1,
-      ngx_conf_include,
-      0,
-      0,
-      NULL },
+    { 
+		ngx_string("include"),
+		NGX_ANY_CONF|NGX_CONF_TAKE1,
+		ngx_conf_include,
+		0,
+		0,
+		NULL 
+	},
 
-      ngx_null_command
+	ngx_null_command
 };
 
 
@@ -123,9 +126,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
     if (filename) 
 	{
-
         /* open configuration file */
-
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
         if (fd == NGX_INVALID_FILE) 
 		{
@@ -275,17 +276,20 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
              * "types { ... }" directive
              */
 
-            if (rc == NGX_CONF_BLOCK_START) {
+            if (rc == NGX_CONF_BLOCK_START)
+			{
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "unexpected \"{\"");
                 goto failed;
             }
 
             rv = (*cf->handler)(cf, NULL, cf->handler_conf);
-            if (rv == NGX_CONF_OK) {
+            if (rv == NGX_CONF_OK) 
+			{
                 continue;
             }
 
-            if (rv == NGX_CONF_ERROR) {
+            if (rv == NGX_CONF_ERROR) 
+			{
                 goto failed;
             }
 
@@ -297,7 +301,8 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
         rc = ngx_conf_handler(cf, rc);
 
-        if (rc == NGX_ERROR) {
+        if (rc == NGX_ERROR) 
+		{
             goto failed;
         }
     }
@@ -834,14 +839,15 @@ ngx_conf_include(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_log_debug1(NGX_LOG_DEBUG_CORE, cf->log, 0, "include %s", file.data);
 
-    if (ngx_conf_full_name(cf->cycle, &file, 1) != NGX_OK) {
+    if (ngx_conf_full_name(cf->cycle, &file, 1) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
-    if (strpbrk((char *) file.data, "*?[") == NULL) {
+    if (strpbrk((char *) file.data, "*?[") == NULL) 
+	{
 
         ngx_log_debug1(NGX_LOG_DEBUG_CORE, cf->log, 0, "include %s", file.data);
-
         return ngx_conf_parse(cf, &file);
     }
 
@@ -851,15 +857,16 @@ ngx_conf_include(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     gl.log = cf->log;
     gl.test = 1;
 
-    if (ngx_open_glob(&gl) != NGX_OK) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
-                           ngx_open_glob_n " \"%s\" failed", file.data);
+    if (ngx_open_glob(&gl) != NGX_OK) 
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno, ngx_open_glob_n " \"%s\" failed", file.data);
         return NGX_CONF_ERROR;
     }
 
     rv = NGX_CONF_OK;
 
-    for ( ;; ) {
+    for ( ;; )
+	{
         n = ngx_read_glob(&gl, &name);
 
         if (n != NGX_OK) {
@@ -887,6 +894,9 @@ ngx_conf_include(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 }
 
 
+/*
+获取路径的全路径名
+*/
 ngx_int_t
 ngx_conf_full_name(ngx_cycle_t *cycle, ngx_str_t *name, ngx_uint_t conf_prefix)
 {
@@ -1076,7 +1086,8 @@ ngx_conf_set_str_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     field = (ngx_str_t *) (p + cmd->offset);
 
-    if (field->data) {
+    if (field->data) 
+	{
         return "is duplicate";
     }
 
@@ -1084,7 +1095,8 @@ ngx_conf_set_str_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     *field = value[1];
 
-    if (cmd->post) {
+    if (cmd->post) 
+	{
         post = cmd->post;
         return post->post_handler(cf, post, field);
     }

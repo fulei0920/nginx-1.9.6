@@ -36,9 +36,9 @@ typedef struct
 
 typedef struct 
 {
-    ngx_str_t         key;
-    ngx_uint_t        key_hash;
-    void             *value;
+    ngx_str_t         key;			//key
+    ngx_uint_t        key_hash;		//hash key
+    void             *value;		//value
 } ngx_hash_key_t;
 
 
@@ -77,18 +77,18 @@ typedef struct {
 
 typedef struct 
 {
-    ngx_uint_t        hsize;
+    ngx_uint_t        hsize;    	/*冲突桶数目*/
 
     ngx_pool_t       *pool;
     ngx_pool_t       *temp_pool;
 
-    ngx_array_t       keys;		/*array of ngx_hash_key_t, 以列表形式记录所有结点*/
-    ngx_array_t      *keys_hash;
+    ngx_array_t       keys;			/*array of ngx_hash_key_t, 以列表形式记录所有结点*/
+    ngx_array_t      *keys_hash;	/*完全匹配散列表*/
 
-    ngx_array_t       dns_wc_head;
+    ngx_array_t       dns_wc_head;			/* array of ngx_hash_key_t */
     ngx_array_t      *dns_wc_head_hash;
 
-    ngx_array_t       dns_wc_tail;
+    ngx_array_t       dns_wc_tail;			/* array of ngx_hash_key_t */
     ngx_array_t      *dns_wc_tail_hash;
 } ngx_hash_keys_arrays_t;
 

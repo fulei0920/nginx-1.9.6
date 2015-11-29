@@ -13,10 +13,10 @@
 
 typedef struct 
 {
-    int     signo;
+    int     signo;					/*信号*/
     char   *signame;
-    char   *name;
-    void  (*handler)(int signo);
+    char   *name;		
+    void  (*handler)(int signo);  /*信号处理函数*/
 } ngx_signal_t;
 
 
@@ -31,10 +31,10 @@ int              ngx_argc;
 char           **ngx_argv;
 char           **ngx_os_argv;
 
-ngx_int_t        ngx_process_slot;
-ngx_socket_t     ngx_channel;
-ngx_int_t        ngx_last_process;
-ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
+ngx_int_t        ngx_process_slot;		/*指向当前正在处理的ngx_processes中元素的下标*/
+ngx_socket_t     ngx_channel;			/*子进程写套接字(用于与主进程进行通信)*/
+ngx_int_t        ngx_last_process;   	/*子进程的数量*/
+ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];  /*存储所有子进程的信息*/
 
 
 ngx_signal_t  signals[] = 
@@ -99,13 +99,17 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     ngx_pid_t  pid;
     ngx_int_t  s;
 
+	/*获取ngx_processes中可用的槽的索引*/
     if (respawn >= 0) 
 	{
         s = respawn;
-
-    } else {
-        for (s = 0; s < ngx_last_process; s++) {
-            if (ngx_processes[s].pid == -1) {
+    } 
+	else
+	{
+        for (s = 0; s < ngx_last_process; s++)
+		{
+            if (ngx_processes[s].pid == -1) 
+			{
                 break;
             }
         }
@@ -122,68 +126,62 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
 	{
 
         /* Solaris 9 still has no AF_LOCAL */
-
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1)
         {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "socketpair() failed while spawning \"%s\"", name);
             return NGX_INVALID_PID;
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0,
-                       "channel %d:%d",
-                       ngx_processes[s].channel[0],
-                       ngx_processes[s].channel[1]);
+        ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0, "channel %d:%d", ngx_processes[s].channel[0], ngx_processes[s].channel[1]);
 
-        if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          ngx_nonblocking_n " failed while spawning \"%s\"",
-                          name);
+        if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, ngx_nonblocking_n " failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (ngx_nonblocking(ngx_processes[s].channel[1]) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          ngx_nonblocking_n " failed while spawning \"%s\"",
-                          name);
+        if (ngx_nonblocking(ngx_processes[s].channel[1]) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, ngx_nonblocking_n " failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
         on = 1;
-        if (ioctl(ngx_processes[s].channel[0], FIOASYNC, &on) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "ioctl(FIOASYNC) failed while spawning \"%s\"", name);
+        if (ioctl(ngx_processes[s].channel[0], FIOASYNC, &on) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "ioctl(FIOASYNC) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (fcntl(ngx_processes[s].channel[0], F_SETOWN, ngx_pid) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "fcntl(F_SETOWN) failed while spawning \"%s\"", name);
+        if (fcntl(ngx_processes[s].channel[0], F_SETOWN, ngx_pid) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "fcntl(F_SETOWN) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (fcntl(ngx_processes[s].channel[0], F_SETFD, FD_CLOEXEC) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "fcntl(FD_CLOEXEC) failed while spawning \"%s\"",
-                           name);
+        if (fcntl(ngx_processes[s].channel[0], F_SETFD, FD_CLOEXEC) == -1)
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "fcntl(FD_CLOEXEC) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (fcntl(ngx_processes[s].channel[1], F_SETFD, FD_CLOEXEC) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "fcntl(FD_CLOEXEC) failed while spawning \"%s\"",
-                           name);
+        if (fcntl(ngx_processes[s].channel[1], F_SETFD, FD_CLOEXEC) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "fcntl(FD_CLOEXEC) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
         ngx_channel = ngx_processes[s].channel[1];
 
-    } else {
+    } 
+	else
+	{
         ngx_processes[s].channel[0] = -1;
         ngx_processes[s].channel[1] = -1;
     }
@@ -215,7 +213,8 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     ngx_processes[s].pid = pid;
     ngx_processes[s].exited = 0;
 
-    if (respawn >= 0) {
+    if (respawn >= 0)
+	{
         return pid;
     }
 
@@ -224,7 +223,8 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     ngx_processes[s].name = name;
     ngx_processes[s].exiting = 0;
 
-    switch (respawn) {
+    switch (respawn) 
+	{
 
     case NGX_PROCESS_NORESPAWN:
         ngx_processes[s].respawn = 0;
@@ -257,7 +257,8 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
         break;
     }
 
-    if (s == ngx_last_process) {
+    if (s == ngx_last_process) 
+	{
         ngx_last_process++;
     }
 
@@ -294,17 +295,17 @@ ngx_init_signals(ngx_log_t *log)
     ngx_signal_t      *sig;
     struct sigaction   sa;
 
-    for (sig = signals; sig->signo != 0; sig++) {
+    for (sig = signals; sig->signo != 0; sig++)
+	{
         ngx_memzero(&sa, sizeof(struct sigaction));
         sa.sa_handler = sig->handler;
         sigemptyset(&sa.sa_mask);
-        if (sigaction(sig->signo, &sa, NULL) == -1) {
+        if (sigaction(sig->signo, &sa, NULL) == -1) 
+		{
 #if (NGX_VALGRIND)
-            ngx_log_error(NGX_LOG_ALERT, log, ngx_errno,
-                          "sigaction(%s) failed, ignored", sig->signame);
+            ngx_log_error(NGX_LOG_ALERT, log, ngx_errno, "sigaction(%s) failed, ignored", sig->signame);
 #else
-            ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
-                          "sigaction(%s) failed", sig->signame);
+            ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "sigaction(%s) failed", sig->signame);
             return NGX_ERROR;
 #endif
         }
@@ -628,14 +629,16 @@ ngx_os_signal_process(ngx_cycle_t *cycle, char *name, ngx_int_t pid)
 {
     ngx_signal_t  *sig;
 
-    for (sig = signals; sig->signo != 0; sig++) {
-        if (ngx_strcmp(name, sig->name) == 0) {
-            if (kill(pid, sig->signo) != -1) {
+    for (sig = signals; sig->signo != 0; sig++)
+	{
+        if (ngx_strcmp(name, sig->name) == 0) 
+		{
+            if (kill(pid, sig->signo) != -1) 
+			{
                 return 0;
             }
 
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "kill(%P, %d) failed", pid, sig->signo);
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "kill(%P, %d) failed", pid, sig->signo);
         }
     }
 

@@ -28,8 +28,8 @@ static void ngx_cache_loader_process_handler(ngx_event_t *ev);
 
 
 ngx_uint_t    ngx_process;  //进程类型
-ngx_uint_t    ngx_worker;
-ngx_pid_t     ngx_pid;
+ngx_uint_t    ngx_worker;	
+ngx_pid_t     ngx_pid;		//当前进程的pid
 
 sig_atomic_t  ngx_reap;
 sig_atomic_t  ngx_sigio;
@@ -118,7 +118,8 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     }
 
     p = ngx_cpymem(title, master_process, sizeof(master_process) - 1);
-    for (i = 0; i < ngx_argc; i++) {
+    for (i = 0; i < ngx_argc; i++) 
+	{
         *p++ = ' ';
         p = ngx_cpystrn(p, (u_char *) ngx_argv[i], size);
     }
@@ -346,6 +347,10 @@ ngx_single_process_cycle(ngx_cycle_t *cycle)
 }
 
 
+/*
+n -- 工作进程个数
+*/
+
 static void
 ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 {
@@ -433,25 +438,20 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
 {
     ngx_int_t  i;
 
-    for (i = 0; i < ngx_last_process; i++) {
+    for (i = 0; i < ngx_last_process; i++)
+	{
 
-        if (i == ngx_process_slot
-            || ngx_processes[i].pid == -1
-            || ngx_processes[i].channel[0] == -1)
+        if (i == ngx_process_slot || ngx_processes[i].pid == -1 || ngx_processes[i].channel[0] == -1)
         {
             continue;
         }
 
-        ngx_log_debug6(NGX_LOG_DEBUG_CORE, cycle->log, 0,
-                      "pass channel s:%d pid:%P fd:%d to s:%i pid:%P fd:%d",
-                      ch->slot, ch->pid, ch->fd,
-                      i, ngx_processes[i].pid,
-                      ngx_processes[i].channel[0]);
+        ngx_log_debug6(NGX_LOG_DEBUG_CORE, cycle->log, 0, "pass channel s:%d pid:%P fd:%d to s:%i pid:%P fd:%d",
+				ch->slot, ch->pid, ch->fd, i, ngx_processes[i].pid, ngx_processes[i].channel[0]);
 
         /* TODO: NGX_AGAIN */
 
-        ngx_write_channel(ngx_processes[i].channel[0],
-                          ch, sizeof(ngx_channel_t), cycle->log);
+        ngx_write_channel(ngx_processes[i].channel[0], ch, sizeof(ngx_channel_t), cycle->log);
     }
 }
 
@@ -802,68 +802,72 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
     ngx_core_conf_t  *ccf;
     ngx_listening_t  *ls;
 
-    if (ngx_set_environment(cycle, NULL) == NULL) {
+    if (ngx_set_environment(cycle, NULL) == NULL)
+	{
         /* fatal */
         exit(2);
     }
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
-    if (worker >= 0 && ccf->priority != 0) {
-        if (setpriority(PRIO_PROCESS, 0, ccf->priority) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "setpriority(%d) failed", ccf->priority);
+    if (worker >= 0 && ccf->priority != 0) 
+	{
+        if (setpriority(PRIO_PROCESS, 0, ccf->priority) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "setpriority(%d) failed", ccf->priority);
         }
     }
 
-    if (ccf->rlimit_nofile != NGX_CONF_UNSET) {
+    if (ccf->rlimit_nofile != NGX_CONF_UNSET) 
+	{
         rlmt.rlim_cur = (rlim_t) ccf->rlimit_nofile;
         rlmt.rlim_max = (rlim_t) ccf->rlimit_nofile;
 
-        if (setrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "setrlimit(RLIMIT_NOFILE, %i) failed",
-                          ccf->rlimit_nofile);
+        if (setrlimit(RLIMIT_NOFILE, &rlmt) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "setrlimit(RLIMIT_NOFILE, %i) failed", ccf->rlimit_nofile);
         }
     }
 
-    if (ccf->rlimit_core != NGX_CONF_UNSET) {
+    if (ccf->rlimit_core != NGX_CONF_UNSET)
+	{
         rlmt.rlim_cur = (rlim_t) ccf->rlimit_core;
         rlmt.rlim_max = (rlim_t) ccf->rlimit_core;
 
-        if (setrlimit(RLIMIT_CORE, &rlmt) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "setrlimit(RLIMIT_CORE, %O) failed",
-                          ccf->rlimit_core);
+        if (setrlimit(RLIMIT_CORE, &rlmt) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "setrlimit(RLIMIT_CORE, %O) failed", ccf->rlimit_core);
         }
     }
 
-    if (geteuid() == 0) {
-        if (setgid(ccf->group) == -1) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "setgid(%d) failed", ccf->group);
+    if (geteuid() == 0) 
+	{
+        if (setgid(ccf->group) == -1) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, "setgid(%d) failed", ccf->group);
             /* fatal */
             exit(2);
         }
 
-        if (initgroups(ccf->username, ccf->group) == -1) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "initgroups(%s, %d) failed",
-                          ccf->username, ccf->group);
+        if (initgroups(ccf->username, ccf->group) == -1)
+		{
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, "initgroups(%s, %d) failed", ccf->username, ccf->group);
         }
 
-        if (setuid(ccf->user) == -1) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "setuid(%d) failed", ccf->user);
+        if (setuid(ccf->user) == -1) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, "setuid(%d) failed", ccf->user);
             /* fatal */
             exit(2);
         }
     }
 
-    if (worker >= 0) {
+    if (worker >= 0) 
+	{
         cpu_affinity = ngx_get_cpu_affinity(worker);
 
-        if (cpu_affinity) {
+        if (cpu_affinity) 
+		{
             ngx_setaffinity(cpu_affinity, cycle->log);
         }
     }
@@ -879,10 +883,11 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
 
 #endif
 
-    if (ccf->working_directory.len) {
-        if (chdir((char *) ccf->working_directory.data) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "chdir(\"%s\") failed", ccf->working_directory.data);
+    if (ccf->working_directory.len)
+	{
+        if (chdir((char *) ccf->working_directory.data) == -1)
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "chdir(\"%s\") failed", ccf->working_directory.data);
             /* fatal */
             exit(2);
         }
@@ -890,9 +895,9 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
 
     sigemptyset(&set);
 
-    if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                      "sigprocmask() failed");
+    if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "sigprocmask() failed");
     }
 
     srandom((ngx_pid << 16) ^ ngx_time());
@@ -902,51 +907,56 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
      * in the worker processes there are no events at all at this point
      */
     ls = cycle->listening.elts;
-    for (i = 0; i < cycle->listening.nelts; i++) {
+    for (i = 0; i < cycle->listening.nelts; i++) 
+	{
         ls[i].previous = NULL;
     }
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->init_process) {
-            if (ngx_modules[i]->init_process(cycle) == NGX_ERROR) {
+    for (i = 0; ngx_modules[i]; i++) 
+	{
+        if (ngx_modules[i]->init_process) 
+		{
+            if (ngx_modules[i]->init_process(cycle) == NGX_ERROR) 
+			{
                 /* fatal */
                 exit(2);
             }
         }
     }
 
-    for (n = 0; n < ngx_last_process; n++) {
-
-        if (ngx_processes[n].pid == -1) {
+    for (n = 0; n < ngx_last_process; n++) 
+	{
+        if (ngx_processes[n].pid == -1) 
+		{
             continue;
         }
 
-        if (n == ngx_process_slot) {
+        if (n == ngx_process_slot) 
+		{
             continue;
         }
 
-        if (ngx_processes[n].channel[1] == -1) {
+        if (ngx_processes[n].channel[1] == -1) 
+		{
             continue;
         }
 
-        if (close(ngx_processes[n].channel[1]) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "close() channel failed");
+        if (close(ngx_processes[n].channel[1]) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "close() channel failed");
         }
     }
 
-    if (close(ngx_processes[ngx_process_slot].channel[0]) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                      "close() channel failed");
+    if (close(ngx_processes[ngx_process_slot].channel[0]) == -1)
+	{
+        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "close() channel failed");
     }
 
 #if 0
     ngx_last_process = 0;
 #endif
 
-    if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT,
-                              ngx_channel_handler)
-        == NGX_ERROR)
+    if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT, ngx_channel_handler) == NGX_ERROR)
     {
         /* fatal */
         exit(2);
@@ -1022,7 +1032,8 @@ ngx_channel_handler(ngx_event_t *ev)
     ngx_channel_t      ch;
     ngx_connection_t  *c;
 
-    if (ev->timedout) {
+    if (ev->timedout) 
+	{
         ev->timedout = 0;
         return;
     }
@@ -1031,15 +1042,18 @@ ngx_channel_handler(ngx_event_t *ev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_CORE, ev->log, 0, "channel handler");
 
-    for ( ;; ) {
+    for ( ;; ) 
+	{
 
         n = ngx_read_channel(c->fd, &ch, sizeof(ngx_channel_t), ev->log);
 
         ngx_log_debug1(NGX_LOG_DEBUG_CORE, ev->log, 0, "channel: %i", n);
 
-        if (n == NGX_ERROR) {
+        if (n == NGX_ERROR)
+		{
 
-            if (ngx_event_flags & NGX_USE_EPOLL_EVENT) {
+            if (ngx_event_flags & NGX_USE_EPOLL_EVENT)
+			{
                 ngx_del_conn(c, 0);
             }
 
@@ -1047,20 +1061,23 @@ ngx_channel_handler(ngx_event_t *ev)
             return;
         }
 
-        if (ngx_event_flags & NGX_USE_EVENTPORT_EVENT) {
-            if (ngx_add_event(ev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+        if (ngx_event_flags & NGX_USE_EVENTPORT_EVENT) 
+		{
+            if (ngx_add_event(ev, NGX_READ_EVENT, 0) == NGX_ERROR)
+			{
                 return;
             }
         }
 
-        if (n == NGX_AGAIN) {
+        if (n == NGX_AGAIN)
+		{
             return;
         }
 
-        ngx_log_debug1(NGX_LOG_DEBUG_CORE, ev->log, 0,
-                       "channel command: %d", ch.command);
+        ngx_log_debug1(NGX_LOG_DEBUG_CORE, ev->log, 0, "channel command: %d", ch.command);
 
-        switch (ch.command) {
+        switch (ch.command) 
+		{
 
         case NGX_CMD_QUIT:
             ngx_quit = 1;
@@ -1076,9 +1093,7 @@ ngx_channel_handler(ngx_event_t *ev)
 
         case NGX_CMD_OPEN_CHANNEL:
 
-            ngx_log_debug3(NGX_LOG_DEBUG_CORE, ev->log, 0,
-                           "get channel s:%i pid:%P fd:%d",
-                           ch.slot, ch.pid, ch.fd);
+            ngx_log_debug3(NGX_LOG_DEBUG_CORE, ev->log, 0, "get channel s:%i pid:%P fd:%d", ch.slot, ch.pid, ch.fd);
 
             ngx_processes[ch.slot].pid = ch.pid;
             ngx_processes[ch.slot].channel[0] = ch.fd;
@@ -1086,14 +1101,12 @@ ngx_channel_handler(ngx_event_t *ev)
 
         case NGX_CMD_CLOSE_CHANNEL:
 
-            ngx_log_debug4(NGX_LOG_DEBUG_CORE, ev->log, 0,
-                           "close channel s:%i pid:%P our:%P fd:%d",
-                           ch.slot, ch.pid, ngx_processes[ch.slot].pid,
-                           ngx_processes[ch.slot].channel[0]);
+            ngx_log_debug4(NGX_LOG_DEBUG_CORE, ev->log, 0, "close channel s:%i pid:%P our:%P fd:%d",
+                           ch.slot, ch.pid, ngx_processes[ch.slot].pid, ngx_processes[ch.slot].channel[0]);
 
-            if (close(ngx_processes[ch.slot].channel[0]) == -1) {
-                ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_errno,
-                              "close() channel failed");
+            if (close(ngx_processes[ch.slot].channel[0]) == -1) 
+			{
+                ngx_log_error(NGX_LOG_ALERT, ev->log, ngx_errno, "close() channel failed");
             }
 
             ngx_processes[ch.slot].channel[0] = -1;

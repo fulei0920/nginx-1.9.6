@@ -412,11 +412,13 @@ ngx_log_open_default(ngx_cycle_t *cycle)
     ngx_log_t         *log;
     static ngx_str_t   error_log = ngx_string(NGX_ERROR_LOG_PATH);
 
-    if (ngx_log_get_file_log(&cycle->new_log) != NULL) {
+    if (ngx_log_get_file_log(&cycle->new_log) != NULL) 
+	{
         return NGX_OK;
     }
 
-    if (cycle->new_log.log_level != 0) {
+    if (cycle->new_log.log_level != 0) 
+	{
         /* there are some error logs, but no files */
 
         log = ngx_pcalloc(cycle->pool, sizeof(ngx_log_t));
@@ -449,7 +451,8 @@ ngx_log_redirect_stderr(ngx_cycle_t *cycle)
 {
     ngx_fd_t  fd;
 
-    if (cycle->log_use_stderr) {
+    if (cycle->log_use_stderr)
+	{
         return NGX_OK;
     }
 

@@ -21,7 +21,8 @@ typedef struct {
 } ngx_shmtx_sh_t;
 
 
-typedef struct {
+typedef struct 
+{
 #if (NGX_HAVE_ATOMIC_OPS)
     ngx_atomic_t  *lock;
 #if (NGX_HAVE_POSIX_SEM)
