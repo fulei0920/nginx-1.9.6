@@ -31,8 +31,8 @@ int              ngx_argc;
 char           **ngx_argv;
 char           **ngx_os_argv;
 
-ngx_int_t        ngx_process_slot;		/*指向当前正在处理的ngx_processes中元素的下标*/
-ngx_socket_t     ngx_channel;			/*子进程写套接字(用于与主进程进行通信)*/
+ngx_int_t        ngx_process_slot;		/*当前进程在ngx_processes中元素的下标*/
+ngx_socket_t     ngx_channel;			/*子进程套接字对中的读套接字(用于与主进程进行通信)*/
 ngx_int_t        ngx_last_process;   	/*子进程的数量*/
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];  /*存储所有子进程的信息*/
 

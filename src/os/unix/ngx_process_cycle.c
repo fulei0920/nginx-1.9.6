@@ -769,8 +769,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
         if (ngx_quit) 
 		{
             ngx_quit = 0;
-            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
-                          "gracefully shutting down");
+            ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "gracefully shutting down");
             ngx_setproctitle("worker process is shutting down");
 
             if (!ngx_exiting) 
@@ -876,9 +875,9 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
 
     /* allow coredump after setuid() in Linux 2.4.x */
 
-    if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                      "prctl(PR_SET_DUMPABLE) failed");
+    if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) == -1) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "prctl(PR_SET_DUMPABLE) failed");
     }
 
 #endif
