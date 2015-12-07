@@ -1731,12 +1731,14 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
         }
 
         ls = ngx_http_add_listening(cf, &addr[i]);
-        if (ls == NULL) {
+        if (ls == NULL) 
+		{
             return NGX_ERROR;
         }
 
         hport = ngx_pcalloc(cf->pool, sizeof(ngx_http_port_t));
-        if (hport == NULL) {
+        if (hport == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -1744,23 +1746,27 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
 
         hport->naddrs = i + 1;
 
-        switch (ls->sockaddr->sa_family) {
+        switch (ls->sockaddr->sa_family) 
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
-            if (ngx_http_add_addrs6(cf, hport, addr) != NGX_OK) {
+            if (ngx_http_add_addrs6(cf, hport, addr) != NGX_OK) 
+			{
                 return NGX_ERROR;
             }
             break;
 #endif
         default: /* AF_INET */
-            if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) {
+            if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) 
+			{
                 return NGX_ERROR;
             }
             break;
         }
 
-        if (ngx_clone_listening(cf, ls) != NGX_OK) {
+        if (ngx_clone_listening(cf, ls) != NGX_OK)
+		{
             return NGX_ERROR;
         }
 

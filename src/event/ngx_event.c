@@ -273,11 +273,13 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 ngx_int_t
 ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 {
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) {
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) 
+	{
 
         /* kqueue, epoll */
 
-        if (!rev->active && !rev->ready) {
+        if (!rev->active && !rev->ready)
+		{
             if (ngx_add_event(rev, NGX_READ_EVENT, NGX_CLEAR_EVENT)
                 == NGX_ERROR)
             {

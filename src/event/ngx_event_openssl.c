@@ -1032,7 +1032,6 @@ ngx_ssl_create_connection(ngx_ssl_t *ssl, ngx_connection_t *c, ngx_uint_t flags)
     ngx_ssl_connection_t  *sc;
 
     sc = ngx_pcalloc(c->pool, sizeof(ngx_ssl_connection_t));
-    if (sc == NULL) 
     if (sc == NULL)
 	{
         return NGX_ERROR;
@@ -1106,7 +1105,6 @@ ngx_ssl_handshake(ngx_connection_t *c)
 
     if (n == 1) 
 	{
-
         if (ngx_handle_read_event(c->read, 0) != NGX_OK) 
 		{
             return NGX_ERROR;
@@ -1127,11 +1125,14 @@ ngx_ssl_handshake(ngx_connection_t *c)
 
         cipher = SSL_get_current_cipher(c->ssl->connection);
 
-        if (cipher) {
+        if (cipher) 
+		{
             SSL_CIPHER_description(cipher, &buf[1], 128);
 
-            for (s = &buf[1], d = buf; *s; s++) {
-                if (*s == ' ' && *d == ' ') {
+            for (s = &buf[1], d = buf; *s; s++) 
+			{
+                if (*s == ' ' && *d == ' ') 
+				{
                     continue;
                 }
 
@@ -1142,7 +1143,8 @@ ngx_ssl_handshake(ngx_connection_t *c)
                 *++d = *s;
             }
 
-            if (*d != ' ') {
+            if (*d != ' ') 
+			{
                 d++;
             }
 
@@ -1157,9 +1159,10 @@ ngx_ssl_handshake(ngx_connection_t *c)
                                "SSL reused session");
             }
 
-        } else {
-            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                           "SSL no shared ciphers");
+        } 
+		else 
+		{
+            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL no shared ciphers");
         }
         }
 #endif
@@ -1209,7 +1212,8 @@ ngx_ssl_handshake(ngx_connection_t *c)
         return NGX_AGAIN;
     }
 
-    if (sslerr == SSL_ERROR_WANT_WRITE) {
+    if (sslerr == SSL_ERROR_WANT_WRITE) 
+	{
         c->write->ready = 0;
         c->read->handler = ngx_ssl_handshake_handler;
         c->write->handler = ngx_ssl_handshake_handler;
@@ -1253,15 +1257,16 @@ ngx_ssl_handshake_handler(ngx_event_t *ev)
 
     c = ev->data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                   "SSL handshake handler: %d", ev->write);
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL handshake handler: %d", ev->write);
 
-    if (ev->timedout) {
+    if (ev->timedout) 
+	{
         c->ssl->handler(c);
         return;
     }
 
-    if (ngx_ssl_handshake(c) == NGX_AGAIN) {
+    if (ngx_ssl_handshake(c) == NGX_AGAIN) 
+	{
         return;
     }
 
