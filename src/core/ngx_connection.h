@@ -37,7 +37,7 @@ struct ngx_listening_s
     /* handler of accepted connection */
     ngx_connection_handler_pt   handler;
 
-    void               *servers;  /* array of ngx_http_in_addr_t, for example */
+    void               *servers;  /* array of ngx_http_in_addr_t, for example */   
     ngx_log_t           log;
     ngx_log_t          *logp;
 
@@ -61,7 +61,7 @@ struct ngx_listening_s
     unsigned            nonblocking_accept:1;
     unsigned            listen:1;
     unsigned            nonblocking:1;
-    unsigned            shared:1;    /* shared between threads or processes */
+    unsigned            shared:1;    		/* shared between threads or processes */
     unsigned            addr_ntop:1;
 
 #if (NGX_HAVE_INET6 && defined IPV6_V6ONLY)
@@ -126,7 +126,7 @@ struct ngx_connection_s
     ngx_event_t        *read;
     ngx_event_t        *write;
 
-    ngx_socket_t        fd;    /*该连接对应的描述符*/
+    ngx_socket_t        fd;    		/*该连接对应的描述符*/
 
     ngx_recv_pt         recv;
     ngx_send_pt         send;
@@ -141,9 +141,9 @@ struct ngx_connection_s
 
     ngx_pool_t         *pool;
 
-    struct sockaddr    *sockaddr;
-    socklen_t           socklen;
-    ngx_str_t           addr_text;
+    struct sockaddr    *sockaddr;				/* socket address of peer*/
+    socklen_t           socklen;				/* length of socket address of peer*/
+    ngx_str_t           addr_text;				/* the ip address of text of peer*/
 
     ngx_str_t           proxy_protocol_addr;
 
@@ -158,13 +158,13 @@ struct ngx_connection_s
 
     ngx_queue_t         queue;
 
-    ngx_atomic_uint_t   number;
+    ngx_atomic_uint_t   number;					/*该链接的序号*/
 
     ngx_uint_t          requests;
 
     unsigned            buffered:8;
 
-    unsigned            log_error:3;     /* ngx_connection_log_error_e */
+    unsigned            log_error:3;     		/* ngx_connection_log_error_e */
 
     unsigned            unexpected_eof:1;
     unsigned            timedout:1;

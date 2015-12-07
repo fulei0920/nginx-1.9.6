@@ -242,7 +242,8 @@ typedef struct {
 } ngx_http_virtual_names_t;
 
 
-struct ngx_http_addr_conf_s {
+struct ngx_http_addr_conf_s
+{
     /* the default server configuration for this address:port */
     ngx_http_core_srv_conf_t  *default_server;
 
@@ -258,7 +259,8 @@ struct ngx_http_addr_conf_s {
 };
 
 
-typedef struct {
+typedef struct 
+{
     in_addr_t                  addr;
     ngx_http_addr_conf_t       conf;
 } ngx_http_in_addr_t;
@@ -266,7 +268,8 @@ typedef struct {
 
 #if (NGX_HAVE_INET6)
 
-typedef struct {
+typedef struct 
+{
     struct in6_addr            addr6;
     ngx_http_addr_conf_t       conf;
 } ngx_http_in6_addr_t;

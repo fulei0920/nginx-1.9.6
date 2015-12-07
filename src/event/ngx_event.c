@@ -49,12 +49,12 @@ ngx_atomic_t         *ngx_connection_counter = &connection_counter;
 
 
 ngx_atomic_t         *ngx_accept_mutex_ptr;
-ngx_shmtx_t           ngx_accept_mutex;
+ngx_shmtx_t           ngx_accept_mutex;       	/*进程间的互斥锁*/
 ngx_uint_t            ngx_use_accept_mutex;
 ngx_uint_t            ngx_accept_events;
-ngx_uint_t            ngx_accept_mutex_held;
+ngx_uint_t            ngx_accept_mutex_held;    /*监听套接字注册到事件循环中*/
 ngx_msec_t            ngx_accept_mutex_delay;
-ngx_int_t             ngx_accept_disabled;
+ngx_int_t             ngx_accept_disabled;		/*负载均衡的阈值*/
 
 
 #if (NGX_STAT_STUB)
@@ -140,26 +140,32 @@ static ngx_command_t  ngx_event_core_commands[] =
 		NULL 
     },
 
-    { ngx_string("multi_accept"),
-      NGX_EVENT_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      0,
-      offsetof(ngx_event_conf_t, multi_accept),
-      NULL },
+    { 
+		ngx_string("multi_accept"),
+		NGX_EVENT_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		0,
+		offsetof(ngx_event_conf_t, multi_accept),
+		NULL 
+	},
 
-    { ngx_string("accept_mutex"),
-      NGX_EVENT_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      0,
-      offsetof(ngx_event_conf_t, accept_mutex),
-      NULL },
+	{ 
+		ngx_string("accept_mutex"),
+		NGX_EVENT_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		0,
+		offsetof(ngx_event_conf_t, accept_mutex),
+		NULL 
+    },
 
-    { ngx_string("accept_mutex_delay"),
-      NGX_EVENT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_msec_slot,
-      0,
-      offsetof(ngx_event_conf_t, accept_mutex_delay),
-      NULL },
+    { 
+    	ngx_string("accept_mutex_delay"),
+		NGX_EVENT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_msec_slot,
+		0,
+		offsetof(ngx_event_conf_t, accept_mutex_delay),
+		NULL 
+     },
 
     { ngx_string("debug_connection"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -209,37 +215,44 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 	{
         timer = NGX_TIMER_INFINITE;
         flags = 0;
-
-    } else {
+    } 
+	else 
+	{
         timer = ngx_event_find_timer();
         flags = NGX_UPDATE_TIME;
 
 #if (NGX_WIN32)
 
         /* handle signals from master in case of network inactivity */
-
-        if (timer == NGX_TIMER_INFINITE || timer > 500) {
+        if (timer == NGX_TIMER_INFINITE || timer > 500)
+		{
             timer = 500;
         }
 
 #endif
     }
 
-    if (ngx_use_accept_mutex) {
-        if (ngx_accept_disabled > 0) {
+    if (ngx_use_accept_mutex) 
+	{
+        if (ngx_accept_disabled > 0) 
+		{
             ngx_accept_disabled--;
-
-        } else {
-            if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
+        } 
+		else 
+		{
+            if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) 
+			{
                 return;
             }
 
-            if (ngx_accept_mutex_held) {
+            if (ngx_accept_mutex_held) 
+			{
                 flags |= NGX_POST_EVENTS;
 
-            } else {
-                if (timer == NGX_TIMER_INFINITE
-                    || timer > ngx_accept_mutex_delay)
+            }
+			else
+			{
+                if (timer == NGX_TIMER_INFINITE || timer > ngx_accept_mutex_delay)
                 {
                     timer = ngx_accept_mutex_delay;
                 }
@@ -253,16 +266,17 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
     delta = ngx_current_msec - delta;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                   "timer delta: %M", delta);
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "timer delta: %M", delta);
 
     ngx_event_process_posted(cycle, &ngx_posted_accept_events);
 
-    if (ngx_accept_mutex_held) {
+    if (ngx_accept_mutex_held) 
+	{
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
 
-    if (delta) {
+    if (delta)
+	{
         ngx_event_expire_timers();
     }
 
@@ -280,8 +294,7 @@ ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 
         if (!rev->active && !rev->ready)
 		{
-            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_CLEAR_EVENT)
-                == NGX_ERROR)
+            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR)
             {
                 return NGX_ERROR;
             }
@@ -289,13 +302,15 @@ ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 
         return NGX_OK;
 
-    } else if (ngx_event_flags & NGX_USE_LEVEL_EVENT) {
+    } 
+	else if (ngx_event_flags & NGX_USE_LEVEL_EVENT) 
+	{
 
         /* select, poll, /dev/poll */
 
-        if (!rev->active && !rev->ready) {
-            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT)
-                == NGX_ERROR)
+        if (!rev->active && !rev->ready) 
+		{
+            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT) == NGX_ERROR)
             {
                 return NGX_ERROR;
             }
@@ -303,9 +318,9 @@ ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
             return NGX_OK;
         }
 
-        if (rev->active && (rev->ready || (flags & NGX_CLOSE_EVENT))) {
-            if (ngx_del_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT | flags)
-                == NGX_ERROR)
+        if (rev->active && (rev->ready || (flags & NGX_CLOSE_EVENT))) 
+		{
+            if (ngx_del_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT | flags) == NGX_ERROR)
             {
                 return NGX_ERROR;
             }
@@ -313,20 +328,24 @@ ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
             return NGX_OK;
         }
 
-    } else if (ngx_event_flags & NGX_USE_EVENTPORT_EVENT) {
-
+    } 
+	else if (ngx_event_flags & NGX_USE_EVENTPORT_EVENT) 
+	{
         /* event ports */
-
-        if (!rev->active && !rev->ready) {
-            if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+        if (!rev->active && !rev->ready) 
+		{
+            if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) 
+			{
                 return NGX_ERROR;
             }
 
             return NGX_OK;
         }
 
-        if (rev->oneshot && !rev->ready) {
-            if (ngx_del_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
+        if (rev->oneshot && !rev->ready)
+		{
+            if (ngx_del_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) 
+			{
                 return NGX_ERROR;
             }
 
@@ -588,7 +607,6 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
         ngx_accept_mutex_delay = ecf->accept_mutex_delay;
-
     } 
 	else 
 	{
@@ -650,9 +668,9 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         sa.sa_handler = ngx_timer_signal_handler;
         sigemptyset(&sa.sa_mask);
 
-        if (sigaction(SIGALRM, &sa, NULL) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "sigaction(SIGALRM) failed");
+        if (sigaction(SIGALRM, &sa, NULL) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "sigaction(SIGALRM) failed");
             return NGX_ERROR;
         }
 
@@ -784,14 +802,12 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 			{
 
                 /*
-                 * delete the old accept events that were bound to
-                 * the old cycle read events array
+                 * delete the old accept events that were bound to the old cycle read events array
                  */
 
                 old = ls[i].previous->connection;
 
-                if (ngx_del_event(old->read, NGX_READ_EVENT, NGX_CLOSE_EVENT)
-                    == NGX_ERROR)
+                if (ngx_del_event(old->read, NGX_READ_EVENT, NGX_CLOSE_EVENT) == NGX_ERROR)
                 {
                     return NGX_ERROR;
                 }
@@ -808,7 +824,8 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
             rev->handler = ngx_event_acceptex;
 
-            if (ngx_use_accept_mutex) {
+            if (ngx_use_accept_mutex)
+			{
                 continue;
             }
 
@@ -825,7 +842,9 @@ ngx_event_process_init(ngx_cycle_t *cycle)
                 return NGX_ERROR;
             }
 
-        } else {
+        }
+		else
+		{
             rev->handler = ngx_event_accept;
 
             if (ngx_use_accept_mutex) {

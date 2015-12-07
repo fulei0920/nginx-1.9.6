@@ -864,7 +864,8 @@ ngx_close_listening_sockets(ngx_cycle_t *cycle)
     ngx_listening_t   *ls;
     ngx_connection_t  *c;
 
-    if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
+    if (ngx_event_flags & NGX_USE_IOCP_EVENT) 
+	{
         return;
     }
 
@@ -872,23 +873,22 @@ ngx_close_listening_sockets(ngx_cycle_t *cycle)
     ngx_use_accept_mutex = 0;
 
     ls = cycle->listening.elts;
-    for (i = 0; i < cycle->listening.nelts; i++) {
+    for (i = 0; i < cycle->listening.nelts; i++)
+	{
 
         c = ls[i].connection;
 
-        if (c) {
-            if (c->read->active) {
-                if (ngx_event_flags & NGX_USE_EPOLL_EVENT) {
-
-                    /*
-                     * it seems that Linux-2.6.x OpenVZ sends events
-                     * for closed shared listening sockets unless
-                     * the events was explicitly deleted
-                     */
-
+        if (c)
+		{
+            if (c->read->active) 
+			{
+                if (ngx_event_flags & NGX_USE_EPOLL_EVENT) 
+				{
+                    /*it seems that Linux-2.6.x OpenVZ sends events for closed shared listening sockets unless the events was explicitly deleted */
                     ngx_del_event(c->read, NGX_READ_EVENT, 0);
-
-                } else {
+                } 
+				else 
+				{
                     ngx_del_event(c->read, NGX_READ_EVENT, NGX_CLOSE_EVENT);
                 }
             }
@@ -898,12 +898,11 @@ ngx_close_listening_sockets(ngx_cycle_t *cycle)
             c->fd = (ngx_socket_t) -1;
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0,
-                       "close listening %V #%d ", &ls[i].addr_text, ls[i].fd);
+        ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0, "close listening %V #%d ", &ls[i].addr_text, ls[i].fd);
 
-        if (ngx_close_socket(ls[i].fd) == -1) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno,
-                          ngx_close_socket_n " %V failed", &ls[i].addr_text);
+        if (ngx_close_socket(ls[i].fd) == -1) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno, ngx_close_socket_n " %V failed", &ls[i].addr_text);
         }
 
 #if (NGX_HAVE_UNIX_DOMAIN)
@@ -912,9 +911,9 @@ ngx_close_listening_sockets(ngx_cycle_t *cycle)
         {
             u_char *name = ls[i].addr_text.data + sizeof("unix:") - 1;
 
-            if (ngx_delete_file(name) == NGX_FILE_ERROR) {
-                ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno,
-                              ngx_delete_file_n " %s failed", name);
+            if (ngx_delete_file(name) == NGX_FILE_ERROR) 
+			{
+                ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_socket_errno, ngx_delete_file_n " %s failed", name);
             }
         }
 
@@ -1000,7 +999,8 @@ ngx_free_connection(ngx_connection_t *c)
     ngx_cycle->free_connections = c;
     ngx_cycle->free_connection_n++;
 
-    if (ngx_cycle->files) {
+    if (ngx_cycle->files) 
+	{
         ngx_cycle->files[c->fd] = NULL;
     }
 }
@@ -1094,10 +1094,10 @@ ngx_close_connection(ngx_connection_t *c)
 void
 ngx_reusable_connection(ngx_connection_t *c, ngx_uint_t reusable)
 {
-    ngx_log_debug1(NGX_LOG_DEBUG_CORE, c->log, 0,
-                   "reusable connection: %ui", reusable);
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, c->log, 0, "reusable connection: %ui", reusable);
 
-    if (c->reusable) {
+    if (c->reusable)
+	{
         ngx_queue_remove(&c->queue);
 
 #if (NGX_STAT_STUB)
@@ -1107,11 +1107,10 @@ ngx_reusable_connection(ngx_connection_t *c, ngx_uint_t reusable)
 
     c->reusable = reusable;
 
-    if (reusable) {
+    if (reusable) 
+	{
         /* need cast as ngx_cycle is volatile */
-
-        ngx_queue_insert_head(
-            (ngx_queue_t *) &ngx_cycle->reusable_connections_queue, &c->queue);
+        ngx_queue_insert_head((ngx_queue_t *) &ngx_cycle->reusable_connections_queue, &c->queue);
 
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_waiting, 1);
@@ -1166,8 +1165,7 @@ ngx_close_idle_connections(ngx_cycle_t *cycle)
 
 
 ngx_int_t
-ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s,
-    ngx_uint_t port)
+ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s, ngx_uint_t port)
 {
     socklen_t             len;
     ngx_uint_t            addr;
@@ -1180,14 +1178,17 @@ ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s,
 
     addr = 0;
 
-    if (c->local_socklen) {
-        switch (c->local_sockaddr->sa_family) {
+    if (c->local_socklen) 
+	{
+        switch (c->local_sockaddr->sa_family) 
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
             sin6 = (struct sockaddr_in6 *) c->local_sockaddr;
 
-            for (i = 0; addr == 0 && i < 16; i++) {
+            for (i = 0; addr == 0 && i < 16; i++) 
+			{
                 addr |= sin6->sin6_addr.s6_addr[i];
             }
 
@@ -1207,17 +1208,20 @@ ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s,
         }
     }
 
-    if (addr == 0) {
+    if (addr == 0) 
+	{
 
         len = NGX_SOCKADDRLEN;
 
-        if (getsockname(c->fd, (struct sockaddr *) &sa, &len) == -1) {
+        if (getsockname(c->fd, (struct sockaddr *) &sa, &len) == -1)
+		{
             ngx_connection_error(c, ngx_socket_errno, "getsockname() failed");
             return NGX_ERROR;
         }
 
         c->local_sockaddr = ngx_palloc(c->pool, len);
-        if (c->local_sockaddr == NULL) {
+        if (c->local_sockaddr == NULL)
+		{
             return NGX_ERROR;
         }
 
@@ -1226,12 +1230,12 @@ ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s,
         c->local_socklen = len;
     }
 
-    if (s == NULL) {
+    if (s == NULL) 
+	{
         return NGX_OK;
     }
 
-    s->len = ngx_sock_ntop(c->local_sockaddr, c->local_socklen,
-                           s->data, s->len, port);
+    s->len = ngx_sock_ntop(c->local_sockaddr, c->local_socklen, s->data, s->len, port);
 
     return NGX_OK;
 }

@@ -221,13 +221,11 @@ ngx_http_init_connection(ngx_connection_t *c)
 
     if (port->naddrs > 1) 
 	{
-
         /*
          * there are several addresses on this port and one of them
          * is an "*:port" wildcard so getsockname() in ngx_http_server_addr()
          * is required to determine a server address
          */
-
         if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK)
 		{
             ngx_http_close_connection(c);
@@ -245,8 +243,10 @@ ngx_http_init_connection(ngx_connection_t *c)
 
             /* the last address is "*" */
 
-            for (i = 0; i < port->naddrs - 1; i++) {
-                if (ngx_memcmp(&addr6[i].addr6, &sin6->sin6_addr, 16) == 0) {
+            for (i = 0; i < port->naddrs - 1; i++) 
+			{
+                if (ngx_memcmp(&addr6[i].addr6, &sin6->sin6_addr, 16) == 0) 
+				{
                     break;
                 }
             }
@@ -263,8 +263,10 @@ ngx_http_init_connection(ngx_connection_t *c)
 
             /* the last address is "*" */
 
-            for (i = 0; i < port->naddrs - 1; i++) {
-                if (addr[i].addr == sin->sin_addr.s_addr) {
+            for (i = 0; i < port->naddrs - 1; i++)
+			{
+                if (addr[i].addr == sin->sin_addr.s_addr) 
+				{
                     break;
                 }
             }
@@ -274,9 +276,12 @@ ngx_http_init_connection(ngx_connection_t *c)
             break;
         }
 
-    } else {
+    } 
+	else 
+	{
 
-        switch (c->local_sockaddr->sa_family) {
+        switch (c->local_sockaddr->sa_family)
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
@@ -296,7 +301,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     hc->conf_ctx = hc->addr_conf->default_server->ctx;
 
     ctx = ngx_palloc(c->pool, sizeof(ngx_http_log_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL)
+	{
         ngx_http_close_connection(c);
         return;
     }
@@ -348,7 +354,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     }
 #endif
 
-    if (hc->addr_conf->proxy_protocol) {
+    if (hc->addr_conf->proxy_protocol) 
+	{
         hc->proxy_protocol = 1;
         c->log->action = "reading PROXY protocol";
     }
@@ -356,8 +363,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     if (rev->ready)
 	{
         /* the deferred accept(), iocp */
-
-        if (ngx_use_accept_mutex) {
+        if (ngx_use_accept_mutex) 
+		{
             ngx_post_event(rev, &ngx_posted_events);
             return;
         }
@@ -369,7 +376,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     ngx_add_timer(rev, c->listening->post_accept_timeout);
     ngx_reusable_connection(c, 1);
 
-    if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+    if (ngx_handle_read_event(rev, 0) != NGX_OK) 
+	{
         ngx_http_close_connection(c);
         return;
     }
@@ -391,13 +399,15 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http wait request handler");
 
-    if (rev->timedout) {
+    if (rev->timedout) 
+	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         ngx_http_close_connection(c);
         return;
     }
 
-    if (c->close) {
+    if (c->close) 
+	{
         ngx_http_close_connection(c);
         return;
     }
@@ -408,20 +418,24 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
     size = cscf->client_header_buffer_size;
 
     b = c->buffer;
-
-    if (b == NULL) {
+    if (b == NULL) 
+	{
         b = ngx_create_temp_buf(c->pool, size);
-        if (b == NULL) {
+        if (b == NULL)
+		{
             ngx_http_close_connection(c);
             return;
         }
 
         c->buffer = b;
 
-    } else if (b->start == NULL) {
+    } 
+	else if (b->start == NULL) 
+	{
 
         b->start = ngx_palloc(c->pool, size);
-        if (b->start == NULL) {
+        if (b->start == NULL) 
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -433,14 +447,17 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     n = c->recv(c, b->last, size);
 
-    if (n == NGX_AGAIN) {
+    if (n == NGX_AGAIN) 
+	{
 
-        if (!rev->timer_set) {
+        if (!rev->timer_set) 
+		{
             ngx_add_timer(rev, c->listening->post_accept_timeout);
             ngx_reusable_connection(c, 1);
         }
 
-        if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+        if (ngx_handle_read_event(rev, 0) != NGX_OK) 
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -3533,13 +3550,14 @@ ngx_http_close_connection(ngx_connection_t *c)
 {
     ngx_pool_t  *pool;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "close http connection: %d", c->fd);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0, "close http connection: %d", c->fd);
 
 #if (NGX_HTTP_SSL)
 
-    if (c->ssl) {
-        if (ngx_ssl_shutdown(c) == NGX_AGAIN) {
+    if (c->ssl) 
+	{
+        if (ngx_ssl_shutdown(c) == NGX_AGAIN) 
+		{
             c->ssl->handler = ngx_http_close_connection;
             return;
         }

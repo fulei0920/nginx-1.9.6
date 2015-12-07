@@ -229,12 +229,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_srv_conf_t, client_header_timeout),
       NULL },
 
-    { ngx_string("client_header_buffer_size"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_size_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, client_header_buffer_size),
-      NULL },
+    { 
+    	ngx_string("client_header_buffer_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_size_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, client_header_buffer_size),
+		NULL 
+    },
 
     { ngx_string("large_client_header_buffers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE2,
@@ -3535,8 +3537,7 @@ ngx_http_core_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
                               prev->request_pool_size, 4096);
     ngx_conf_merge_msec_value(conf->client_header_timeout,
                               prev->client_header_timeout, 60000);
-    ngx_conf_merge_size_value(conf->client_header_buffer_size,
-                              prev->client_header_buffer_size, 1024);
+    ngx_conf_merge_size_value(conf->client_header_buffer_size, prev->client_header_buffer_size, 1024);
     ngx_conf_merge_bufs_value(conf->large_client_header_buffers,
                               prev->large_client_header_buffers,
                               4, 8192);

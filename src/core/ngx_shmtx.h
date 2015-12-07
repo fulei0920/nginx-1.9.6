@@ -13,7 +13,8 @@
 #include <ngx_core.h>
 
 
-typedef struct {
+typedef struct
+{
     ngx_atomic_t   lock;
 #if (NGX_HAVE_POSIX_SEM)
     ngx_atomic_t   wait;

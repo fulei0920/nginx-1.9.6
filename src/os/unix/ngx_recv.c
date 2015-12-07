@@ -135,21 +135,23 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
 
     rev = c->read;
 
-    do {
+    do
+	{
         n = recv(c->fd, buf, size, 0);
 
-        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                       "recv: fd:%d %d of %d", c->fd, n, size);
+        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0, "recv: fd:%d %d of %d", c->fd, n, size);
 
-        if (n == 0) {
+        if (n == 0) 
+		{
             rev->ready = 0;
             rev->eof = 1;
             return n;
 
-        } else if (n > 0) {
+        } 
+		else if (n > 0) 
+		{
 
-            if ((size_t) n < size
-                && !(ngx_event_flags & NGX_USE_GREEDY_EVENT))
+            if ((size_t) n < size && !(ngx_event_flags & NGX_USE_GREEDY_EVENT))
             {
                 rev->ready = 0;
             }
@@ -157,19 +159,23 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
             return n;
         }
 
+		/*n < 0*/
         err = ngx_socket_errno;
 
-        if (err == NGX_EAGAIN || err == NGX_EINTR) {
-            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, err,
-                           "recv() not ready");
+        if (err == NGX_EAGAIN || err == NGX_EINTR) 
+		{
+            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, err, "recv() not ready");
             n = NGX_AGAIN;
 
-        } else {
+        } 
+		else 
+		{
             n = ngx_connection_error(c, err, "recv() failed");
             break;
         }
 
-    } while (err == NGX_EINTR);
+    } 
+	while (err == NGX_EINTR);
 
     rev->ready = 0;
 

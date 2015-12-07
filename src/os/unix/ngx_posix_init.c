@@ -12,14 +12,15 @@
 
 ngx_int_t   ngx_ncpu;							/*CPU核个数*/
 ngx_int_t   ngx_max_sockets;
-ngx_uint_t  ngx_inherited_nonblocking;
+ngx_uint_t  ngx_inherited_nonblocking;			/*已连接套接字继承监听套接字的非阻塞属性*/
 ngx_uint_t  ngx_tcp_nodelay_and_tcp_nopush;
 
 
 struct rlimit  rlmt;
 
 
-ngx_os_io_t ngx_os_io = {
+ngx_os_io_t ngx_os_io = 
+{
     ngx_unix_recv,
     ngx_readv_chain,
     ngx_udp_unix_recv,
