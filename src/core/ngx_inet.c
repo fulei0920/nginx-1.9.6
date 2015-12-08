@@ -177,8 +177,9 @@ ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
 #endif
 
 /*
-将套接字地址结构中网络ip地址和端口转换为点分十进制模式
-port -- 是否转换端口
+将套接字地址结构中网络ip地址和端口转换为点分十进制表示
+port -- 表示是否转换端口
+返回值 -- 点分十进制表示字符串的长度
 */
 size_t
 ngx_sock_ntop(struct sockaddr *sa, socklen_t socklen, u_char *text, size_t len, ngx_uint_t port)
@@ -220,15 +221,16 @@ ngx_sock_ntop(struct sockaddr *sa, socklen_t socklen, u_char *text, size_t len, 
 
         n = 0;
 
-        if (port) {
+        if (port) 
+		{
             text[n++] = '[';
         }
 
         n = ngx_inet6_ntop(sin6->sin6_addr.s6_addr, &text[n], len);
 
-        if (port) {
-            n = ngx_sprintf(&text[1 + n], "]:%d",
-                            ntohs(sin6->sin6_port)) - text;
+        if (port)
+		{
+            n = ngx_sprintf(&text[1 + n], "]:%d", ntohs(sin6->sin6_port)) - text;
         }
 
         return n;

@@ -219,7 +219,8 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
         /* handle signals from master in case of network inactivity */
 
-        if (timer == NGX_TIMER_INFINITE || timer > 500) {
+        if (timer == NGX_TIMER_INFINITE || timer > 500) 
+		{
             timer = 500;
         }
 
@@ -657,9 +658,9 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         sa.sa_handler = ngx_timer_signal_handler;
         sigemptyset(&sa.sa_mask);
 
-        if (sigaction(SIGALRM, &sa, NULL) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
-                          "sigaction(SIGALRM) failed");
+        if (sigaction(SIGALRM, &sa, NULL) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "sigaction(SIGALRM) failed");
             return NGX_ERROR;
         }
 
@@ -697,8 +698,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
     if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT))
 	{
-        ngx_log_error(NGX_LOG_WARN, cycle->log, 0,
-                      "the \"timer_resolution\" directive is not supported "
+        ngx_log_error(NGX_LOG_WARN, cycle->log, 0, "the \"timer_resolution\" directive is not supported "
                       "with the configured event method, ignored");
         ngx_timer_resolution = 0;
     }

@@ -12,19 +12,18 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
-typedef struct ngx_listening_s  ngx_listening_t;
 /*
 描述一个监听套接字
 */
+typedef struct ngx_listening_s  ngx_listening_t;
 struct ngx_listening_s 
 {
-    ngx_socket_t        fd;			/* 文件描述符,即socket */  
+    ngx_socket_t        fd;					/*文件描述符,即socket*/  
     struct sockaddr    *sockaddr;
     socklen_t           socklen;    		/* size of sockaddr */
     size_t              addr_text_max_len;
     ngx_str_t           addr_text;
-    int                 type;		/*指定socket类型*/	
+    int                 type;				/* socket类型*/	
     int                 backlog;
     int                 rcvbuf;				/*接收缓冲区大小*/  
     int                 sndbuf;				/*发送缓冲区大小*/  
@@ -50,7 +49,7 @@ struct ngx_listening_s
     ngx_listening_t    *previous;
     ngx_connection_t   *connection;
 
-    ngx_uint_t          worker;
+    ngx_uint_t          worker;  		/*该监听套接字所属的worker进程的标号*/
 
     unsigned            open:1;
     unsigned            remain:1;
@@ -126,7 +125,7 @@ struct ngx_connection_s
     ngx_event_t        *read;
     ngx_event_t        *write;
 
-    ngx_socket_t        fd;    /*该连接对应的描述符*/
+    ngx_socket_t        fd;    				/*该连接对应的描述符*/
 
     ngx_recv_pt         recv;
     ngx_send_pt         send;

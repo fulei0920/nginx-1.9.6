@@ -25,14 +25,16 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
     u_char            text[NGX_SOCKADDR_STRLEN];
 
     ls = ngx_array_push(&cf->cycle->listening);
-    if (ls == NULL) {
+    if (ls == NULL) 
+	{
         return NULL;
     }
 
     ngx_memzero(ls, sizeof(ngx_listening_t));
 
     sa = ngx_palloc(cf->pool, socklen);
-    if (sa == NULL) {
+    if (sa == NULL) 
+	{
         return NULL;
     }
 
@@ -44,7 +46,8 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
     len = ngx_sock_ntop(sa, socklen, text, NGX_SOCKADDR_STRLEN, 1);
     ls->addr_text.len = len;
 
-    switch (ls->sockaddr->sa_family) {
+    switch (ls->sockaddr->sa_family) 
+	{
 #if (NGX_HAVE_INET6)
     case AF_INET6:
          ls->addr_text_max_len = NGX_INET6_ADDRSTRLEN;
@@ -65,7 +68,8 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
     }
 
     ls->addr_text.data = ngx_pnalloc(cf->pool, len);
-    if (ls->addr_text.data == NULL) {
+    if (ls->addr_text.data == NULL) 
+	{
         return NULL;
     }
 
@@ -99,21 +103,21 @@ ngx_clone_listening(ngx_conf_t *cf, ngx_listening_t *ls)
     ngx_core_conf_t  *ccf;
     ngx_listening_t   ols;
 
-    if (!ls->reuseport) {
+    if (!ls->reuseport) 
+	{
         return NGX_OK;
     }
 
     ols = *ls;
 
-    ccf = (ngx_core_conf_t *) ngx_get_conf(cf->cycle->conf_ctx,
-                                           ngx_core_module);
+    ccf = (ngx_core_conf_t *) ngx_get_conf(cf->cycle->conf_ctx, ngx_core_module);
 
-    for (n = 1; n < ccf->worker_processes; n++) {
-
+    for (n = 1; n < ccf->worker_processes; n++) 
+	{
         /* create a socket for each worker process */
-
         ls = ngx_array_push(&cf->cycle->listening);
-        if (ls == NULL) {
+        if (ls == NULL)
+		{
             return NGX_ERROR;
         }
 

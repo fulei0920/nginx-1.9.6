@@ -22,9 +22,9 @@
  */
 
 #define NGX_INET_ADDRSTRLEN   (sizeof("255.255.255.255") - 1)
-#define NGX_INET6_ADDRSTRLEN                                                 \
+#define NGX_INET6_ADDRSTRLEN       	\
     (sizeof("ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255") - 1)
-#define NGX_UNIX_ADDRSTRLEN                                                  \
+#define NGX_UNIX_ADDRSTRLEN      	\
     (sizeof(struct sockaddr_un) - offsetof(struct sockaddr_un, sun_path))
 
 #if (NGX_HAVE_UNIX_DOMAIN)

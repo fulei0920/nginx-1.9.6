@@ -1191,17 +1191,20 @@ ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     np = (ngx_int_t *) (p + cmd->offset);
 
-    if (*np != NGX_CONF_UNSET) {
+    if (*np != NGX_CONF_UNSET) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
     *np = ngx_atoi(value[1].data, value[1].len);
-    if (*np == NGX_ERROR) {
+    if (*np == NGX_ERROR) 
+	{
         return "invalid number";
     }
 
-    if (cmd->post) {
+    if (cmd->post) 
+	
         post = cmd->post;
         return post->post_handler(cf, post, np);
     }

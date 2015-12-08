@@ -32,8 +32,10 @@ ngx_event_accept(ngx_event_t *ev)
     static ngx_uint_t  use_accept4 = 1;
 #endif
 
-    if (ev->timedout) {
-        if (ngx_enable_accept_events((ngx_cycle_t *) ngx_cycle) != NGX_OK) {
+    if (ev->timedout) 
+	{
+        if (ngx_enable_accept_events((ngx_cycle_t *) ngx_cycle) != NGX_OK)
+		{
             return;
         }
 
@@ -42,7 +44,8 @@ ngx_event_accept(ngx_event_t *ev)
 
     ecf = ngx_event_get_conf(ngx_cycle->conf_ctx, ngx_event_core_module);
 
-    if (!(ngx_event_flags & NGX_USE_KQUEUE_EVENT)) {
+    if (!(ngx_event_flags & NGX_USE_KQUEUE_EVENT)) 
+	{
         ev->available = ecf->multi_accept;
     }
 
@@ -50,46 +53,52 @@ ngx_event_accept(ngx_event_t *ev)
     ls = lc->listening;
     ev->ready = 0;
 
-    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0,
-                   "accept on %V, ready: %d", &ls->addr_text, ev->available);
+    ngx_log_debug2(NGX_LOG_DEBUG_EVENT, ev->log, 0, "accept on %V, ready: %d", &ls->addr_text, ev->available);
 
-    do {
+    do 
+	{
         socklen = NGX_SOCKADDRLEN;
 
 #if (NGX_HAVE_ACCEPT4)
-        if (use_accept4) {
-            s = accept4(lc->fd, (struct sockaddr *) sa, &socklen,
-                        SOCK_NONBLOCK);
-        } else {
+        if (use_accept4) 
+		{
+            s = accept4(lc->fd, (struct sockaddr *) sa, &socklen, SOCK_NONBLOCK);
+        }
+		else 
+        {
             s = accept(lc->fd, (struct sockaddr *) sa, &socklen);
         }
 #else
         s = accept(lc->fd, (struct sockaddr *) sa, &socklen);
 #endif
 
-        if (s == (ngx_socket_t) -1) {
+        if (s == (ngx_socket_t) -1)
+		{
             err = ngx_socket_errno;
 
-            if (err == NGX_EAGAIN) {
-                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ev->log, err,
-                               "accept() not ready");
+            if (err == NGX_EAGAIN) 
+			{
+                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ev->log, err, "accept() not ready");
                 return;
             }
 
             level = NGX_LOG_ALERT;
 
-            if (err == NGX_ECONNABORTED) {
+            if (err == NGX_ECONNABORTED)
+			{
                 level = NGX_LOG_ERR;
 
-            } else if (err == NGX_EMFILE || err == NGX_ENFILE) {
+            } 
+			else if (err == NGX_EMFILE || err == NGX_ENFILE) 
+			{
                 level = NGX_LOG_CRIT;
             }
 
 #if (NGX_HAVE_ACCEPT4)
-            ngx_log_error(level, ev->log, err,
-                          use_accept4 ? "accept4() failed" : "accept() failed");
+            ngx_log_error(level, ev->log, err, use_accept4 ? "accept4() failed" : "accept() failed");
 
-            if (use_accept4 && err == NGX_ENOSYS) {
+            if (use_accept4 && err == NGX_ENOSYS)
+			{
                 use_accept4 = 0;
                 ngx_inherited_nonblocking = 0;
                 continue;
@@ -98,32 +107,39 @@ ngx_event_accept(ngx_event_t *ev)
             ngx_log_error(level, ev->log, err, "accept() failed");
 #endif
 
-            if (err == NGX_ECONNABORTED) {
-                if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
+            if (err == NGX_ECONNABORTED)
+			{
+                if (ngx_event_flags & NGX_USE_KQUEUE_EVENT)
+				{
                     ev->available--;
                 }
 
-                if (ev->available) {
+                if (ev->available)
+				{
                     continue;
                 }
             }
 
-            if (err == NGX_EMFILE || err == NGX_ENFILE) {
-                if (ngx_disable_accept_events((ngx_cycle_t *) ngx_cycle, 1)
-                    != NGX_OK)
+            if (err == NGX_EMFILE || err == NGX_ENFILE) 
+			{
+                if (ngx_disable_accept_events((ngx_cycle_t *) ngx_cycle, 1) != NGX_OK)
                 {
                     return;
                 }
 
-                if (ngx_use_accept_mutex) {
-                    if (ngx_accept_mutex_held) {
+                if (ngx_use_accept_mutex)
+				{
+                    if (ngx_accept_mutex_held) 
+					{
                         ngx_shmtx_unlock(&ngx_accept_mutex);
                         ngx_accept_mutex_held = 0;
                     }
 
                     ngx_accept_disabled = 1;
 
-                } else {
+                }
+				else 
+				{
                     ngx_add_timer(ev, ecf->accept_mutex_delay);
                 }
             }
