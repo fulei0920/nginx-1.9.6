@@ -57,7 +57,8 @@ ngx_event_expire_timers(void)
 
     sentinel = ngx_event_timer_rbtree.sentinel;
 
-    for ( ;; ) {
+    for ( ;; )
+	{
         root = ngx_event_timer_rbtree.root;
 
         if (root == sentinel) {

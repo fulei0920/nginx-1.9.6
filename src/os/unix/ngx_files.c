@@ -541,7 +541,8 @@ ngx_trylock_fd(ngx_fd_t fd)
     fl.l_type = F_WRLCK;
     fl.l_whence = SEEK_SET;
 
-    if (fcntl(fd, F_SETLK, &fl) == -1) {
+    if (fcntl(fd, F_SETLK, &fl) == -1) 
+	{
         return ngx_errno;
     }
 

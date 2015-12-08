@@ -1758,7 +1758,8 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
-            if (ngx_http_add_addrs6(cf, hport, addr) != NGX_OK) {
+            if (ngx_http_add_addrs6(cf, hport, addr) != NGX_OK) 
+			{
                 return NGX_ERROR;
             }
             break;
@@ -1771,7 +1772,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             break;
         }
 
-        if (ngx_clone_listening(cf, ls) != NGX_OK) 
+        if (ngx_clone_listening(cf, ls) != NGX_OK)
 		{
             return NGX_ERROR;
         }

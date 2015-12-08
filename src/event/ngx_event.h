@@ -63,7 +63,7 @@ struct ngx_event_s
     /* the pending eof reported by kqueue, epoll or in aio chain operation */
     unsigned         pending_eof:1;
 
-    unsigned         posted:1;
+    unsigned         posted:1;			/*表明事件是否在posted queue中*/	
 
     unsigned         closed:1;
 
@@ -423,11 +423,14 @@ extern ngx_os_io_t  ngx_io;
 typedef struct 
 {
     ngx_uint_t    connections;
-    ngx_uint_t    use;			/*实际使用的io复用机制模块索引*/
-    ngx_flag_t    multi_accept;
+    ngx_uint_t    use;					/*实际使用的io复用机制模块索引*/
+	/* tries to accept() as many connections as possible after nginx gets notification about a new connection.*/
+    ngx_flag_t    multi_accept;	
+	/* uses accept mutex to serialize accept() syscalls*/
     ngx_flag_t    accept_mutex;
+	/* if a worker process does not have accept mutex it will try to acquire it at least after this delay. By default delay is 500ms.*/
     ngx_msec_t    accept_mutex_delay;
-    u_char       *name;			/*实际使用的io复用机制名称*/
+    u_char       *name;					/*实际使用的io复用机制名称*/
 	
 #if (NGX_DEBUG)
     ngx_array_t   debug_connection;		//ngx_cidr_t类型的数组

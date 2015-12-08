@@ -242,7 +242,8 @@ typedef struct {
 } ngx_http_virtual_names_t;
 
 
-struct ngx_http_addr_conf_s {
+struct ngx_http_addr_conf_s
+{
     /* the default server configuration for this address:port */
     ngx_http_core_srv_conf_t  *default_server;
 

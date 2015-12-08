@@ -19,7 +19,7 @@ typedef struct ngx_buf_s  ngx_buf_t;
 
 struct ngx_buf_s 
 {
-    u_char          *pos;			/*处理到的位置*/
+    u_char          *pos;			/*buffer中数据的起始位置*/
     u_char          *last;			/*buffer中数据的结束位置， buffer中数据的起始位置与buffer的起始位置相同*/
     off_t            file_pos;
     off_t            file_last;
@@ -34,10 +34,7 @@ struct ngx_buf_s
     /* the buf's content could be changed */
     unsigned         temporary:1;
 
-    /*
-     * the buf's content is in a memory cache or in a read only memory
-     * and must not be changed
-     */
+    /*the buf's content is in a memory cache or in a read only memory and must not be changed */
     unsigned         memory:1;
 
     /* the buf's content is mmap()ed and must not be changed */

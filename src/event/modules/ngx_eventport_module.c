@@ -576,8 +576,10 @@ ngx_eventport_process_events(ngx_cycle_t *cycle, ngx_msec_t timer,
                     }
                 }
 
-                if (rev->accept) {
-                    if (ngx_use_accept_mutex) {
+                if (rev->accept) 
+				{
+                    if (ngx_use_accept_mutex) 
+					{
                         ngx_accept_events = 1;
                         continue;
                     }

@@ -292,7 +292,8 @@ typedef struct {
 
 typedef struct ngx_http_addr_conf_s  ngx_http_addr_conf_t;
 
-typedef struct {
+typedef struct 
+{
     ngx_http_addr_conf_t             *addr_conf;
     ngx_http_conf_ctx_t              *conf_ctx;
 
@@ -357,7 +358,8 @@ typedef ngx_int_t (*ngx_http_handler_pt)(ngx_http_request_t *r);
 typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 
 
-struct ngx_http_request_s {
+struct ngx_http_request_s 
+{
     uint32_t                          signature;         /* "HTTP" */
 
     ngx_connection_t                 *connection;
