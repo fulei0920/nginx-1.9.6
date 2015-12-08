@@ -1091,6 +1091,12 @@ ngx_close_connection(ngx_connection_t *c)
 }
 
 
+
+/*
+if ngx_connection_t is reuseable, link it into the queue (ngx_cycle->reusable_connections_queue)
+or remove it from the queue
+resuable -- 1 means reusable, 0 means unreusable
+*/
 void
 ngx_reusable_connection(ngx_connection_t *c, ngx_uint_t reusable)
 {
@@ -1258,7 +1264,8 @@ ngx_connection_error(ngx_connection_t *c, ngx_err_t err, char *text)
     }
 
 #if (NGX_SOLARIS)
-    if (err == NGX_EINVAL && c->log_error == NGX_ERROR_IGNORE_EINVAL) {
+    if (err == NGX_EINVAL && c->log_error == NGX_ERROR_IGNORE_EINVAL) 
+	{
         return 0;
     }
 #endif

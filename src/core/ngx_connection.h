@@ -92,7 +92,8 @@ struct ngx_listening_s
 };
 
 
-typedef enum {
+typedef enum 
+{
      NGX_ERROR_ALERT = 0,
      NGX_ERROR_ERR,
      NGX_ERROR_INFO,
@@ -143,7 +144,7 @@ struct ngx_connection_s
 
     struct sockaddr    *sockaddr;				/* socket address of peer*/
     socklen_t           socklen;				/* length of socket address of peer*/
-    ngx_str_t           addr_text;				/* the ip address of text of peer*/
+    ngx_str_t           addr_text;				/* ip address text of peer*/
 
     ngx_str_t           proxy_protocol_addr;
 
@@ -177,8 +178,8 @@ struct ngx_connection_s
 
     unsigned            sendfile:1;
     unsigned            sndlowat:1;
-    unsigned            tcp_nodelay:2;   /* ngx_connection_tcp_nodelay_e */
-    unsigned            tcp_nopush:2;    /* ngx_connection_tcp_nopush_e */
+    unsigned            tcp_nodelay:2;   		/* ngx_connection_tcp_nodelay_e */
+    unsigned            tcp_nopush:2;    		/* ngx_connection_tcp_nopush_e */
 
     unsigned            need_last_buf:1;
 

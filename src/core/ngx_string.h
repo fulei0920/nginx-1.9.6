@@ -26,7 +26,8 @@ typedef struct {
 } ngx_keyval_t;
 
 
-typedef struct {
+typedef struct 
+{
     unsigned    len:28;
 
     unsigned    valid:1;

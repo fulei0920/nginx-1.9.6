@@ -104,7 +104,8 @@ ngx_int_t
 ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
 {
     u_char  c, ch, *p, *m;
-    enum {
+    enum 
+	{
         sw_start = 0,
         sw_method,
         sw_spaces_before_uri,
@@ -136,20 +137,24 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
 
     state = r->state;
 
-    for (p = b->pos; p < b->last; p++) {
+    for (p = b->pos; p < b->last; p++)
+	{
         ch = *p;
 
-        switch (state) {
+        switch (state) 
+		{
 
         /* HTTP methods: GET, HEAD, POST */
         case sw_start:
             r->request_start = p;
 
-            if (ch == CR || ch == LF) {
+            if (ch == CR || ch == LF) 
+			{
                 break;
             }
 
-            if ((ch < 'A' || ch > 'Z') && ch != '_') {
+            if ((ch < 'A' || ch > 'Z') && ch != '_') 
+			{
                 return NGX_HTTP_PARSE_INVALID_METHOD;
             }
 

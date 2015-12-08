@@ -279,7 +279,7 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_handled, 1);
 #endif
-
+		//set the address text of peer
         if (ls->addr_ntop) 
 		{
             c->addr_text.data = ngx_pnalloc(c->pool, ls->addr_text_max_len);

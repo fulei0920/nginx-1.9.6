@@ -179,7 +179,8 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
 
     rev->ready = 0;
 
-    if (n == NGX_ERROR) {
+    if (n == NGX_ERROR) 
+	{
         rev->error = 1;
     }
 
