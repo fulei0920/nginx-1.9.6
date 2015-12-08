@@ -21,20 +21,17 @@
 
 typedef struct ngx_peer_connection_s  ngx_peer_connection_t;
 
-typedef ngx_int_t (*ngx_event_get_peer_pt)(ngx_peer_connection_t *pc,
-    void *data);
-typedef void (*ngx_event_free_peer_pt)(ngx_peer_connection_t *pc, void *data,
-    ngx_uint_t state);
-#if (NGX_SSL)
+typedef ngx_int_t (*ngx_event_get_peer_pt)(ngx_peer_connection_t *pc, void *data);
+typedef void (*ngx_event_free_peer_pt)(ngx_peer_connection_t *pc, void *data, ngx_uint_t state);
 
-typedef ngx_int_t (*ngx_event_set_peer_session_pt)(ngx_peer_connection_t *pc,
-    void *data);
-typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc,
-    void *data);
+#if (NGX_SSL)
+typedef ngx_int_t (*ngx_event_set_peer_session_pt)(ngx_peer_connection_t *pc, void *data);
+typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc, void *data);
 #endif
 
 
-struct ngx_peer_connection_s {
+struct ngx_peer_connection_s 
+{
     ngx_connection_t                *connection;
 
     struct sockaddr                 *sockaddr;

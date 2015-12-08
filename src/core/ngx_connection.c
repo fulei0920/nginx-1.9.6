@@ -24,28 +24,28 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
     struct sockaddr  *sa;
     u_char            text[NGX_SOCKADDR_STRLEN];
 
+	/*get a listen struction*/
     ls = ngx_array_push(&cf->cycle->listening);
     if (ls == NULL) 
 	{
         return NULL;
     }
-
     ngx_memzero(ls, sizeof(ngx_listening_t));
 
+	/*set the socket address*/
     sa = ngx_palloc(cf->pool, socklen);
     if (sa == NULL) 
 	{
         return NULL;
     }
-
     ngx_memcpy(sa, sockaddr, socklen);
-
     ls->sockaddr = sa;
     ls->socklen = socklen;
 
     len = ngx_sock_ntop(sa, socklen, text, NGX_SOCKADDR_STRLEN, 1);
     ls->addr_text.len = len;
 
+	/*set the text socket address*/
     switch (ls->sockaddr->sa_family) 
 	{
 #if (NGX_HAVE_INET6)
@@ -66,18 +66,15 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
          ls->addr_text_max_len = NGX_SOCKADDR_STRLEN;
          break;
     }
-
     ls->addr_text.data = ngx_pnalloc(cf->pool, len);
     if (ls->addr_text.data == NULL) 
 	{
         return NULL;
     }
-
     ngx_memcpy(ls->addr_text.data, text, len);
 
     ls->fd = (ngx_socket_t) -1;
     ls->type = SOCK_STREAM;
-
     ls->backlog = NGX_LISTEN_BACKLOG;
     ls->rcvbuf = -1;
     ls->sndbuf = -1;
@@ -1017,24 +1014,31 @@ ngx_close_connection(ngx_connection_t *c)
     ngx_uint_t    log_error, level;
     ngx_socket_t  fd;
 
-    if (c->fd == (ngx_socket_t) -1) {
+    if (c->fd == (ngx_socket_t) -1) 
+	{
         ngx_log_error(NGX_LOG_ALERT, c->log, 0, "connection already closed");
         return;
     }
 
-    if (c->read->timer_set) {
+    if (c->read->timer_set)
+	{
         ngx_del_timer(c->read);
     }
 
-    if (c->write->timer_set) {
+    if (c->write->timer_set)
+	{
         ngx_del_timer(c->write);
     }
 
-    if (ngx_del_conn) {
+    if (ngx_del_conn) 
+	{
         ngx_del_conn(c, NGX_CLOSE_EVENT);
 
-    } else {
-        if (c->read->active || c->read->disabled) {
+    } 
+	else 
+	{
+        if (c->read->active || c->read->disabled) 
+		{
             ngx_del_event(c->read, NGX_READ_EVENT, NGX_CLOSE_EVENT);
         }
 
@@ -1043,11 +1047,13 @@ ngx_close_connection(ngx_connection_t *c)
         }
     }
 
-    if (c->read->posted) {
+    if (c->read->posted)
+	{
         ngx_delete_posted_event(c->read);
     }
 
-    if (c->write->posted) {
+    if (c->write->posted) 
+	{
         ngx_delete_posted_event(c->write);
     }
 
@@ -1063,34 +1069,31 @@ ngx_close_connection(ngx_connection_t *c)
     fd = c->fd;
     c->fd = (ngx_socket_t) -1;
 
-    if (ngx_close_socket(fd) == -1) {
-
+    if (ngx_close_socket(fd) == -1) 
+	{
         err = ngx_socket_errno;
+        if (err == NGX_ECONNRESET || err == NGX_ENOTCONN) 
+		{
 
-        if (err == NGX_ECONNRESET || err == NGX_ENOTCONN) {
-
-            switch (log_error) {
-
+            switch (log_error) 
+			{
             case NGX_ERROR_INFO:
                 level = NGX_LOG_INFO;
                 break;
-
             case NGX_ERROR_ERR:
                 level = NGX_LOG_ERR;
                 break;
-
             default:
                 level = NGX_LOG_CRIT;
             }
-
-        } else {
+        } 
+		else
+		{
             level = NGX_LOG_CRIT;
         }
 
         /* we use ngx_cycle->log because c->log was in c->pool */
-
-        ngx_log_error(level, ngx_cycle->log, err,
-                      ngx_close_socket_n " %d failed", fd);
+        ngx_log_error(level, ngx_cycle->log, err, ngx_close_socket_n " %d failed", fd);
     }
 }
 

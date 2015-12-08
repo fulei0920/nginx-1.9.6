@@ -23,7 +23,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
     ngx_connection_t  *c;
 
     rc = pc->get(pc, pc->data);
-    if (rc != NGX_OK) {
+    if (rc != NGX_OK) 
+	{
         return rc;
     }
 
@@ -31,38 +32,36 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, 0, "socket %d", s);
 
-    if (s == (ngx_socket_t) -1) {
-        ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno,
-                      ngx_socket_n " failed");
+    if (s == (ngx_socket_t) -1) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_socket_n " failed");
         return NGX_ERROR;
     }
 
 
     c = ngx_get_connection(s, pc->log);
-
-    if (c == NULL) {
-        if (ngx_close_socket(s) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno,
-                          ngx_close_socket_n "failed");
+    if (c == NULL)
+	{
+        if (ngx_close_socket(s) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_close_socket_n "failed");
         }
 
         return NGX_ERROR;
     }
 
-    if (pc->rcvbuf) {
-        if (setsockopt(s, SOL_SOCKET, SO_RCVBUF,
-                       (const void *) &pc->rcvbuf, sizeof(int)) == -1)
+    if (pc->rcvbuf)
+	{
+        if (setsockopt(s, SOL_SOCKET, SO_RCVBUF, (const void *) &pc->rcvbuf, sizeof(int)) == -1)
         {
-            ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno,
-                          "setsockopt(SO_RCVBUF) failed");
+            ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, "setsockopt(SO_RCVBUF) failed");
             goto failed;
         }
     }
 
-    if (ngx_nonblocking(s) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno,
-                      ngx_nonblocking_n " failed");
-
+    if (ngx_nonblocking(s) == -1) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_nonblocking_n " failed");
         goto failed;
     }
 
