@@ -58,7 +58,7 @@ struct ngx_cycle_s
     ngx_list_t                open_files;		/*ngx_open_file_t 类型的链表*/
     ngx_list_t                shared_memory;    /*ngx_shm_zone_t 类型的链表*/
 
-    ngx_uint_t                connection_n;			
+    ngx_uint_t                connection_n;		/*connections数组的大小*/	
     ngx_uint_t                files_n;
 
     ngx_connection_t         *connections;     	/*指向所分配的所有的connection*/

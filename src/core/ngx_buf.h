@@ -31,8 +31,8 @@ struct ngx_buf_s
     ngx_buf_t       *shadow;
 
 
-    /* the buf's content could be changed */
-    unsigned         temporary:1;
+    
+    unsigned         temporary:1;		/* the buf's content could be changed */
 
     /*the buf's content is in a memory cache or in a read only memory and must not be changed */
     unsigned         memory:1;

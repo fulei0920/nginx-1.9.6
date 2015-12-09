@@ -16,27 +16,31 @@ static char *ngx_stream_core_merge_srv_conf(ngx_conf_t *cf, void *parent,
     void *child);
 static char *ngx_stream_core_error_log(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char *ngx_stream_core_server(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_stream_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
 
-static ngx_command_t  ngx_stream_core_commands[] = {
+static ngx_command_t  ngx_stream_core_commands[] = 
+{
 
-    { ngx_string("server"),
-      NGX_STREAM_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_stream_core_server,
-      0,
-      0,
-      NULL },
+    { 
+		ngx_string("server"),
+		NGX_STREAM_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+		ngx_stream_core_server,
+		0,
+		0,
+		NULL 
+    },
 
-    { ngx_string("listen"),
-      NGX_STREAM_SRV_CONF|NGX_CONF_1MORE,
-      ngx_stream_core_listen,
-      NGX_STREAM_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+    	ngx_string("listen"),
+      	NGX_STREAM_SRV_CONF|NGX_CONF_1MORE,
+      	ngx_stream_core_listen,
+		NGX_STREAM_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("error_log"),
       NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_1MORE,
@@ -45,12 +49,14 @@ static ngx_command_t  ngx_stream_core_commands[] = {
       0,
       NULL },
 
-    { ngx_string("tcp_nodelay"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_STREAM_SRV_CONF_OFFSET,
-      offsetof(ngx_stream_core_srv_conf_t, tcp_nodelay),
-      NULL },
+    { 
+    	ngx_string("tcp_nodelay"),
+		NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_STREAM_SRV_CONF_OFFSET,
+		offsetof(ngx_stream_core_srv_conf_t, tcp_nodelay),
+		NULL 
+    },
 
       ngx_null_command
 };
@@ -67,7 +73,8 @@ static ngx_stream_module_t  ngx_stream_core_module_ctx = {
 };
 
 
-ngx_module_t  ngx_stream_core_module = {
+ngx_module_t  ngx_stream_core_module = 
+{
     NGX_MODULE_V1,
     &ngx_stream_core_module_ctx,           /* module context */
     ngx_stream_core_commands,              /* module directives */
@@ -89,19 +96,17 @@ ngx_stream_core_create_main_conf(ngx_conf_t *cf)
     ngx_stream_core_main_conf_t  *cmcf;
 
     cmcf = ngx_pcalloc(cf->pool, sizeof(ngx_stream_core_main_conf_t));
-    if (cmcf == NULL) {
+    if (cmcf == NULL) 
+	{
         return NULL;
     }
 
-    if (ngx_array_init(&cmcf->servers, cf->pool, 4,
-                       sizeof(ngx_stream_core_srv_conf_t *))
-        != NGX_OK)
+    if (ngx_array_init(&cmcf->servers, cf->pool, 4, sizeof(ngx_stream_core_srv_conf_t *)) != NGX_OK)
     {
         return NULL;
     }
 
-    if (ngx_array_init(&cmcf->listen, cf->pool, 4, sizeof(ngx_stream_listen_t))
-        != NGX_OK)
+    if (ngx_array_init(&cmcf->listen, cf->pool, 4, sizeof(ngx_stream_listen_t)) != NGX_OK)
     {
         return NULL;
     }
@@ -116,7 +121,8 @@ ngx_stream_core_create_srv_conf(ngx_conf_t *cf)
     ngx_stream_core_srv_conf_t  *cscf;
 
     cscf = ngx_pcalloc(cf->pool, sizeof(ngx_stream_core_srv_conf_t));
-    if (cscf == NULL) {
+    if (cscf == NULL) 
+	{
         return NULL;
     }
 
@@ -141,17 +147,20 @@ ngx_stream_core_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_stream_core_srv_conf_t *prev = parent;
     ngx_stream_core_srv_conf_t *conf = child;
 
-    if (conf->handler == NULL) {
-        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                      "no handler for server in %s:%ui",
-                      conf->file_name, conf->line);
+    if (conf->handler == NULL) 
+	{
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no handler for server in %s:%ui", conf->file_name, conf->line);
         return NGX_CONF_ERROR;
     }
 
-    if (conf->error_log == NULL) {
-        if (prev->error_log) {
+    if (conf->error_log == NULL) 
+	{
+        if (prev->error_log) 
+		{
             conf->error_log = prev->error_log;
-        } else {
+        } 
+		else 
+		{
             conf->error_log = &cf->cycle->new_log;
         }
     }
@@ -184,7 +193,8 @@ ngx_stream_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_stream_core_main_conf_t  *cmcf;
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_stream_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -192,23 +202,26 @@ ngx_stream_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ctx->main_conf = stream_ctx->main_conf;
 
     /* the server{}'s srv_conf */
-
-    ctx->srv_conf = ngx_pcalloc(cf->pool,
-                                sizeof(void *) * ngx_stream_max_module);
-    if (ctx->srv_conf == NULL) {
+    ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_stream_max_module);
+    if (ctx->srv_conf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_STREAM_MODULE) {
+    for (m = 0; ngx_modules[m]; m++)
+	{
+        if (ngx_modules[m]->type != NGX_STREAM_MODULE)
+		{
             continue;
         }
 
         module = ngx_modules[m]->ctx;
 
-        if (module->create_srv_conf) {
+        if (module->create_srv_conf) 
+		{
             mconf = module->create_srv_conf(cf);
-            if (mconf == NULL) {
+            if (mconf == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
 
@@ -217,14 +230,14 @@ ngx_stream_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     /* the server configuration context */
-
     cscf = ctx->srv_conf[ngx_stream_core_module.ctx_index];
     cscf->ctx = ctx;
 
     cmcf = ctx->main_conf[ngx_stream_core_module.ctx_index];
 
     cscfp = ngx_array_push(&cmcf->servers);
-    if (cscfp == NULL) {
+    if (cscfp == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -232,7 +245,6 @@ ngx_stream_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* parse inside server{} */
-
     pcf = *cf;
     cf->ctx = ctx;
     cf->cmd_type = NGX_STREAM_SRV_CONF;
@@ -268,13 +280,12 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.url = value[1];
     u.listen = 1;
 
-    if (ngx_parse_url(cf->pool, &u) != NGX_OK) {
-        if (u.err) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "%s in \"%V\" of the \"listen\" directive",
-                               u.err, &u.url);
+    if (ngx_parse_url(cf->pool, &u) != NGX_OK)
+	{
+        if (u.err)
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%s in \"%V\" of the \"listen\" directive", u.err, &u.url);
         }
-
         return NGX_CONF_ERROR;
     }
 
@@ -282,15 +293,18 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ls = cmcf->listen.elts;
 
-    for (i = 0; i < cmcf->listen.nelts; i++) {
-
+	/*check if we have a duplicate listen*/
+    for (i = 0; i < cmcf->listen.nelts; i++) 
+	{
         sa = &ls[i].u.sockaddr;
 
-        if (sa->sa_family != u.family) {
+        if (sa->sa_family != u.family)
+		{
             continue;
         }
 
-        switch (sa->sa_family) {
+        switch (sa->sa_family) 
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
@@ -317,28 +331,27 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             break;
         }
 
-        if (ngx_memcmp(ls[i].u.sockaddr_data + off, u.sockaddr + off, len)
-            != 0)
+        if (ngx_memcmp(ls[i].u.sockaddr_data + off, u.sockaddr + off, len) != 0)
         {
             continue;
         }
 
-        if (port != u.port) {
+        if (port != u.port) 
+		{
             continue;
         }
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "duplicate \"%V\" address and port pair", &u.url);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "duplicate \"%V\" address and port pair", &u.url);
         return NGX_CONF_ERROR;
     }
 
     ls = ngx_array_push(&cmcf->listen);
-    if (ls == NULL) {
+    if (ls == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
     ngx_memzero(ls, sizeof(ngx_stream_listen_t));
-
     ngx_memcpy(&ls->u.sockaddr, u.sockaddr, u.socklen);
 
     ls->socklen = u.socklen;
@@ -350,33 +363,38 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ls->ipv6only = 1;
 #endif
 
-    for (i = 2; i < cf->args->nelts; i++) {
+    for (i = 2; i < cf->args->nelts; i++) 
+	{
 
-        if (ngx_strcmp(value[i].data, "bind") == 0) {
+        if (ngx_strcmp(value[i].data, "bind") == 0)
+		{
             ls->bind = 1;
             continue;
         }
 
-        if (ngx_strncmp(value[i].data, "backlog=", 8) == 0) {
+        if (ngx_strncmp(value[i].data, "backlog=", 8) == 0)
+		{
             ls->backlog = ngx_atoi(value[i].data + 8, value[i].len - 8);
             ls->bind = 1;
 
-            if (ls->backlog == NGX_ERROR || ls->backlog == 0) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid backlog \"%V\"", &value[i]);
+            if (ls->backlog == NGX_ERROR || ls->backlog == 0) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid backlog \"%V\"", &value[i]);
                 return NGX_CONF_ERROR;
             }
 
             continue;
         }
 
-        if (ngx_strncmp(value[i].data, "ipv6only=o", 10) == 0) {
+        if (ngx_strncmp(value[i].data, "ipv6only=o", 10) == 0)
+		{
 #if (NGX_HAVE_INET6 && defined IPV6_V6ONLY)
             u_char  buf[NGX_SOCKADDR_STRLEN];
 
             sa = &ls->u.sockaddr;
 
-            if (sa->sa_family == AF_INET6) {
+            if (sa->sa_family == AF_INET6) 
+			{
 
                 if (ngx_strcmp(&value[i].data[10], "n") == 0) {
                     ls->ipv6only = 1;
@@ -423,27 +441,32 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strcmp(value[i].data, "ssl") == 0) {
+        if (ngx_strcmp(value[i].data, "ssl") == 0) 
+		{
 #if (NGX_STREAM_SSL)
             ls->ssl = 1;
             continue;
 #else
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "the \"ssl\" parameter requires "
-                               "ngx_stream_ssl_module");
-            return NGX_CONF_ERROR;
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the \"ssl\" parameter requires ngx_stream_ssl_module");
+			return NGX_CONF_ERROR;
 #endif
         }
 
-        if (ngx_strncmp(value[i].data, "so_keepalive=", 13) == 0) {
+        if (ngx_strncmp(value[i].data, "so_keepalive=", 13) == 0) 
+		{
 
-            if (ngx_strcmp(&value[i].data[13], "on") == 0) {
+            if (ngx_strcmp(&value[i].data[13], "on") == 0) 
+			{
                 ls->so_keepalive = 1;
 
-            } else if (ngx_strcmp(&value[i].data[13], "off") == 0) {
+            } 
+			else if (ngx_strcmp(&value[i].data[13], "off") == 0) 
+           	{
                 ls->so_keepalive = 2;
 
-            } else {
+            } 
+			else
+			{
 
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
                 u_char     *p, *end;
@@ -503,11 +526,9 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #else
 
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "the \"so_keepalive\" parameter accepts "
-                                   "only \"on\" or \"off\" on this platform");
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the \"so_keepalive\" parameter accepts only \"on\" or \"off\" on this platform");
                 return NGX_CONF_ERROR;
-
+				
 #endif
             }
 
@@ -518,15 +539,12 @@ ngx_stream_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
         invalid_so_keepalive:
 
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid so_keepalive value: \"%s\"",
-                               &value[i].data[13]);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid so_keepalive value: \"%s\"", &value[i].data[13]);
             return NGX_CONF_ERROR;
 #endif
         }
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "the invalid \"%V\" parameter", &value[i]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the invalid \"%V\" parameter", &value[i]);
         return NGX_CONF_ERROR;
     }
 

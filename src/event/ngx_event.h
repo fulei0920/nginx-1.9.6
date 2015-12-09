@@ -29,10 +29,10 @@ typedef struct {
 
 struct ngx_event_s 
 {
-    void            *data;			/*指向该event所属的connection*/
-    unsigned         write:1;
-    unsigned         accept:1;
-    unsigned         instance:1;	   /* used to detect the stale events in kqueue and epoll */
+    void            *data;					/*指向该event所属的connection*/
+    unsigned         write:1;				/*指明是写事件还是读事件*/
+    unsigned         accept:1;				/*指明该事件属于监听套接字*/
+    unsigned         instance:1;	   		/* used to detect the stale events in kqueue and epoll */
 
     /*
      * the event was passed or would be passed to a kernel;
@@ -53,8 +53,8 @@ struct ngx_event_s
     unsigned         eof:1;
     unsigned         error:1;
 
-    unsigned         timedout:1;
-    unsigned         timer_set:1;
+    unsigned         timedout:1;			/*表示事件超时*/
+    unsigned         timer_set:1;			/*事件被添加到定时器中*/
 
     unsigned         delayed:1;
 

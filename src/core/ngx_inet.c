@@ -692,7 +692,8 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
         n = ngx_atoi(port, len);
 
-        if (n < 1 || n > 65535) {
+        if (n < 1 || n > 65535) 
+		{
             u->err = "invalid port";
             return NGX_ERROR;
         }
@@ -745,7 +746,8 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
     len = last - host;
 
-    if (len == 0) {
+    if (len == 0) 
+	{
         u->err = "no host";
         return NGX_ERROR;
     }
@@ -753,7 +755,8 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
     u->host.len = len;
     u->host.data = host;
 
-    if (u->listen && len == 1 && *host == '*') {
+    if (u->listen && len == 1 && *host == '*')
+	{
         sin->sin_addr.s_addr = INADDR_ANY;
         u->wildcard = 1;
         return NGX_OK;
@@ -761,9 +764,11 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
     sin->sin_addr.s_addr = ngx_inet_addr(host, len);
 
-    if (sin->sin_addr.s_addr != INADDR_NONE) {
+    if (sin->sin_addr.s_addr != INADDR_NONE) 
+	{
 
-        if (sin->sin_addr.s_addr == INADDR_ANY) {
+        if (sin->sin_addr.s_addr == INADDR_ANY) 
+		{
             u->wildcard = 1;
         }
 

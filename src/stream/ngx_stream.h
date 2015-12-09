@@ -24,14 +24,17 @@ typedef struct ngx_stream_session_s  ngx_stream_session_t;
 #include <ngx_stream_upstream_round_robin.h>
 
 
-typedef struct {
+typedef struct
+{
     void                  **main_conf;
     void                  **srv_conf;
 } ngx_stream_conf_ctx_t;
 
 
-typedef struct {
-    union {
+typedef struct 
+{
+    union 
+	{
         struct sockaddr     sockaddr;
         struct sockaddr_in  sockaddr_in;
 #if (NGX_HAVE_INET6)
@@ -59,7 +62,7 @@ typedef struct {
 #if (NGX_HAVE_REUSEPORT)
     unsigned                reuseport:1;
 #endif
-    unsigned                so_keepalive:2;
+    unsigned                so_keepalive:2;  /* 1-- on 2 -- off*/
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
     int                     tcp_keepidle;
     int                     tcp_keepintvl;
@@ -69,7 +72,8 @@ typedef struct {
 } ngx_stream_listen_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_stream_conf_ctx_t  *ctx;
     ngx_str_t               addr_text;
 #if (NGX_STREAM_SSL)
@@ -77,37 +81,42 @@ typedef struct {
 #endif
 } ngx_stream_addr_conf_t;
 
-typedef struct {
-    in_addr_t               addr;
+typedef struct 
+{
+    in_addr_t               addr;		/*IPv4地址，网络字节序*/
     ngx_stream_addr_conf_t  conf;
 } ngx_stream_in_addr_t;
 
 
 #if (NGX_HAVE_INET6)
 
-typedef struct {
-    struct in6_addr         addr6;
+typedef struct 
+{
+    struct in6_addr         addr6;		/*IPv6地址，网络字节序*/
     ngx_stream_addr_conf_t  conf;
 } ngx_stream_in6_addr_t;
 
 #endif
 
 
-typedef struct {
-    /* ngx_stream_in_addr_t or ngx_stream_in6_addr_t */
-    void                   *addrs;
-    ngx_uint_t              naddrs;
+typedef struct 
+{
+    
+    void                   *addrs;		/*ngx_stream_in_addr_t 或者 ngx_stream_in6_addr_t*/
+    ngx_uint_t              naddrs;		/*地址个数*/
 } ngx_stream_port_t;
 
 
-typedef struct {
+typedef struct 
+{
     int                     family;
-    in_port_t               port;
+    in_port_t               port;		
     ngx_array_t             addrs;       /* array of ngx_stream_conf_addr_t */
 } ngx_stream_conf_port_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_stream_listen_t     opt;
 } ngx_stream_conf_addr_t;
 
@@ -115,9 +124,10 @@ typedef struct {
 typedef ngx_int_t (*ngx_stream_access_pt)(ngx_stream_session_t *s);
 
 
-typedef struct {
-    ngx_array_t             servers;     /* ngx_stream_core_srv_conf_t */
-    ngx_array_t             listen;      /* ngx_stream_listen_t */
+typedef struct 
+{
+    ngx_array_t             servers;     		/* ngx_stream_core_srv_conf_t*类型的数组 */
+    ngx_array_t             listen;      		/* ngx_stream_listen_t类型的数组 */
     ngx_stream_access_pt    limit_conn_handler;
     ngx_stream_access_pt    access_handler;
 } ngx_stream_core_main_conf_t;
@@ -126,11 +136,12 @@ typedef struct {
 typedef void (*ngx_stream_handler_pt)(ngx_stream_session_t *s);
 
 
-typedef struct {
+typedef struct 
+{
     ngx_stream_handler_pt   handler;
     ngx_stream_conf_ctx_t  *ctx;
-    u_char                 *file_name;
-    ngx_int_t               line;
+    u_char                 *file_name;			//配置文件名
+    ngx_int_t               line;				//行号
     ngx_log_t              *error_log;
     ngx_flag_t              tcp_nodelay;
 } ngx_stream_core_srv_conf_t;
@@ -152,7 +163,7 @@ struct ngx_stream_session_s {
     ngx_stream_upstream_t  *upstream;
 };
 
-
+/*STRAEM模块配置上下文*/
 typedef struct 
 {
     ngx_int_t             (*postconfiguration)(ngx_conf_t *cf);
@@ -161,8 +172,7 @@ typedef struct
     char                 *(*init_main_conf)(ngx_conf_t *cf, void *conf);
 
     void                 *(*create_srv_conf)(ngx_conf_t *cf);
-    char                 *(*merge_srv_conf)(ngx_conf_t *cf, void *prev,
-                                            void *conf);
+    char                 *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf);
 } ngx_stream_module_t;
 
 

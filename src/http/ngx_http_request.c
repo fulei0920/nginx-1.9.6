@@ -311,6 +311,7 @@ ngx_http_init_connection(ngx_connection_t *c)
     ctx->request = NULL;
     ctx->current_request = NULL;
 
+	/* 设置当前连接的日志属性 */
     c->log->connection = c->number;
     c->log->handler = ngx_http_log_error;
     c->log->data = ctx;
@@ -318,6 +319,7 @@ ngx_http_init_connection(ngx_connection_t *c)
 
     c->log_error = NGX_ERROR_INFO;
 
+	/* 设置当前连接读、写事件的handler处理方法 */
     rev = c->read;
     rev->handler = ngx_http_wait_request_handler;
     c->write->handler = ngx_http_empty_handler;
@@ -360,6 +362,9 @@ ngx_http_init_connection(ngx_connection_t *c)
         c->log->action = "reading PROXY protocol";
     }
 
+	/* 若读事件准备就绪，则判断是否使用同步锁，
+     * 根据同步锁情况判断决定是否立即处理该事件；
+     */
     if (rev->ready)
 	{
         /* the deferred accept(), iocp */
@@ -372,10 +377,16 @@ ngx_http_init_connection(ngx_connection_t *c)
         rev->handler(rev);
         return;
     }
+	 /*
+     * 若当前连接的读事件未准备就绪，
+     * 则将其添加到定时器事件机制，并注册到epoll事件机制中；
+     */
 
+	/* 将当前连接的读事件添加到定时器机制中 */
     ngx_add_timer(rev, c->listening->post_accept_timeout);
     ngx_reusable_connection(c, 1);
 
+	/* 将当前连接的读事件注册到epoll事件机制中 */
     if (ngx_handle_read_event(rev, 0) != NGX_OK) 
 	{
         ngx_http_close_connection(c);
@@ -383,7 +394,11 @@ ngx_http_init_connection(ngx_connection_t *c)
     }
 }
 
-
+/*
+deal with the first packet for http request
+alloc buffer to store request data
+alloc requtest structure to hold request state
+*/
 static void
 ngx_http_wait_request_handler(ngx_event_t *rev)
 {
@@ -448,7 +463,7 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     n = c->recv(c, b->last, size);
 
-    if (n == NGX_AGAIN) 
+    if (n == NGX_AGAIN)  /*表示客户端发起连接请求，但是暂时还没发送实际的数据*/
 	{
 
         if (!rev->timer_set) 
@@ -472,13 +487,13 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
         return;
     }
 
-    if (n == NGX_ERROR) 
+    if (n == NGX_ERROR)  /*表示当前连接出错*/
 	{
         ngx_http_close_connection(c);
         return;
     }
 
-    if (n == 0) 
+    if (n == 0)  /*表示客户端已经主动关闭当前连接*/
 	{
         ngx_log_error(NGX_LOG_INFO, c->log, 0, "client closed connection");
         ngx_http_close_connection(c);
@@ -941,7 +956,9 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
 #endif
 
-
+/*
+deal with the http request 
+*/
 static void
 ngx_http_process_request_line(ngx_event_t *rev)
 {
@@ -1399,7 +1416,10 @@ ngx_http_process_request_headers(ngx_event_t *rev)
     }
 }
 
-
+/*
+if there are datas in head_in buffer return directly
+else if we can read, recive the data from connection
+*/
 static ssize_t
 ngx_http_read_request_header(ngx_http_request_t *r)
 {

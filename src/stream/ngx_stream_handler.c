@@ -45,7 +45,8 @@ ngx_stream_init_connection(ngx_connection_t *c)
 
     port = c->listening->servers;
 
-    if (port->naddrs > 1) {
+    if (port->naddrs > 1) 
+	{
 
         /*
          * There are several addresses on this port and one of them
@@ -55,14 +56,16 @@ ngx_stream_init_connection(ngx_connection_t *c)
          * AcceptEx() already gave this address.
          */
 
-        if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK) {
+        if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK)
+		{
             ngx_stream_close_connection(c);
             return;
         }
 
         sa = c->local_sockaddr;
 
-        switch (sa->sa_family) {
+        switch (sa->sa_family) 
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
@@ -72,8 +75,10 @@ ngx_stream_init_connection(ngx_connection_t *c)
 
             /* the last address is "*" */
 
-            for (i = 0; i < port->naddrs - 1; i++) {
-                if (ngx_memcmp(&addr6[i].addr6, &sin6->sin6_addr, 16) == 0) {
+            for (i = 0; i < port->naddrs - 1; i++) 
+			{
+                if (ngx_memcmp(&addr6[i].addr6, &sin6->sin6_addr, 16) == 0) 
+				{
                     break;
                 }
             }
@@ -89,8 +94,8 @@ ngx_stream_init_connection(ngx_connection_t *c)
             addr = port->addrs;
 
             /* the last address is "*" */
-
-            for (i = 0; i < port->naddrs - 1; i++) {
+            for (i = 0; i < port->naddrs - 1; i++)
+			{
                 if (addr[i].addr == sin->sin_addr.s_addr) {
                     break;
                 }
@@ -101,8 +106,11 @@ ngx_stream_init_connection(ngx_connection_t *c)
             break;
         }
 
-    } else {
-        switch (c->local_sockaddr->sa_family) {
+    } 
+	else
+	{
+        switch (c->local_sockaddr->sa_family) 
+		{
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
@@ -119,7 +127,8 @@ ngx_stream_init_connection(ngx_connection_t *c)
     }
 
     s = ngx_pcalloc(c->pool, sizeof(ngx_stream_session_t));
-    if (s == NULL) {
+    if (s == NULL) 
+	{
         ngx_stream_close_connection(c);
         return;
     }
@@ -137,8 +146,7 @@ ngx_stream_init_connection(ngx_connection_t *c)
 
     len = ngx_sock_ntop(c->sockaddr, c->socklen, text, NGX_SOCKADDR_STRLEN, 1);
 
-    ngx_log_error(NGX_LOG_INFO, c->log, 0, "*%uA client %*s connected to %V",
-                  c->number, len, text, &addr_conf->addr_text);
+    ngx_log_error(NGX_LOG_INFO, c->log, 0, "*%uA client %*s connected to %V", c->number, len, text, &addr_conf->addr_text);
 
     c->log->connection = c->number;
     c->log->handler = ngx_stream_log_error;

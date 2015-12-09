@@ -10,7 +10,8 @@
 #include <ngx_stream.h>
 
 
-typedef struct {
+typedef struct 
+{
     in_addr_t         mask;
     in_addr_t         addr;
     ngx_uint_t        deny;      /* unsigned  deny:1; */
@@ -34,7 +35,8 @@ typedef struct {
 
 #endif
 
-typedef struct {
+typedef struct 
+{
     ngx_array_t      *rules;     /* array of ngx_stream_access_rule_t */
 #if (NGX_HAVE_INET6)
     ngx_array_t      *rules6;    /* array of ngx_stream_access_rule6_t */
@@ -66,21 +68,26 @@ static char *ngx_stream_access_merge_srv_conf(ngx_conf_t *cf,
 static ngx_int_t ngx_stream_access_init(ngx_conf_t *cf);
 
 
-static ngx_command_t  ngx_stream_access_commands[] = {
+static ngx_command_t  ngx_stream_access_commands[] = 
+{
 
-    { ngx_string("allow"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_stream_access_rule,
-      NGX_STREAM_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("allow"),
+		NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_stream_access_rule,
+		NGX_STREAM_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
-    { ngx_string("deny"),
-      NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_stream_access_rule,
-      NGX_STREAM_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("deny"),
+		NGX_STREAM_MAIN_CONF|NGX_STREAM_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_stream_access_rule,
+		NGX_STREAM_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
@@ -98,7 +105,8 @@ static ngx_stream_module_t  ngx_stream_access_module_ctx = {
 };
 
 
-ngx_module_t  ngx_stream_access_module = {
+ngx_module_t  ngx_stream_access_module = 
+{
     NGX_MODULE_V1,
     &ngx_stream_access_module_ctx,         /* module context */
     ngx_stream_access_commands,            /* module directives */
@@ -304,15 +312,18 @@ ngx_stream_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     all = (value[1].len == 3 && ngx_strcmp(value[1].data, "all") == 0);
 
-    if (!all) {
-
+    if (!all)
+	{
 #if (NGX_HAVE_UNIX_DOMAIN)
 
-        if (value[1].len == 5 && ngx_strcmp(value[1].data, "unix:") == 0) {
+        if (value[1].len == 5 && ngx_strcmp(value[1].data, "unix:") == 0) 
+		{
             cidr.family = AF_UNIX;
             rc = NGX_OK;
 
-        } else {
+        } 
+		else 
+		{
             rc = ngx_ptocidr(&value[1], &cidr);
         }
 
@@ -320,30 +331,33 @@ ngx_stream_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         rc = ngx_ptocidr(&value[1], &cidr);
 #endif
 
-        if (rc == NGX_ERROR) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                         "invalid parameter \"%V\"", &value[1]);
+        if (rc == NGX_ERROR) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter \"%V\"", &value[1]);
             return NGX_CONF_ERROR;
         }
 
-        if (rc == NGX_DONE) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                         "low address bits of %V are meaningless", &value[1]);
+        if (rc == NGX_DONE)
+		{
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "low address bits of %V are meaningless", &value[1]);
         }
     }
 
-    if (cidr.family == AF_INET || all) {
+    if (cidr.family == AF_INET || all)
+	{
 
-        if (ascf->rules == NULL) {
-            ascf->rules = ngx_array_create(cf->pool, 4,
-                                           sizeof(ngx_stream_access_rule_t));
-            if (ascf->rules == NULL) {
+        if (ascf->rules == NULL) 
+		{
+            ascf->rules = ngx_array_create(cf->pool, 4, sizeof(ngx_stream_access_rule_t));
+            if (ascf->rules == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
         }
 
         rule = ngx_array_push(ascf->rules);
-        if (rule == NULL) {
+        if (rule == NULL)
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -404,7 +418,8 @@ ngx_stream_access_create_srv_conf(ngx_conf_t *cf)
     ngx_stream_access_srv_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_stream_access_srv_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 

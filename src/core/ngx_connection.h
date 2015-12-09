@@ -23,7 +23,7 @@ struct ngx_listening_s
     socklen_t           socklen;    		/* size of sockaddr */
     size_t              addr_text_max_len;
     ngx_str_t           addr_text;
-    int                 type;				/* socket类型*/	
+    int                 type;				/* type of socket*/	
     int                 backlog;
     int                 rcvbuf;				/*接收缓冲区大小*/  
     int                 sndbuf;				/*发送缓冲区大小*/  
@@ -53,22 +53,22 @@ struct ngx_listening_s
 
     unsigned            open:1;
     unsigned            remain:1;
-    unsigned            ignore:1;
+    unsigned            ignore:1;				/* ignore this one */
 
-    unsigned            bound:1;       /* already bound */
-    unsigned            inherited:1;   /* inherited from previous process */
+    unsigned            bound:1;       			/* already bound */
+    unsigned            inherited:1;   			/* inherited from previous process */
     unsigned            nonblocking_accept:1;
-    unsigned            listen:1;
+    unsigned            listen:1;				/* listen state*/
     unsigned            nonblocking:1;
-    unsigned            shared:1;    		/* shared between threads or processes */
+    unsigned            shared:1;    			/* shared between threads or processes */
     unsigned            addr_ntop:1;
 
 #if (NGX_HAVE_INET6 && defined IPV6_V6ONLY)
     unsigned            ipv6only:1;
 #endif
 #if (NGX_HAVE_REUSEPORT)
-    unsigned            reuseport:1;
-    unsigned            add_reuseport:1;
+    unsigned            reuseport:1;			/* reuseport state*/	
+    unsigned            add_reuseport:1;       	/* need to make it reuseport*/
 #endif
     unsigned            keepalive:2;
 
@@ -205,8 +205,7 @@ struct ngx_connection_s
     }
 
 
-ngx_listening_t *ngx_create_listening(ngx_conf_t *cf, void *sockaddr,
-    socklen_t socklen);
+ngx_listening_t *ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen);
 ngx_int_t ngx_clone_listening(ngx_conf_t *cf, ngx_listening_t *ls);
 ngx_int_t ngx_set_inherited_sockets(ngx_cycle_t *cycle);
 ngx_int_t ngx_open_listening_sockets(ngx_cycle_t *cycle);
@@ -214,10 +213,8 @@ void ngx_configure_listening_sockets(ngx_cycle_t *cycle);
 void ngx_close_listening_sockets(ngx_cycle_t *cycle);
 void ngx_close_connection(ngx_connection_t *c);
 void ngx_close_idle_connections(ngx_cycle_t *cycle);
-ngx_int_t ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s,
-    ngx_uint_t port);
+ngx_int_t ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s, ngx_uint_t port);
 ngx_int_t ngx_connection_error(ngx_connection_t *c, ngx_err_t err, char *text);
-
 ngx_connection_t *ngx_get_connection(ngx_socket_t s, ngx_log_t *log);
 void ngx_free_connection(ngx_connection_t *c);
 

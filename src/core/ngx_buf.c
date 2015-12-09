@@ -53,7 +53,8 @@ ngx_alloc_chain_link(ngx_pool_t *pool)
 
     cl = pool->chain;
 
-    if (cl) {
+    if (cl) 
+	{
         pool->chain = cl->next;
         return cl;
     }

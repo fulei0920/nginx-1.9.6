@@ -10,35 +10,39 @@
 #include <ngx_stream.h>
 
 
-static char *ngx_stream_upstream(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *dummy);
-static char *ngx_stream_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_stream_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy);
+static char *ngx_stream_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static void *ngx_stream_upstream_create_main_conf(ngx_conf_t *cf);
 static char *ngx_stream_upstream_init_main_conf(ngx_conf_t *cf, void *conf);
 
 
-static ngx_command_t  ngx_stream_upstream_commands[] = {
+static ngx_command_t  ngx_stream_upstream_commands[] = 
+{
 
-    { ngx_string("upstream"),
-      NGX_STREAM_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE1,
-      ngx_stream_upstream,
-      0,
-      0,
-      NULL },
+    { 
+		ngx_string("upstream"),
+		NGX_STREAM_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE1,
+		ngx_stream_upstream,
+		0,
+		0,
+		NULL
+    },
 
-    { ngx_string("server"),
-      NGX_STREAM_UPS_CONF|NGX_CONF_1MORE,
-      ngx_stream_upstream_server,
-      NGX_STREAM_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("server"),
+		NGX_STREAM_UPS_CONF|NGX_CONF_1MORE,
+		ngx_stream_upstream_server,
+		NGX_STREAM_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
 
 
-static ngx_stream_module_t  ngx_stream_upstream_module_ctx = {
+static ngx_stream_module_t  ngx_stream_upstream_module_ctx = 
+{
     NULL,                                  /* postconfiguration */
 
     ngx_stream_upstream_create_main_conf,  /* create main configuration */
@@ -49,7 +53,8 @@ static ngx_stream_module_t  ngx_stream_upstream_module_ctx = {
 };
 
 
-ngx_module_t  ngx_stream_upstream_module = {
+ngx_module_t  ngx_stream_upstream_module = 
+{
     NGX_MODULE_V1,
     &ngx_stream_upstream_module_ctx,       /* module context */
     ngx_stream_upstream_commands,          /* module directives */
@@ -91,13 +96,15 @@ ngx_stream_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
                                            |NGX_STREAM_UPSTREAM_FAIL_TIMEOUT
                                            |NGX_STREAM_UPSTREAM_DOWN
                                            |NGX_STREAM_UPSTREAM_BACKUP);
-    if (uscf == NULL) {
+    if (uscf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_stream_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -106,9 +113,9 @@ ngx_stream_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
     /* the upstream{}'s srv_conf */
 
-    ctx->srv_conf = ngx_pcalloc(cf->pool,
-                                sizeof(void *) * ngx_stream_max_module);
-    if (ctx->srv_conf == NULL) {
+    ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_stream_max_module);
+    if (ctx->srv_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -317,12 +324,14 @@ ngx_stream_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
     ngx_stream_upstream_srv_conf_t   *uscf, **uscfp;
     ngx_stream_upstream_main_conf_t  *umcf;
 
-    if (!(flags & NGX_STREAM_UPSTREAM_CREATE)) {
+    if (!(flags & NGX_STREAM_UPSTREAM_CREATE)) 
+	{
 
-        if (ngx_parse_url(cf->pool, u) != NGX_OK) {
-            if (u->err) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "%s in upstream \"%V\"", u->err, &u->url);
+        if (ngx_parse_url(cf->pool, u) != NGX_OK) 
+		{
+            if (u->err) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%s in upstream \"%V\"", u->err, &u->url);
             }
 
             return NULL;
@@ -423,13 +432,12 @@ ngx_stream_upstream_create_main_conf(ngx_conf_t *cf)
     ngx_stream_upstream_main_conf_t  *umcf;
 
     umcf = ngx_pcalloc(cf->pool, sizeof(ngx_stream_upstream_main_conf_t));
-    if (umcf == NULL) {
+    if (umcf == NULL) 
+	{
         return NULL;
     }
 
-    if (ngx_array_init(&umcf->upstreams, cf->pool, 4,
-                       sizeof(ngx_stream_upstream_srv_conf_t *))
-        != NGX_OK)
+    if (ngx_array_init(&umcf->upstreams, cf->pool, 4, sizeof(ngx_stream_upstream_srv_conf_t *)) != NGX_OK)
     {
         return NULL;
     }
@@ -449,11 +457,10 @@ ngx_stream_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 
     uscfp = umcf->upstreams.elts;
 
-    for (i = 0; i < umcf->upstreams.nelts; i++) {
+    for (i = 0; i < umcf->upstreams.nelts; i++) 
+	{
 
-        init = uscfp[i]->peer.init_upstream
-                                         ? uscfp[i]->peer.init_upstream
-                                         : ngx_stream_upstream_init_round_robin;
+        init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream : ngx_stream_upstream_init_round_robin;
 
         if (init(cf, uscfp[i]) != NGX_OK) {
             return NGX_CONF_ERROR;

@@ -67,7 +67,8 @@ typedef struct {
 } ngx_http_upstream_state_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_hash_t                       headers_in_hash;
     ngx_array_t                      upstreams;		 	/* array of ngx_http_upstream_srv_conf_t* */
                                             

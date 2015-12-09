@@ -31,7 +31,8 @@ static ngx_command_t  ngx_stream_upstream_zone_commands[] = {
 };
 
 
-static ngx_stream_module_t  ngx_stream_upstream_zone_module_ctx = {
+static ngx_stream_module_t  ngx_stream_upstream_zone_module_ctx = 
+{
     NULL,                                  /* postconfiguration */
 
     NULL,                                  /* create main configuration */

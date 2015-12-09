@@ -3465,8 +3465,7 @@ ngx_http_core_init_main_conf(ngx_conf_t *cf, void *conf)
     ngx_http_core_main_conf_t *cmcf = conf;
 
     ngx_conf_init_uint_value(cmcf->server_names_hash_max_size, 512);
-    ngx_conf_init_uint_value(cmcf->server_names_hash_bucket_size,
-                             ngx_cacheline_size);
+    ngx_conf_init_uint_value(cmcf->server_names_hash_bucket_size, ngx_cacheline_size);
 
     cmcf->server_names_hash_bucket_size =
             ngx_align(cmcf->server_names_hash_bucket_size, ngx_cacheline_size);

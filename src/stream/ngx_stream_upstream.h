@@ -23,29 +23,30 @@
 #define NGX_STREAM_UPSTREAM_BACKUP        0x0020
 
 
-typedef struct {
-    ngx_array_t                        upstreams;
-                                           /* ngx_stream_upstream_srv_conf_t */
+typedef struct 
+{
+    ngx_array_t                        upstreams;  /* ngx_stream_upstream_srv_conf_t*类型的数组 */
+                                           
 } ngx_stream_upstream_main_conf_t;
 
 
 typedef struct ngx_stream_upstream_srv_conf_s  ngx_stream_upstream_srv_conf_t;
 
 
-typedef ngx_int_t (*ngx_stream_upstream_init_pt)(ngx_conf_t *cf,
-    ngx_stream_upstream_srv_conf_t *us);
-typedef ngx_int_t (*ngx_stream_upstream_init_peer_pt)(ngx_stream_session_t *s,
-    ngx_stream_upstream_srv_conf_t *us);
+typedef ngx_int_t (*ngx_stream_upstream_init_pt)(ngx_conf_t *cf, ngx_stream_upstream_srv_conf_t *us);
+typedef ngx_int_t (*ngx_stream_upstream_init_peer_pt)(ngx_stream_session_t *s, ngx_stream_upstream_srv_conf_t *us);
 
 
-typedef struct {
+typedef struct 
+{
     ngx_stream_upstream_init_pt        init_upstream;
     ngx_stream_upstream_init_peer_pt   init;
     void                              *data;
 } ngx_stream_upstream_peer_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                          name;
     ngx_addr_t                        *addrs;
     ngx_uint_t                         naddrs;
@@ -58,7 +59,8 @@ typedef struct {
 } ngx_stream_upstream_server_t;
 
 
-struct ngx_stream_upstream_srv_conf_s {
+struct ngx_stream_upstream_srv_conf_s
+{
     ngx_stream_upstream_peer_t         peer;
     void                             **srv_conf;
 
@@ -78,7 +80,8 @@ struct ngx_stream_upstream_srv_conf_s {
 };
 
 
-typedef struct {
+typedef struct
+{
     ngx_peer_connection_t              peer;
     ngx_buf_t                          downstream_buf;
     ngx_buf_t                          upstream_buf;

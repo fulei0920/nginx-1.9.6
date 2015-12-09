@@ -162,19 +162,23 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
             break;
 
         case sw_method:
-            if (ch == ' ') {
+            if (ch == ' ') 
+			{
                 r->method_end = p - 1;
                 m = r->request_start;
 
-                switch (p - m) {
+                switch (p - m) 
+				{
 
                 case 3:
-                    if (ngx_str3_cmp(m, 'G', 'E', 'T', ' ')) {
+                    if (ngx_str3_cmp(m, 'G', 'E', 'T', ' ')) 
+					{
                         r->method = NGX_HTTP_GET;
                         break;
                     }
 
-                    if (ngx_str3_cmp(m, 'P', 'U', 'T', ' ')) {
+                    if (ngx_str3_cmp(m, 'P', 'U', 'T', ' ')) 
+					{
                         r->method = NGX_HTTP_PUT;
                         break;
                     }
@@ -182,31 +186,39 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                     break;
 
                 case 4:
-                    if (m[1] == 'O') {
+                    if (m[1] == 'O') 
+					{
 
-                        if (ngx_str3Ocmp(m, 'P', 'O', 'S', 'T')) {
+                        if (ngx_str3Ocmp(m, 'P', 'O', 'S', 'T')) 
+						{
                             r->method = NGX_HTTP_POST;
                             break;
                         }
 
-                        if (ngx_str3Ocmp(m, 'C', 'O', 'P', 'Y')) {
+                        if (ngx_str3Ocmp(m, 'C', 'O', 'P', 'Y'))
+						{
                             r->method = NGX_HTTP_COPY;
                             break;
                         }
 
-                        if (ngx_str3Ocmp(m, 'M', 'O', 'V', 'E')) {
+                        if (ngx_str3Ocmp(m, 'M', 'O', 'V', 'E')) 
+						{
                             r->method = NGX_HTTP_MOVE;
                             break;
                         }
 
-                        if (ngx_str3Ocmp(m, 'L', 'O', 'C', 'K')) {
+                        if (ngx_str3Ocmp(m, 'L', 'O', 'C', 'K'))
+						{
                             r->method = NGX_HTTP_LOCK;
                             break;
                         }
 
-                    } else {
+                    } 
+					else
+					{
 
-                        if (ngx_str4cmp(m, 'H', 'E', 'A', 'D')) {
+                        if (ngx_str4cmp(m, 'H', 'E', 'A', 'D'))
+						{
                             r->method = NGX_HTTP_HEAD;
                             break;
                         }
@@ -215,17 +227,20 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                     break;
 
                 case 5:
-                    if (ngx_str5cmp(m, 'M', 'K', 'C', 'O', 'L')) {
+                    if (ngx_str5cmp(m, 'M', 'K', 'C', 'O', 'L'))
+					{
                         r->method = NGX_HTTP_MKCOL;
                         break;
                     }
 
-                    if (ngx_str5cmp(m, 'P', 'A', 'T', 'C', 'H')) {
+                    if (ngx_str5cmp(m, 'P', 'A', 'T', 'C', 'H')) 
+					{
                         r->method = NGX_HTTP_PATCH;
                         break;
                     }
 
-                    if (ngx_str5cmp(m, 'T', 'R', 'A', 'C', 'E')) {
+                    if (ngx_str5cmp(m, 'T', 'R', 'A', 'C', 'E')) 
+					{
                         r->method = NGX_HTTP_TRACE;
                         break;
                     }
@@ -233,12 +248,14 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                     break;
 
                 case 6:
-                    if (ngx_str6cmp(m, 'D', 'E', 'L', 'E', 'T', 'E')) {
+                    if (ngx_str6cmp(m, 'D', 'E', 'L', 'E', 'T', 'E')) 
+					{
                         r->method = NGX_HTTP_DELETE;
                         break;
                     }
 
-                    if (ngx_str6cmp(m, 'U', 'N', 'L', 'O', 'C', 'K')) {
+                    if (ngx_str6cmp(m, 'U', 'N', 'L', 'O', 'C', 'K')) 
+					{
                         r->method = NGX_HTTP_UNLOCK;
                         break;
                     }
@@ -262,8 +279,7 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                     break;
 
                 case 9:
-                    if (ngx_str9cmp(m,
-                            'P', 'R', 'O', 'P', 'P', 'A', 'T', 'C', 'H'))
+                    if (ngx_str9cmp(m, 'P', 'R', 'O', 'P', 'P', 'A', 'T', 'C', 'H'))
                     {
                         r->method = NGX_HTTP_PROPPATCH;
                     }
@@ -275,7 +291,8 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                 break;
             }
 
-            if ((ch < 'A' || ch > 'Z') && ch != '_') {
+            if ((ch < 'A' || ch > 'Z') && ch != '_') 
+			{
                 return NGX_HTTP_PARSE_INVALID_METHOD;
             }
 
@@ -284,20 +301,23 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
         /* space* before URI */
         case sw_spaces_before_uri:
 
-            if (ch == '/') {
+            if (ch == '/') 
+			{
                 r->uri_start = p;
                 state = sw_after_slash_in_uri;
                 break;
             }
 
             c = (u_char) (ch | 0x20);
-            if (c >= 'a' && c <= 'z') {
+            if (c >= 'a' && c <= 'z')
+			{
                 r->schema_start = p;
                 state = sw_schema;
                 break;
             }
 
-            switch (ch) {
+            switch (ch) 
+			{
             case ' ':
                 break;
             default:
@@ -308,11 +328,13 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
         case sw_schema:
 
             c = (u_char) (ch | 0x20);
-            if (c >= 'a' && c <= 'z') {
+            if (c >= 'a' && c <= 'z') 
+			{
                 break;
             }
 
-            switch (ch) {
+            switch (ch) 
+			{
             case ':':
                 r->schema_end = p;
                 state = sw_schema_slash;
@@ -358,11 +380,13 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
         case sw_host:
 
             c = (u_char) (ch | 0x20);
-            if (c >= 'a' && c <= 'z') {
+            if (c >= 'a' && c <= 'z') 
+			{
                 break;
             }
 
-            if ((ch >= '0' && ch <= '9') || ch == '.' || ch == '-') {
+            if ((ch >= '0' && ch <= '9') || ch == '.' || ch == '-') 
+			{
                 break;
             }
 
@@ -486,7 +510,8 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
         /* check "/.", "//", "%", and "\" (Win32) in URI */
         case sw_after_slash_in_uri:
 
-            if (usual[ch >> 5] & (1 << (ch & 0x1f))) {
+            if (usual[ch >> 5] & (1 << (ch & 0x1f))) 
+			{
                 state = sw_check_uri;
                 break;
             }
@@ -813,14 +838,16 @@ done:
 
     b->pos = p + 1;
 
-    if (r->request_end == NULL) {
+    if (r->request_end == NULL)
+	{
         r->request_end = p;
     }
 
     r->http_version = r->http_major * 1000 + r->http_minor;
     r->state = sw_start;
 
-    if (r->http_version == 9 && r->method != NGX_HTTP_GET) {
+    if (r->http_version == 9 && r->method != NGX_HTTP_GET)
+	{
         return NGX_HTTP_PARSE_INVALID_09_METHOD;
     }
 

@@ -302,27 +302,32 @@ ngx_http_upstream_header_t  ngx_http_upstream_headers_in[] = {
 };
 
 
-static ngx_command_t  ngx_http_upstream_commands[] = {
+static ngx_command_t  ngx_http_upstream_commands[] = 
+{
+    { 
+		ngx_string("upstream"),
+		NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE1,
+		ngx_http_upstream,
+		0,
+		0,
+		NULL 
+    },
 
-    { ngx_string("upstream"),
-      NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE1,
-      ngx_http_upstream,
-      0,
-      0,
-      NULL },
-
-    { ngx_string("server"),
-      NGX_HTTP_UPS_CONF|NGX_CONF_1MORE,
-      ngx_http_upstream_server,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("server"),
+		NGX_HTTP_UPS_CONF|NGX_CONF_1MORE,
+		ngx_http_upstream_server,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
 
 
-static ngx_http_module_t  ngx_http_upstream_module_ctx = {
+static ngx_http_module_t  ngx_http_upstream_module_ctx = 
+{
     ngx_http_upstream_add_variables,       /* preconfiguration */
     NULL,                                  /* postconfiguration */
 
@@ -337,7 +342,8 @@ static ngx_http_module_t  ngx_http_upstream_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_upstream_module = {
+ngx_module_t  ngx_http_upstream_module =
+{
     NGX_MODULE_V1,
     &ngx_http_upstream_module_ctx,         /* module context */
     ngx_http_upstream_commands,            /* module directives */

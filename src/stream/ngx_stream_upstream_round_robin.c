@@ -10,12 +10,10 @@
 #include <ngx_stream.h>
 
 
-#define ngx_stream_upstream_tries(p) ((p)->number                             \
-                                      + ((p)->next ? (p)->next->number : 0))
+#define ngx_stream_upstream_tries(p) ((p)->number + ((p)->next ? (p)->next->number : 0))
 
 
-static ngx_stream_upstream_rr_peer_t *ngx_stream_upstream_get_peer(
-    ngx_stream_upstream_rr_peer_data_t *rrp);
+static ngx_stream_upstream_rr_peer_t *ngx_stream_upstream_get_peer(ngx_stream_upstream_rr_peer_data_t *rrp);
 
 #if (NGX_STREAM_SSL)
 
@@ -28,8 +26,7 @@ static void ngx_stream_upstream_save_round_robin_peer_session(
 
 
 ngx_int_t
-ngx_stream_upstream_init_round_robin(ngx_conf_t *cf,
-    ngx_stream_upstream_srv_conf_t *us)
+ngx_stream_upstream_init_round_robin(ngx_conf_t *cf, ngx_stream_upstream_srv_conf_t *us)
 {
     ngx_url_t                        u;
     ngx_uint_t                       i, j, n, w;

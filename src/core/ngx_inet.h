@@ -40,7 +40,8 @@
 #endif
 
 
-typedef struct {
+typedef struct 
+{
     in_addr_t                 addr;
     in_addr_t                 mask;
 } ngx_in_cidr_t;
@@ -56,9 +57,11 @@ typedef struct {
 #endif
 
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t                family;
-    union {
+    union 
+	{
         ngx_in_cidr_t         in;
 #if (NGX_HAVE_INET6)
         ngx_in6_cidr_t        in6;

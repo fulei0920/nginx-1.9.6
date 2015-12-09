@@ -132,7 +132,7 @@ struct ngx_module_s
     uintptr_t             spare_hook7;
 };
 
-/*核心模块上下文*/
+/*核心模块配置上下文*/
 typedef struct 
 {
     ngx_str_t             name;
