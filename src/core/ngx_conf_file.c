@@ -380,7 +380,6 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             }
 
             /* is the directive's location right ? */
-
             if (!(cmd->type & cf->cmd_type))
 			{
                 continue;

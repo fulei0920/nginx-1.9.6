@@ -35,7 +35,8 @@ static ngx_event_t  **event_index;
 
 static ngx_str_t    select_name = ngx_string("select");
 
-ngx_event_module_t  ngx_select_module_ctx = {
+ngx_event_module_t  ngx_select_module_ctx = 
+{
     &select_name,
     NULL,                                  /* create configuration */
     ngx_select_init_conf,                  /* init configuration */
@@ -406,16 +407,16 @@ ngx_select_init_conf(ngx_cycle_t *cycle, void *conf)
 
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
 
-    if (ecf->use != ngx_select_module.ctx_index) {
+    if (ecf->use != ngx_select_module.ctx_index) 
+	{
         return NGX_CONF_OK;
     }
 
     /* disable warning: the default FD_SETSIZE is 1024U in FreeBSD 5.x */
 
-    if (cycle->connection_n > FD_SETSIZE) {
-        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-                      "the maximum number of files "
-                      "supported by select() is %ud", FD_SETSIZE);
+    if (cycle->connection_n > FD_SETSIZE) 
+	{
+        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "the maximum number of files supported by select() is %ud", FD_SETSIZE);
         return NGX_CONF_ERROR;
     }
 

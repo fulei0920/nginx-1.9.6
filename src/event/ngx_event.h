@@ -423,7 +423,7 @@ extern ngx_os_io_t  ngx_io;
 typedef struct 
 {
     ngx_uint_t    connections;
-    ngx_uint_t    use;					/*实际使用的io复用机制模块索引*/
+    ngx_uint_t    use;					/*实际使用的io复用机制模块索引(ctx_index)*/
 	/* tries to accept() as many connections as possible after nginx gets notification about a new connection.*/
     ngx_flag_t    multi_accept;	
 	/* uses accept mutex to serialize accept() syscalls*/
