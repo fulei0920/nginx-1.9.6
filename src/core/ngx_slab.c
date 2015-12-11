@@ -64,8 +64,8 @@ static void ngx_slab_error(ngx_slab_pool_t *pool, ngx_uint_t level,
     char *text);
 
 
-static ngx_uint_t  ngx_slab_max_size;
-static ngx_uint_t  ngx_slab_exact_size;
+static ngx_uint_t  ngx_slab_max_size;  		/*slot分配能够分配的最大值，大于该值则需从pages里分配*/
+static ngx_uint_t  ngx_slab_exact_size;		/*用一个uintptr_t类型的位图变量对页进行划分时每一块的大小*/
 static ngx_uint_t  ngx_slab_exact_shift;
 
 
@@ -79,10 +79,12 @@ ngx_slab_init(ngx_slab_pool_t *pool)
     ngx_slab_page_t  *slots;
 
     /* STUB */
-    if (ngx_slab_max_size == 0) {
+    if (ngx_slab_max_size == 0) 
+	{
         ngx_slab_max_size = ngx_pagesize / 2;
         ngx_slab_exact_size = ngx_pagesize / (8 * sizeof(uintptr_t));
-        for (n = ngx_slab_exact_size; n >>= 1; ngx_slab_exact_shift++) {
+        for (n = ngx_slab_exact_size; n >>= 1; ngx_slab_exact_shift++) 
+		{
             /* void */
         }
     }
@@ -98,7 +100,8 @@ ngx_slab_init(ngx_slab_pool_t *pool)
     slots = (ngx_slab_page_t *) p;
     n = ngx_pagesize_shift - pool->min_shift;
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) 
+	{
         slots[i].slab = 0;
         slots[i].next = &slots[i];
         slots[i].prev = 0;
@@ -119,12 +122,11 @@ ngx_slab_init(ngx_slab_pool_t *pool)
     pool->pages->next = &pool->free;
     pool->pages->prev = (uintptr_t) &pool->free;
 
-    pool->start = (u_char *)
-                  ngx_align_ptr((uintptr_t) p + pages * sizeof(ngx_slab_page_t),
-                                 ngx_pagesize);
+    pool->start = (u_char *) ngx_align_ptr((uintptr_t) p + pages * sizeof(ngx_slab_page_t), ngx_pagesize);
 
     m = pages - (pool->end - pool->start) / ngx_pagesize;
-    if (m > 0) {
+    if (m > 0) 
+	{
         pages -= m;
         pool->pages->slab = pages;
     }

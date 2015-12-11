@@ -15,25 +15,27 @@
 
 typedef struct ngx_slab_page_s  ngx_slab_page_t;
 
-struct ngx_slab_page_s {
+struct ngx_slab_page_s 
+{
     uintptr_t         slab;
     ngx_slab_page_t  *next;
     uintptr_t         prev;
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_shmtx_sh_t    lock;
 
-    size_t            min_size;
-    size_t            min_shift;
+    size_t            min_size;		/* 1 << min_shift */
+    size_t            min_shift;   	/* 3 */
 
     ngx_slab_page_t  *pages;
     ngx_slab_page_t  *last;
     ngx_slab_page_t   free;
 
     u_char           *start;
-    u_char           *end;
+    u_char           *end;			/*结束地址*/
 
     ngx_shmtx_t       mutex;
 
@@ -43,7 +45,7 @@ typedef struct {
     unsigned          log_nomem:1;
 
     void             *data;
-    void             *addr;
+    void             *addr;			/*起始地址*/
 } ngx_slab_pool_t;
 
 

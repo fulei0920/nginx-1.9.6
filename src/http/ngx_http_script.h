@@ -63,7 +63,8 @@ typedef struct {
 } ngx_http_script_compile_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                   value;
     ngx_uint_t                 *flushes;
     void                       *lengths;
@@ -71,7 +72,8 @@ typedef struct {
 } ngx_http_complex_value_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_conf_t                 *cf;
     ngx_str_t                  *value;
     ngx_http_complex_value_t   *complex_value;

@@ -487,7 +487,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
             goto failed;
         }
 
-        if (shm_zone[i].init(&shm_zone[i], NULL) != NGX_OK) {
+        if (shm_zone[i].init(&shm_zone[i], NULL) != NGX_OK) 
+		{
             goto failed;
         }
 
@@ -831,9 +832,9 @@ old_shm_zone_done:
 
 failed:
 
-    if (!ngx_is_init_cycle(old_cycle)) {
-        old_ccf = (ngx_core_conf_t *) ngx_get_conf(old_cycle->conf_ctx,
-                                                   ngx_core_module);
+    if (!ngx_is_init_cycle(old_cycle))
+	{
+        old_ccf = (ngx_core_conf_t *) ngx_get_conf(old_cycle->conf_ctx, ngx_core_module);
         if (old_ccf->environment) {
             environ = old_ccf->environment;
         }
@@ -906,9 +907,11 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 
     sp = (ngx_slab_pool_t *) zn->shm.addr;
 
-    if (zn->shm.exists) {
+    if (zn->shm.exists) 
+	{
 
-        if (sp == sp->addr) {
+        if (sp == sp->addr) 
+		{
             return NGX_OK;
         }
 
@@ -916,21 +919,21 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 
         /* remap at the required address */
 
-        if (ngx_shm_remap(&zn->shm, sp->addr) != NGX_OK) {
+        if (ngx_shm_remap(&zn->shm, sp->addr) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
         sp = (ngx_slab_pool_t *) zn->shm.addr;
 
-        if (sp == sp->addr) {
+        if (sp == sp->addr)
+		{
             return NGX_OK;
         }
 
 #endif
 
-        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0,
-                      "shared zone \"%V\" has no equal addresses: %p vs %p",
-                      &zn->shm.name, sp->addr, sp);
+        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "shared zone \"%V\" has no equal addresses: %p vs %p", &zn->shm.name, sp->addr, sp);
         return NGX_ERROR;
     }
 
@@ -938,6 +941,8 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
     sp->min_shift = 3;
     sp->addr = zn->shm.addr;
 
+
+	/*初始化共享内存互斥访问机制数据*/
 #if (NGX_HAVE_ATOMIC_OPS)
 
     file = NULL;
@@ -945,7 +950,8 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 #else
 
     file = ngx_pnalloc(cycle->pool, cycle->lock_file.len + zn->shm.name.len);
-    if (file == NULL) {
+    if (file == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -953,7 +959,8 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 
 #endif
 
-    if (ngx_shmtx_create(&sp->mutex, &sp->lock, file) != NGX_OK) {
+    if (ngx_shmtx_create(&sp->mutex, &sp->lock, file) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -1238,6 +1245,10 @@ ngx_reopen_files(ngx_cycle_t *cycle, ngx_uid_t user)
 }
 
 
+
+/*
+向全局共享内存链表中添加一个共享内存
+*/
 ngx_shm_zone_t *
 ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
 {
@@ -1248,10 +1259,15 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
     part = &cf->cycle->shared_memory.part;
     shm_zone = part->elts;
 
-    for (i = 0; /* void */ ; i++) {
+	//遍历全局链表，检查冲突，
+	//对于已经存在且不冲突的共享内存可直接返回引用
+    for (i = 0; /* void */ ; i++)
+	{
 
-        if (i >= part->nelts) {
-            if (part->next == NULL) {
+        if (i >= part->nelts) 
+		{
+            if (part->next == NULL) 
+			{
                 break;
             }
             part = part->next;
@@ -1259,33 +1275,32 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
             i = 0;
         }
 
-        if (name->len != shm_zone[i].shm.name.len) {
+        if (name->len != shm_zone[i].shm.name.len) 
+		{
             continue;
         }
 
-        if (ngx_strncmp(name->data, shm_zone[i].shm.name.data, name->len)
-            != 0)
+        if (ngx_strncmp(name->data, shm_zone[i].shm.name.data, name->len) != 0)
         {
             continue;
         }
 
-        if (tag != shm_zone[i].tag) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                            "the shared memory zone \"%V\" is "
-                            "already declared for a different use",
-                            &shm_zone[i].shm.name);
+        if (tag != shm_zone[i].tag)
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the shared memory zone \"%V\" is "
+					"already declared for a different use", &shm_zone[i].shm.name);
             return NULL;
         }
 
-        if (shm_zone[i].shm.size == 0) {
+        if (shm_zone[i].shm.size == 0) 
+		{
             shm_zone[i].shm.size = size;
         }
 
-        if (size && size != shm_zone[i].shm.size) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                            "the size %uz of shared memory zone \"%V\" "
-                            "conflicts with already declared size %uz",
-                            size, &shm_zone[i].shm.name, shm_zone[i].shm.size);
+        if (size && size != shm_zone[i].shm.size)
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the size %uz of shared memory zone \"%V\" "
+					"conflicts with already declared size %uz", size, &shm_zone[i].shm.name, shm_zone[i].shm.size);
             return NULL;
         }
 
@@ -1293,8 +1308,8 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
     }
 
     shm_zone = ngx_list_push(&cf->cycle->shared_memory);
-
-    if (shm_zone == NULL) {
+    if (shm_zone == NULL)
+	{
         return NULL;
     }
 

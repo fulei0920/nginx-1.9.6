@@ -30,7 +30,8 @@ typedef struct {
 } ngx_http_limit_req_shctx_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_limit_req_shctx_t  *sh;
     ngx_slab_pool_t             *shpool;
     /* integer value, 1 corresponds to 0.001 r/s */
@@ -137,7 +138,8 @@ static ngx_http_module_t  ngx_http_limit_req_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_limit_req_module = {
+ngx_module_t  ngx_http_limit_req_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_limit_req_module_ctx,        /* module context */
     ngx_http_limit_req_commands,           /* module directives */
@@ -624,11 +626,10 @@ ngx_http_limit_req_init_zone(ngx_shm_zone_t *shm_zone, void *data)
 
     ctx = shm_zone->data;
 
-    if (octx) {
+    if (octx) 
+	{
         if (ctx->key.value.len != octx->key.value.len
-            || ngx_strncmp(ctx->key.value.data, octx->key.value.data,
-                           ctx->key.value.len)
-               != 0)
+            || ngx_strncmp(ctx->key.value.data, octx->key.value.data, ctx->key.value.len) != 0)
         {
             ngx_log_error(NGX_LOG_EMERG, shm_zone->shm.log, 0,
                           "limit_req \"%V\" uses the \"%V\" key "
@@ -646,33 +647,34 @@ ngx_http_limit_req_init_zone(ngx_shm_zone_t *shm_zone, void *data)
 
     ctx->shpool = (ngx_slab_pool_t *) shm_zone->shm.addr;
 
-    if (shm_zone->shm.exists) {
+    if (shm_zone->shm.exists) 
+	{
         ctx->sh = ctx->shpool->data;
 
         return NGX_OK;
     }
 
     ctx->sh = ngx_slab_alloc(ctx->shpool, sizeof(ngx_http_limit_req_shctx_t));
-    if (ctx->sh == NULL) {
+    if (ctx->sh == NULL) 
+	{
         return NGX_ERROR;
     }
 
     ctx->shpool->data = ctx->sh;
 
-    ngx_rbtree_init(&ctx->sh->rbtree, &ctx->sh->sentinel,
-                    ngx_http_limit_req_rbtree_insert_value);
+    ngx_rbtree_init(&ctx->sh->rbtree, &ctx->sh->sentinel, ngx_http_limit_req_rbtree_insert_value);
 
     ngx_queue_init(&ctx->sh->queue);
 
     len = sizeof(" in limit_req zone \"\"") + shm_zone->shm.name.len;
 
     ctx->shpool->log_ctx = ngx_slab_alloc(ctx->shpool, len);
-    if (ctx->shpool->log_ctx == NULL) {
+    if (ctx->shpool->log_ctx == NULL)
+	{
         return NGX_ERROR;
     }
 
-    ngx_sprintf(ctx->shpool->log_ctx, " in limit_req zone \"%V\"%Z",
-                &shm_zone->shm.name);
+    ngx_sprintf(ctx->shpool->log_ctx, " in limit_req zone \"%V\"%Z", &shm_zone->shm.name);
 
     ctx->shpool->log_nomem = 0;
 
@@ -742,7 +744,8 @@ ngx_http_limit_req_zone(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value = cf->args->elts;
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_limit_req_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -752,7 +755,8 @@ ngx_http_limit_req_zone(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ccv.value = &value[1];
     ccv.complex_value = &ctx->key;
 
-    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
+    if (ngx_http_compile_complex_value(&ccv) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -761,7 +765,8 @@ ngx_http_limit_req_zone(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     scale = 1;
     name.len = 0;
 
-    for (i = 2; i < cf->args->nelts; i++) {
+    for (i = 2; i < cf->args->nelts; i++) 
+	{
 
         if (ngx_strncmp(value[i].data, "zone=", 5) == 0) {
 
@@ -782,15 +787,15 @@ ngx_http_limit_req_zone(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
             size = ngx_parse_size(&s);
 
-            if (size == NGX_ERROR) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid zone size \"%V\"", &value[i]);
+            if (size == NGX_ERROR) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid zone size \"%V\"", &value[i]);
                 return NGX_CONF_ERROR;
             }
 
-            if (size < (ssize_t) (8 * ngx_pagesize)) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "zone \"%V\" is too small", &value[i]);
+            if (size < (ssize_t) (8 * ngx_pagesize)) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "zone \"%V\" is too small", &value[i]);
                 return NGX_CONF_ERROR;
             }
 
@@ -835,18 +840,17 @@ ngx_http_limit_req_zone(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ctx->rate = rate * 1000 / scale;
 
-    shm_zone = ngx_shared_memory_add(cf, &name, size,
-                                     &ngx_http_limit_req_module);
-    if (shm_zone == NULL) {
+    shm_zone = ngx_shared_memory_add(cf, &name, size, &ngx_http_limit_req_module);
+    if (shm_zone == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
-    if (shm_zone->data) {
+    if (shm_zone->data) 
+	{
         ctx = shm_zone->data;
-
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "%V \"%V\" is already bound to key \"%V\"",
-                           &cmd->name, &name, &ctx->key.value);
+		
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%V \"%V\" is already bound to key \"%V\"", &cmd->name, &name, &ctx->key.value);
         return NGX_CONF_ERROR;
     }
 

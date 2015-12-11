@@ -28,10 +28,10 @@ typedef ngx_int_t (*ngx_shm_zone_init_pt) (ngx_shm_zone_t *zone, void *data);
 
 struct ngx_shm_zone_s 
 {
-    void                     *data;
+    void                     *data;		/*共享内存特定数据*/	
     ngx_shm_t                 shm;
-    ngx_shm_zone_init_pt      init;
-    void                     *tag;
+    ngx_shm_zone_init_pt      init;		/*共享内存特定初始化函数*/
+    void                     *tag;		/*共享内存标签，用于标明该共享内存属于哪个模块*/
     ngx_uint_t                noreuse;  /* unsigned  noreuse:1; */
 };
 
@@ -56,7 +56,7 @@ struct ngx_cycle_s
     ngx_array_t               paths;			/*ngx_path_t*类型的数组*/
     ngx_array_t               config_dump;		/*ngx_conf_dump_t类型的数组*/
     ngx_list_t                open_files;		/*ngx_open_file_t 类型的链表*/
-    ngx_list_t                shared_memory;    /*ngx_shm_zone_t 类型的链表*/
+    ngx_list_t                shared_memory;    /*ngx_shm_zone_t 类型的链表，存储所有模块分配的共享内存*/
 
     ngx_uint_t                connection_n;		/*connections数组的大小, 每个工作进程的连接最大数*/	
     ngx_uint_t                files_n;
@@ -120,8 +120,7 @@ void ngx_reopen_files(ngx_cycle_t *cycle, ngx_uid_t user);
 char **ngx_set_environment(ngx_cycle_t *cycle, ngx_uint_t *last);
 ngx_pid_t ngx_exec_new_binary(ngx_cycle_t *cycle, char *const *argv);
 uint64_t ngx_get_cpu_affinity(ngx_uint_t n);
-ngx_shm_zone_t *ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name,
-    size_t size, void *tag);
+ngx_shm_zone_t *ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag);
 
 
 extern volatile ngx_cycle_t  *ngx_cycle;

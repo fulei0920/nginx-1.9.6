@@ -106,6 +106,8 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     } 
 	else
 	{
+
+		/*查找ngx_processess数组内第一个可用元素的下标*/
         for (s = 0; s < ngx_last_process; s++)
 		{
             if (ngx_processes[s].pid == -1) 
