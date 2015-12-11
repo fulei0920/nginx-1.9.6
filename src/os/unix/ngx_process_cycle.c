@@ -446,8 +446,7 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
             continue;
         }
 
-        ngx_log_debug6(NGX_LOG_DEBUG_CORE, cycle->log, 0, "pass channel s:%d pid:%P fd:%d to s:%i pid:%P fd:%d",
-				ch->slot, ch->pid, ch->fd, i, ngx_processes[i].pid, ngx_processes[i].channel[0]);
+        ngx_log_debug6(NGX_LOG_DEBUG_CORE, cycle->log, 0, "pass channel s:%d pid:%P fd:%d to s:%i pid:%P fd:%d", ch->slot, ch->pid, ch->fd, i, ngx_processes[i].pid, ngx_processes[i].channel[0]);
 
         /* TODO: NGX_AGAIN */
 
@@ -861,6 +860,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
         }
     }
 
+	/*设置CPU亲和性*/
     if (worker >= 0) 
 	{
         cpu_affinity = ngx_get_cpu_affinity(worker);
@@ -923,6 +923,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
         }
     }
 
+	/*关闭之前子进程的channel[1]*/
     for (n = 0; n < ngx_last_process; n++) 
 	{
         if (ngx_processes[n].pid == -1) 
@@ -946,6 +947,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
         }
     }
 
+	/*关闭channel[0]*/
     if (close(ngx_processes[ngx_process_slot].channel[0]) == -1)
 	{
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "close() channel failed");
@@ -1101,7 +1103,7 @@ ngx_channel_handler(ngx_event_t *ev)
         case NGX_CMD_CLOSE_CHANNEL:
 
             ngx_log_debug4(NGX_LOG_DEBUG_CORE, ev->log, 0, "close channel s:%i pid:%P our:%P fd:%d",
-                           ch.slot, ch.pid, ngx_processes[ch.slot].pid, ngx_processes[ch.slot].channel[0]);
+					ch.slot, ch.pid, ngx_processes[ch.slot].pid, ngx_processes[ch.slot].channel[0]);
 
             if (close(ngx_processes[ch.slot].channel[0]) == -1) 
 			{

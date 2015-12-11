@@ -24,7 +24,7 @@ typedef struct
 {
     ngx_pid_t           pid;			/*进程pid*/
     int                 status;
-    ngx_socket_t        channel[2];  	/*套接字对*/
+    ngx_socket_t        channel[2];  	/*套接字对, 子进程使用channel[1]*/
 
     ngx_spawn_proc_pt   proc;   		/*进程执行的函数*/
     void               *data;
@@ -62,8 +62,7 @@ typedef struct {
 #endif
 
 
-ngx_pid_t ngx_spawn_process(ngx_cycle_t *cycle,
-    ngx_spawn_proc_pt proc, void *data, char *name, ngx_int_t respawn);
+ngx_pid_t ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *name, ngx_int_t respawn);
 ngx_pid_t ngx_execute(ngx_cycle_t *cycle, ngx_exec_ctx_t *ctx);
 ngx_int_t ngx_init_signals(ngx_log_t *log);
 void ngx_debug_point(void);

@@ -201,12 +201,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_main_conf_t, server_names_hash_bucket_size),
       NULL },
 
-    { ngx_string("server"),
-      NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_http_core_server,
-      0,
-      0,
-      NULL },
+    { 
+		ngx_string("server"),
+		NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
+		ngx_http_core_server,
+		0,
+		0,
+		NULL 
+    },
 
     { ngx_string("connection_pool_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -310,12 +312,13 @@ static ngx_command_t  ngx_http_core_commands[] = {
 		NULL 
 	},
 
-    { ngx_string("default_type"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, default_type),
-      NULL 
+    { 
+		ngx_string("default_type"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, default_type),
+		NULL 
     },
 
     { ngx_string("root"),

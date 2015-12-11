@@ -60,11 +60,14 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log
 
 #else
 
-    if (ch->fd == -1) {
+    if (ch->fd == -1)
+	{
         msg.msg_accrights = NULL;
         msg.msg_accrightslen = 0;
 
-    } else {
+    } 
+	else
+	{
         msg.msg_accrights = (caddr_t) &ch->fd;
         msg.msg_accrightslen = sizeof(int);
     }
@@ -81,9 +84,11 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log
 
     n = sendmsg(s, &msg, 0);
 
-    if (n == -1) {
+    if (n == -1) 
+	{
         err = ngx_errno;
-        if (err == NGX_EAGAIN) {
+        if (err == NGX_EAGAIN)
+		{
             return NGX_AGAIN;
         }
 

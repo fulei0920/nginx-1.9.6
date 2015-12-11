@@ -32,8 +32,8 @@ char           **ngx_argv;
 char           **ngx_os_argv;
 
 ngx_int_t        ngx_process_slot;		/*当前进程在ngx_processes中元素的下标*/
-ngx_socket_t     ngx_channel;			/*子进程套接字对中的读套接字(用于与主进程进行通信)*/
-ngx_int_t        ngx_last_process;   	/*子进程的数量*/
+ngx_socket_t     ngx_channel;			/*子进程套接字对中的使用的套接字(用于与其他进程进行通信) channel[1]*/
+ngx_int_t        ngx_last_process;   	/*ngx_processes中最后一个子进程的下一个位置的索引*/
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];  /*存储所有子进程的信息*/
 
 
@@ -121,7 +121,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
         }
     }
 
-
+	/*创建套接字对*/
     if (respawn != NGX_PROCESS_DETACHED)
 	{
 
@@ -269,8 +269,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
 ngx_pid_t
 ngx_execute(ngx_cycle_t *cycle, ngx_exec_ctx_t *ctx)
 {
-    return ngx_spawn_process(cycle, ngx_execute_proc, ctx, ctx->name,
-                             NGX_PROCESS_DETACHED);
+    return ngx_spawn_process(cycle, ngx_execute_proc, ctx, ctx->name, NGX_PROCESS_DETACHED);
 }
 
 

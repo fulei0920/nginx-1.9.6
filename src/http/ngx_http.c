@@ -77,7 +77,6 @@ ngx_str_t  ngx_http_html_default_types[] = {
 
 static ngx_command_t  ngx_http_commands[] = 
 {
-
     {
 		ngx_string("http"),
 		NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
@@ -87,7 +86,7 @@ static ngx_command_t  ngx_http_commands[] =
 		NULL 
     },
 
-      ngx_null_command
+    ngx_null_command
 };
 
 
