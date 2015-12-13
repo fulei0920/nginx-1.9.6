@@ -27,15 +27,15 @@ typedef struct
 {
     ngx_shmtx_sh_t    lock;
 
-    size_t            min_size;		/* 1 << min_shift */
-    size_t            min_shift;   	/* 3 */
+    size_t            min_size;		/*最小分配单元  1 << min_shift */
+    size_t            min_shift;   	/*最小分配单元对应的位移，默认值3*/
 
-    ngx_slab_page_t  *pages;
+    ngx_slab_page_t  *pages;		/*页数组*/
     ngx_slab_page_t  *last;
-    ngx_slab_page_t   free;
+    ngx_slab_page_t   free;			/*空闲页链表*/
 
-    u_char           *start;
-    u_char           *end;			/*结束地址*/
+    u_char           *start;		/*可分配空间的起始地址*/
+    u_char           *end;			/*内存块的结束地址*/ 
 
     ngx_shmtx_t       mutex;
 
@@ -45,7 +45,7 @@ typedef struct
     unsigned          log_nomem:1;
 
     void             *data;
-    void             *addr;			/*起始地址*/
+    void             *addr;			/*内存块的起始地址*/
 } ngx_slab_pool_t;
 
 

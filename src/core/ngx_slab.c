@@ -56,12 +56,9 @@
 
 #endif
 
-static ngx_slab_page_t *ngx_slab_alloc_pages(ngx_slab_pool_t *pool,
-    ngx_uint_t pages);
-static void ngx_slab_free_pages(ngx_slab_pool_t *pool, ngx_slab_page_t *page,
-    ngx_uint_t pages);
-static void ngx_slab_error(ngx_slab_pool_t *pool, ngx_uint_t level,
-    char *text);
+static ngx_slab_page_t *ngx_slab_alloc_pages(ngx_slab_pool_t *pool, ngx_uint_t pages);
+static void ngx_slab_free_pages(ngx_slab_pool_t *pool, ngx_slab_page_t *page, ngx_uint_t pages);
+static void ngx_slab_error(ngx_slab_pool_t *pool, ngx_uint_t level, char *text);
 
 
 static ngx_uint_t  ngx_slab_max_size;  		/*slot分配能够分配的最大值，大于该值则需从pages里分配*/
@@ -83,12 +80,8 @@ ngx_slab_init(ngx_slab_pool_t *pool)
 	{
         ngx_slab_max_size = ngx_pagesize / 2;
         ngx_slab_exact_size = ngx_pagesize / (8 * sizeof(uintptr_t));
-        for (n = ngx_slab_exact_size; n >>= 1; ngx_slab_exact_shift++) 
-		{
-            /* void */
-        }
+        for (n = ngx_slab_exact_size; n >>= 1; ngx_slab_exact_shift++) { /* void */}
     }
-    /**/
 
     pool->min_size = 1 << pool->min_shift;
 
@@ -162,44 +155,49 @@ ngx_slab_alloc_locked(ngx_slab_pool_t *pool, size_t size)
     ngx_uint_t        i, slot, shift, map;
     ngx_slab_page_t  *page, *prev, *slots;
 
-    if (size > ngx_slab_max_size) {
+    if (size > ngx_slab_max_size) 
+	{
 
-        ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, ngx_cycle->log, 0,
-                       "slab alloc: %uz", size);
+        ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, ngx_cycle->log, 0, "slab alloc: %uz", size);
 
-        page = ngx_slab_alloc_pages(pool, (size >> ngx_pagesize_shift)
-                                          + ((size % ngx_pagesize) ? 1 : 0));
-        if (page) {
+        page = ngx_slab_alloc_pages(pool, (size >> ngx_pagesize_shift) + ((size % ngx_pagesize) ? 1 : 0));
+        if (page)
+		{
             p = (page - pool->pages) << ngx_pagesize_shift;
             p += (uintptr_t) pool->start;
 
-        } else {
+        } 
+		else
+		{
             p = 0;
         }
 
         goto done;
     }
 
-    if (size > pool->min_size) {
+    if (size > pool->min_size) 
+	{
         shift = 1;
         for (s = size - 1; s >>= 1; shift++) { /* void */ }
         slot = shift - pool->min_shift;
 
-    } else {
+    }
+	else 
+	{
         size = pool->min_size;
         shift = pool->min_shift;
         slot = 0;
     }
 
-    ngx_log_debug2(NGX_LOG_DEBUG_ALLOC, ngx_cycle->log, 0,
-                   "slab alloc: %uz slot: %ui", size, slot);
+    ngx_log_debug2(NGX_LOG_DEBUG_ALLOC, ngx_cycle->log, 0, "slab alloc: %uz slot: %ui", size, slot);
 
     slots = (ngx_slab_page_t *) ((u_char *) pool + sizeof(ngx_slab_pool_t));
     page = slots[slot].next;
 
-    if (page->next != page) {
-
-        if (shift < ngx_slab_exact_shift) {
+    if (page->next != page) 
+	{
+        if (shift < ngx_slab_exact_shift) 
+		{
 
             do {
                 p = (page - pool->pages) << ngx_pagesize_shift;
@@ -654,11 +652,14 @@ ngx_slab_alloc_pages(ngx_slab_pool_t *pool, ngx_uint_t pages)
 {
     ngx_slab_page_t  *page, *p;
 
-    for (page = pool->free.next; page != &pool->free; page = page->next) {
+    for (page = pool->free.next; page != &pool->free; page = page->next) 
+	{
 
-        if (page->slab >= pages) {
+        if (page->slab >= pages) 
+		{
 
-            if (page->slab > pages) {
+            if (page->slab > pages) 
+			{
                 page[page->slab - 1].prev = (uintptr_t) &page[pages];
 
                 page[pages].slab = page->slab - pages;
@@ -669,7 +670,9 @@ ngx_slab_alloc_pages(ngx_slab_pool_t *pool, ngx_uint_t pages)
                 p->next = &page[pages];
                 page->next->prev = (uintptr_t) &page[pages];
 
-            } else {
+            } 
+			else 
+			{
                 p = (ngx_slab_page_t *) page->prev;
                 p->next = page->next;
                 page->next->prev = page->prev;
@@ -679,11 +682,13 @@ ngx_slab_alloc_pages(ngx_slab_pool_t *pool, ngx_uint_t pages)
             page->next = NULL;
             page->prev = NGX_SLAB_PAGE;
 
-            if (--pages == 0) {
+            if (--pages == 0) 
+			{
                 return page;
             }
 
-            for (p = page + 1; pages; pages--) {
+            for (p = page + 1; pages; pages--)
+			{
                 p->slab = NGX_SLAB_PAGE_BUSY;
                 p->next = NULL;
                 p->prev = NGX_SLAB_PAGE;
@@ -694,9 +699,9 @@ ngx_slab_alloc_pages(ngx_slab_pool_t *pool, ngx_uint_t pages)
         }
     }
 
-    if (pool->log_nomem) {
-        ngx_slab_error(pool, NGX_LOG_CRIT,
-                       "ngx_slab_alloc() failed: no memory");
+    if (pool->log_nomem)
+	{
+        ngx_slab_error(pool, NGX_LOG_CRIT, "ngx_slab_alloc() failed: no memory");
     }
 
     return NULL;

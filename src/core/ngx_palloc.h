@@ -23,8 +23,7 @@
 
 #define NGX_POOL_ALIGNMENT       16
 #define NGX_MIN_POOL_SIZE                                                     \
-    ngx_align((sizeof(ngx_pool_t) + 2 * sizeof(ngx_pool_large_t)),            \
-              NGX_POOL_ALIGNMENT)
+    ngx_align((sizeof(ngx_pool_t) + 2 * sizeof(ngx_pool_large_t)), NGX_POOL_ALIGNMENT)
 
 
 typedef void (*ngx_pool_cleanup_pt)(void *data);
@@ -47,28 +46,30 @@ struct ngx_pool_large_s
     void                 *alloc;
 };
 
-
+/*内存池的数据结构模块*/
 typedef struct 
 {
     u_char               *last;		/*上一次内存分配的结束位置，即下一次内存分配的起始位置*/
     u_char               *end;  	/*内存池的结束位置*/
-    ngx_pool_t           *next;		/*链接到下一个内存池*/
-    ngx_uint_t            failed;	/*记录内存分配不能满足需求的失败次数*/
+    ngx_pool_t           *next;		/*链接到下一个内存池，内存池的很多块内存就是通过该指针连成链表的*/
+    ngx_uint_t            failed;	/*统计该内存池不能满足分配请求的次数 */
 } ngx_pool_data_t;
 
+/*内存池的管理分配模块*/
 struct ngx_pool_s 
 {
-    ngx_pool_data_t       d;			/*管理内存块*/
+    ngx_pool_data_t       d;			/*内存池的数据块*/
     size_t                max;			/*小块内存分配的最大值*/
     ngx_pool_t           *current;		/*指向内存池链表中当前可供分配的内存池*/
-    ngx_chain_t          *chain;
+    ngx_chain_t          *chain;		/*指向一个ngx_chain_t结构*/
     ngx_pool_large_t     *large;		/*指向大块内存分配，nginx中，大块内存分配直接采用标准系统接口malloc*/
-    ngx_pool_cleanup_t   *cleanup;		/*析构函数，挂载内存释放时需要清理资源的一些必要操作；*/
+    ngx_pool_cleanup_t   *cleanup;		/*析构函数，挂载内存释放时需要清理资源的一些必要操作*/
     ngx_log_t            *log;			/*内存分配相关的日志记录*/
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_fd_t              fd;
     u_char               *name;
     ngx_log_t            *log;

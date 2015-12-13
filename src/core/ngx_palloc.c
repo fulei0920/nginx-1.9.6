@@ -106,13 +106,16 @@ ngx_reset_pool(ngx_pool_t *pool)
     ngx_pool_t        *p;
     ngx_pool_large_t  *l;
 
-    for (l = pool->large; l; l = l->next) {
-        if (l->alloc) {
+    for (l = pool->large; l; l = l->next)
+	{
+        if (l->alloc) 
+		{
             ngx_free(l->alloc);
         }
     }
 
-    for (p = pool; p; p = p->d.next) {
+    for (p = pool; p; p = p->d.next) 
+	{
         p->d.last = (u_char *) p + sizeof(ngx_pool_t);
         p->d.failed = 0;
     }
@@ -122,6 +125,8 @@ ngx_reset_pool(ngx_pool_t *pool)
     pool->large = NULL;
 }
 
+
+//分配适合size大小的内存，以NGX_ALIGNMENT对齐的内存
 //require <= max
 //内存池中分配，若剩余内存无法满足则分配一个新的内存池，进行分配并连接到next中
 //require > max时
@@ -158,7 +163,7 @@ ngx_palloc(ngx_pool_t *pool, size_t size)
     return ngx_palloc_large(pool, size);
 }
 
-
+//分配适合size大小的内存，不考虑内存对齐。
 void *
 ngx_pnalloc(ngx_pool_t *pool, size_t size)
 {
@@ -177,7 +182,6 @@ ngx_pnalloc(ngx_pool_t *pool, size_t size)
             if ((size_t) (p->d.end - m) >= size) 
 			{
                 p->d.last = m + size;
-
                 return m;
             }
 
@@ -212,7 +216,8 @@ ngx_palloc_block(ngx_pool_t *pool, size_t size)
     new->d.end = m + psize;
     new->d.next = NULL;
     new->d.failed = 0;
-
+	//注意：该函数分配一块内存后，偏移值是ngx_pool_data_t结构体大小(16B)
+	//而创建内存池时时，偏移值是ngx_pool_t结构体大小(40B)。
     m += sizeof(ngx_pool_data_t);
     m = ngx_align_ptr(m, NGX_ALIGNMENT);
     new->d.last = m + size;
@@ -282,12 +287,14 @@ ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment)
     ngx_pool_large_t  *large;
 
     p = ngx_memalign(alignment, size, pool->log);
-    if (p == NULL) {
+    if (p == NULL) 
+	{
         return NULL;
     }
 
     large = ngx_palloc(pool, sizeof(ngx_pool_large_t));
-    if (large == NULL) {
+    if (large == NULL) 
+	{
         ngx_free(p);
         return NULL;
     }
@@ -305,10 +312,11 @@ ngx_pfree(ngx_pool_t *pool, void *p)
 {
     ngx_pool_large_t  *l;
 
-    for (l = pool->large; l; l = l->next) {
-        if (p == l->alloc) {
-            ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, pool->log, 0,
-                           "free: %p", l->alloc);
+    for (l = pool->large; l; l = l->next)
+	{
+        if (p == l->alloc) 
+		{
+            ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, pool->log, 0, "free: %p", l->alloc);
             ngx_free(l->alloc);
             l->alloc = NULL;
 
@@ -341,23 +349,28 @@ ngx_pool_cleanup_add(ngx_pool_t *p, size_t size)
     ngx_pool_cleanup_t  *c;
 
     c = ngx_palloc(p, sizeof(ngx_pool_cleanup_t));
-    if (c == NULL) {
+    if (c == NULL) 
+	{
         return NULL;
     }
 
-    if (size) {
+    if (size) 
+	{
         c->data = ngx_palloc(p, size);
-        if (c->data == NULL) {
+        if (c->data == NULL)
+		{
             return NULL;
         }
 
-    } else {
+    }
+	else
+	{
         c->data = NULL;
     }
 
     c->handler = NULL;
+	
     c->next = p->cleanup;
-
     p->cleanup = c;
 
     ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, p->log, 0, "add cleanup: %p", c);
@@ -372,12 +385,14 @@ ngx_pool_run_cleanup_file(ngx_pool_t *p, ngx_fd_t fd)
     ngx_pool_cleanup_t       *c;
     ngx_pool_cleanup_file_t  *cf;
 
-    for (c = p->cleanup; c; c = c->next) {
-        if (c->handler == ngx_pool_cleanup_file) {
-
+    for (c = p->cleanup; c; c = c->next) 
+	{
+        if (c->handler == ngx_pool_cleanup_file) 
+		{
             cf = c->data;
 
-            if (cf->fd == fd) {
+            if (cf->fd == fd) 
+			{
                 c->handler(cf);
                 c->handler = NULL;
                 return;
@@ -392,12 +407,11 @@ ngx_pool_cleanup_file(void *data)
 {
     ngx_pool_cleanup_file_t  *c = data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, c->log, 0, "file cleanup: fd:%d",
-                   c->fd);
+    ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, c->log, 0, "file cleanup: fd:%d", c->fd);
 
-    if (ngx_close_file(c->fd) == NGX_FILE_ERROR) {
-        ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno,
-                      ngx_close_file_n " \"%s\" failed", c->name);
+    if (ngx_close_file(c->fd) == NGX_FILE_ERROR) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno, ngx_close_file_n " \"%s\" failed", c->name);
     }
 }
 
@@ -409,21 +423,21 @@ ngx_pool_delete_file(void *data)
 
     ngx_err_t  err;
 
-    ngx_log_debug2(NGX_LOG_DEBUG_ALLOC, c->log, 0, "file cleanup: fd:%d %s",
-                   c->fd, c->name);
+    ngx_log_debug2(NGX_LOG_DEBUG_ALLOC, c->log, 0, "file cleanup: fd:%d %s", c->fd, c->name);
 
-    if (ngx_delete_file(c->name) == NGX_FILE_ERROR) {
+    if (ngx_delete_file(c->name) == NGX_FILE_ERROR) 
+	{
         err = ngx_errno;
 
-        if (err != NGX_ENOENT) {
-            ngx_log_error(NGX_LOG_CRIT, c->log, err,
-                          ngx_delete_file_n " \"%s\" failed", c->name);
+        if (err != NGX_ENOENT)
+		{
+            ngx_log_error(NGX_LOG_CRIT, c->log, err, ngx_delete_file_n " \"%s\" failed", c->name);
         }
     }
 
-    if (ngx_close_file(c->fd) == NGX_FILE_ERROR) {
-        ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno,
-                      ngx_close_file_n " \"%s\" failed", c->name);
+    if (ngx_close_file(c->fd) == NGX_FILE_ERROR) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno, ngx_close_file_n " \"%s\" failed", c->name);
     }
 }
 
