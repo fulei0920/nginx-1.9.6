@@ -42,7 +42,9 @@ ngx_create_pool(size_t size, ngx_log_t *log)
     return p;
 }
 
-
+//nginx没有提供对小块内存的释放，
+//这意味着从内存池里分配出去的内存不会再回收到内存池里来，
+//而只有在销毁整个内存池，所有这些内存才会回收到系统内存里
 void
 ngx_destroy_pool(ngx_pool_t *pool)
 {
@@ -306,7 +308,7 @@ ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment)
     return p;
 }
 
-
+//提供对大块内存的释放
 ngx_int_t
 ngx_pfree(ngx_pool_t *pool, void *p)
 {

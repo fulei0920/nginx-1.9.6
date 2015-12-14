@@ -187,12 +187,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_main_conf_t, variables_hash_bucket_size),
       NULL },
 
-    { ngx_string("server_names_hash_max_size"),
-      NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_MAIN_CONF_OFFSET,
-      offsetof(ngx_http_core_main_conf_t, server_names_hash_max_size),
-      NULL },
+    { 
+    	ngx_string("server_names_hash_max_size"),
+		NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_MAIN_CONF_OFFSET,
+		offsetof(ngx_http_core_main_conf_t, server_names_hash_max_size),
+		NULL 
+    },
 
     { ngx_string("server_names_hash_bucket_size"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,

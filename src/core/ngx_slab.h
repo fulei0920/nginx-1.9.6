@@ -30,8 +30,8 @@ typedef struct
     size_t            min_size;		/*最小分配单元  1 << min_shift */
     size_t            min_shift;   	/*最小分配单元对应的位移，默认值3*/
 
-    ngx_slab_page_t  *pages;		/*页数组*/
-    ngx_slab_page_t  *last;
+    ngx_slab_page_t  *pages;		/*页数组首地址*/
+    ngx_slab_page_t  *last;			/*页数组末端地址*/
     ngx_slab_page_t   free;			/*空闲页链表*/
 
     u_char           *start;		/*可分配空间的起始地址*/

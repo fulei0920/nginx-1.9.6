@@ -1565,7 +1565,7 @@ ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http_
 
     if (ha.keys.nelts)
 	{
-        hash.hash = &addr->hash;
+        hash.hash = &addr->hash;  //事实上是个输出参数
         hash.temp_pool = NULL;
 
         if (ngx_hash_init(&hash, ha.keys.elts, ha.keys.nelts) != NGX_OK) 

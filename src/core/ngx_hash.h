@@ -13,7 +13,8 @@
 #include <ngx_core.h>
 
 
-typedef struct {
+typedef struct 
+{
     void             *value;
     u_short           len;
     u_char            name[1];
@@ -52,9 +53,10 @@ typedef struct {
 } ngx_hash_combined_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_hash_t       *hash;
-    ngx_hash_key_pt   key;
+    ngx_hash_key_pt   key;				//hashº¯Êý
 
     ngx_uint_t        max_size;
     ngx_uint_t        bucket_size;
