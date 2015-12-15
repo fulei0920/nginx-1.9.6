@@ -12,12 +12,12 @@
 
 static ngx_uint_t ngx_http_test_if_unmodified(ngx_http_request_t *r);
 static ngx_uint_t ngx_http_test_if_modified(ngx_http_request_t *r);
-static ngx_uint_t ngx_http_test_if_match(ngx_http_request_t *r,
-    ngx_table_elt_t *header, ngx_uint_t weak);
+static ngx_uint_t ngx_http_test_if_match(ngx_http_request_t *r, ngx_table_elt_t *header, ngx_uint_t weak);
 static ngx_int_t ngx_http_not_modified_filter_init(ngx_conf_t *cf);
 
 
-static ngx_http_module_t  ngx_http_not_modified_filter_module_ctx = {
+static ngx_http_module_t  ngx_http_not_modified_filter_module_ctx = 
+{
     NULL,                                  /* preconfiguration */
     ngx_http_not_modified_filter_init,     /* postconfiguration */
 
@@ -31,8 +31,13 @@ static ngx_http_module_t  ngx_http_not_modified_filter_module_ctx = {
     NULL                                   /* merge location configuration */
 };
 
-
-ngx_module_t  ngx_http_not_modified_filter_module = {
+/*
+对待响应数据进行过滤检测，如果通过时间戳判断出前后两次请求的响应数据没有发生任何实质改变，
+那么可以直接响应濉板"304 Not Modified"状态标识，让客户端使用本地缓存即可，
+而原本待发送的响应数据将被清除掉。
+*/
+ngx_module_t  ngx_http_not_modified_filter_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_not_modified_filter_module_ctx, /* module context */
     NULL,                                  /* module directives */
@@ -97,7 +102,8 @@ ngx_http_not_modified_header_filter(ngx_http_request_t *r)
         ngx_http_clear_content_length(r);
         ngx_http_clear_accept_ranges(r);
 
-        if (r->headers_out.content_encoding) {
+        if (r->headers_out.content_encoding) 
+		{
             r->headers_out.content_encoding->hash = 0;
             r->headers_out.content_encoding = NULL;
         }

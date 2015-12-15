@@ -17,7 +17,6 @@ static void ngx_conf_flush_files(ngx_cycle_t *cycle);
 
 static ngx_command_t  ngx_conf_commands[] = 
 {
-
     { 
 		ngx_string("include"),
 		NGX_ANY_CONF|NGX_CONF_TAKE1,
@@ -123,8 +122,8 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
     fd = NGX_INVALID_FILE;
     prev = NULL;
 #endif
-
-    if (filename) 
+	/***********判断当前解析过程状态**********/
+    if (filename)   //正要开始解析一个配置文件
 	{
         /* open configuration file */
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
@@ -172,19 +171,22 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
            )
         {
             p = ngx_pstrdup(cf->cycle->pool, filename);
-            if (p == NULL) {
+            if (p == NULL) 
+			{
                 goto failed;
             }
 
             size = ngx_file_size(&cf->conf_file->file.info);
 
             tbuf = ngx_create_temp_buf(cf->cycle->pool, (size_t) size);
-            if (tbuf == NULL) {
+            if (tbuf == NULL) 
+			{
                 goto failed;
             }
 
             cd = ngx_array_push(&cf->cycle->config_dump);
-            if (cd == NULL) {
+            if (cd == NULL) 
+			{
                 goto failed;
             }
 
@@ -202,11 +204,11 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         }
 
     } 
-	else if (cf->conf_file->file.fd != NGX_INVALID_FILE) 
+	else if (cf->conf_file->file.fd != NGX_INVALID_FILE)   //正要开始解析一个复杂配置项值
 	{
         type = parse_block;
     } 
-	else 
+	else 	//正要解析命令行参数配置项值
 	{
         type = parse_param;
     }
@@ -258,10 +260,9 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         if (rc == NGX_CONF_BLOCK_START) 
 		{
 
-            if (type == parse_param) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "block directives are not supported "
-                                   "in -g option");
+            if (type == parse_param) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "block directives are not supported in -g option");
                 goto failed;
             }
         }
@@ -313,22 +314,24 @@ failed:
 
 done:
 
-    if (filename) {
-        if (cf->conf_file->buffer->start) {
+    if (filename) 
+	{
+        if (cf->conf_file->buffer->start) 
+		{
             ngx_free(cf->conf_file->buffer->start);
         }
 
-        if (ngx_close_file(fd) == NGX_FILE_ERROR) {
-            ngx_log_error(NGX_LOG_ALERT, cf->log, ngx_errno,
-                          ngx_close_file_n " %s failed",
-                          filename->data);
+        if (ngx_close_file(fd) == NGX_FILE_ERROR)
+		{
+            ngx_log_error(NGX_LOG_ALERT, cf->log, ngx_errno, ngx_close_file_n " %s failed", filename->data);
             rc = NGX_ERROR;
         }
 
         cf->conf_file = prev;
     }
 
-    if (rc == NGX_ERROR) {
+    if (rc == NGX_ERROR) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -514,18 +517,18 @@ ngx_conf_read_token(ngx_conf_t *cf)
 
     found = 0;
     need_space = 0;
-    last_space = 1;
+    last_space = 1;   //前一个字符为空白字符
     sharp_comment = 0;
     variable = 0;
     quoted = 0;
     s_quoted = 0;
-    d_quoted = 0;
+    d_quoted = 0;	//当前处于双引号字符串后
 
     cf->args->nelts = 0;
     b = cf->conf_file->buffer;
     dump = cf->conf_file->dump;
-    start = b->pos;
-    start_line = cf->conf_file->line;
+    start = b->pos;							//token的起始地址
+    start_line = cf->conf_file->line;		//token的行号
 
     file_size = ngx_file_size(&cf->conf_file->file.info);
 
@@ -537,7 +540,6 @@ ngx_conf_read_token(ngx_conf_t *cf)
 
             if (cf->conf_file->file.offset >= file_size)
 			{
-
                 if (cf->args->nelts > 0 || !last_space)
 				{
 
@@ -547,9 +549,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
                         return NGX_ERROR;
                     }
 
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                  "unexpected end of file, "
-                                  "expecting \";\" or \"}\"");
+                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "unexpected end of file, expecting \";\" or \"}\"");
                     return NGX_ERROR;
                 }
 
@@ -641,27 +641,32 @@ ngx_conf_read_token(ngx_conf_t *cf)
 
         if (need_space)
 		{
-            if (ch == ' ' || ch == '\t' || ch == CR || ch == LF) {
+            if (ch == ' ' || ch == '\t' || ch == CR || ch == LF)
+			{
                 last_space = 1;
                 need_space = 0;
                 continue;
             }
 
-            if (ch == ';') {
+            if (ch == ';') 
+			{
                 return NGX_OK;
             }
 
-            if (ch == '{') {
+            if (ch == '{') 
+			{
                 return NGX_CONF_BLOCK_START;
             }
 
-            if (ch == ')') {
+            if (ch == ')') 
+			{
                 last_space = 1;
                 need_space = 0;
 
-            } else {
-                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                    "unexpected \"%c\"", ch);
+            }
+			else
+			{
+                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "unexpected \"%c\"", ch);
                  return NGX_ERROR;
             }
         }
@@ -678,7 +683,6 @@ ngx_conf_read_token(ngx_conf_t *cf)
 
             switch (ch)
 			{
-
             case ';':
             case '{':
                 if (cf->args->nelts == 0) 
@@ -687,16 +691,17 @@ ngx_conf_read_token(ngx_conf_t *cf)
                     return NGX_ERROR;
                 }
 
-                if (ch == '{') {
+                if (ch == '{') 
+				{
                     return NGX_CONF_BLOCK_START;
                 }
 
                 return NGX_OK;
 
             case '}':
-                if (cf->args->nelts != 0) {
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                       "unexpected \"}\"");
+                if (cf->args->nelts != 0) 
+				{
+                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "unexpected \"}\"");
                     return NGX_ERROR;
                 }
 
@@ -727,19 +732,24 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 last_space = 0;
             }
 
-        } else {
-            if (ch == '{' && variable) {
+        }
+		else 
+		{
+            if (ch == '{' && variable)
+			{
                 continue;
             }
 
             variable = 0;
 
-            if (ch == '\\') {
+            if (ch == '\\') 
+			{
                 quoted = 1;
                 continue;
             }
 
-            if (ch == '$') {
+            if (ch == '$') 
+			{
                 variable = 1;
                 continue;
             }
@@ -758,30 +768,33 @@ ngx_conf_read_token(ngx_conf_t *cf)
                     found = 1;
                 }
 
-            } else if (ch == ' ' || ch == '\t' || ch == CR || ch == LF
-                       || ch == ';' || ch == '{')
+            }
+			else if (ch == ' ' || ch == '\t' || ch == CR || ch == LF || ch == ';' || ch == '{')
             {
                 last_space = 1;
                 found = 1;
             }
 
-            if (found) {
+            if (found) 
+			{
                 word = ngx_array_push(cf->args);
-                if (word == NULL) {
+                if (word == NULL)
+				{
                     return NGX_ERROR;
                 }
 
                 word->data = ngx_pnalloc(cf->pool, b->pos - 1 - start + 1);
-                if (word->data == NULL) {
+                if (word->data == NULL) 
+				{
                     return NGX_ERROR;
                 }
 
-                for (dst = word->data, src = start, len = 0;
-                     src < b->pos - 1;
-                     len++)
+                for (dst = word->data, src = start, len = 0; src < b->pos - 1; len++)
                 {
-                    if (*src == '\\') {
-                        switch (src[1]) {
+                    if (*src == '\\') 
+					{
+                        switch (src[1]) 
+						{
                         case '"':
                         case '\'':
                         case '\\':
@@ -810,7 +823,8 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 *dst = '\0';
                 word->len = len;
 
-                if (ch == ';') {
+                if (ch == ';') 
+				{
                     return NGX_OK;
                 }
 

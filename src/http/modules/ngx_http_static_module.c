@@ -29,8 +29,11 @@ ngx_http_module_t  ngx_http_static_module_ctx =
     NULL                                   /* merge location configuration */
 };
 
-
-ngx_module_t  ngx_http_static_module = {
+/*
+负责处理客户端的静态页面请求
+*/
+ngx_module_t  ngx_http_static_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_static_module_ctx,           /* module context */
     NULL,                                  /* module directives */
@@ -281,7 +284,8 @@ ngx_http_static_init(ngx_conf_t *cf)
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
-    if (h == NULL) {
+    if (h == NULL)
+	{
         return NGX_ERROR;
     }
 

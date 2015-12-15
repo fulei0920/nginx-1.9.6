@@ -378,7 +378,7 @@ struct ngx_http_core_loc_conf_s
 	[result] key -- htm value -- text/html
 	[result] key -- shtml value -- text/html
 	*/
-    ngx_array_t  *types;       			
+    ngx_array_t  *types;    		/*array of ngx_hash_key_t*/   			
     ngx_hash_t    types_hash;
     ngx_str_t     default_type;   /*[config]defatult_type  application/octet-stream*/
 
@@ -549,10 +549,8 @@ ngx_http_cleanup_t *ngx_http_cleanup_add(ngx_http_request_t *r, size_t size);
 
 
 typedef ngx_int_t (*ngx_http_output_header_filter_pt)(ngx_http_request_t *r);
-typedef ngx_int_t (*ngx_http_output_body_filter_pt)
-    (ngx_http_request_t *r, ngx_chain_t *chain);
-typedef ngx_int_t (*ngx_http_request_body_filter_pt)
-    (ngx_http_request_t *r, ngx_chain_t *chain);
+typedef ngx_int_t (*ngx_http_output_body_filter_pt)(ngx_http_request_t *r, ngx_chain_t *chain);
+typedef ngx_int_t (*ngx_http_request_body_filter_pt) (ngx_http_request_t *r, ngx_chain_t *chain);
 
 
 ngx_int_t ngx_http_output_filter(ngx_http_request_t *r, ngx_chain_t *chain);

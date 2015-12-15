@@ -64,7 +64,6 @@ static void ngx_openssl_exit(ngx_cycle_t *cycle);
 
 static ngx_command_t  ngx_openssl_commands[] = 
 {
-
     { 
 		ngx_string("ssl_engine"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,

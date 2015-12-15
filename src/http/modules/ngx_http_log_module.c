@@ -151,7 +151,8 @@ static char *ngx_http_log_open_file_cache(ngx_conf_t *cf, ngx_command_t *cmd,
 static ngx_int_t ngx_http_log_init(ngx_conf_t *cf);
 
 
-static ngx_command_t  ngx_http_log_commands[] = {
+static ngx_command_t  ngx_http_log_commands[] = 
+{
 
     { ngx_string("log_format"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_2MORE,
@@ -194,7 +195,11 @@ static ngx_http_module_t  ngx_http_log_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_log_module = {
+/*
+负责记录请求访问日志
+*/
+ngx_module_t  ngx_http_log_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_log_module_ctx,              /* module context */
     ngx_http_log_commands,                 /* module directives */

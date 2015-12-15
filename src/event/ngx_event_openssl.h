@@ -92,7 +92,8 @@ struct ngx_ssl_sess_id_s {
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_rbtree_t                session_rbtree;
     ngx_rbtree_node_t           sentinel;
     ngx_queue_t                 expire_queue;

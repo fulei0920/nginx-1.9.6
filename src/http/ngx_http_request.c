@@ -1261,11 +1261,14 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
     rc = NGX_AGAIN;
 
-    for ( ;; ) {
+    for ( ;; ) 
+	{
 
-        if (rc == NGX_AGAIN) {
+        if (rc == NGX_AGAIN) 
+		{
 
-            if (r->header_in->pos == r->header_in->end) {
+            if (r->header_in->pos == r->header_in->end) 
+			{
 
                 rv = ngx_http_alloc_large_header_buffer(r, 0);
 
@@ -1305,7 +1308,8 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
             n = ngx_http_read_request_header(r);
 
-            if (n == NGX_AGAIN || n == NGX_ERROR) {
+            if (n == NGX_AGAIN || n == NGX_ERROR)
+			{
                 return;
             }
         }
@@ -1313,8 +1317,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
         /* the host header could change the server configuration context */
         cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
 
-        rc = ngx_http_parse_header_line(r, r->header_in,
-                                        cscf->underscores_in_headers);
+        rc = ngx_http_parse_header_line(r, r->header_in, cscf->underscores_in_headers);
 
         if (rc == NGX_OK) {
 

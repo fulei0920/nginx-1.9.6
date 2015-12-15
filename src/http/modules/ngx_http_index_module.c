@@ -39,20 +39,23 @@ static char *ngx_http_index_set_index(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
 
-static ngx_command_t  ngx_http_index_commands[] = {
-
-    { ngx_string("index"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
-      ngx_http_index_set_index,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+static ngx_command_t  ngx_http_index_commands[] = 
+{
+    { 
+		ngx_string("index"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
+		ngx_http_index_set_index,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
 
 
-static ngx_http_module_t  ngx_http_index_module_ctx = {
+static ngx_http_module_t  ngx_http_index_module_ctx = 
+{
     NULL,                                  /* preconfiguration */
     ngx_http_index_init,                   /* postconfiguration */
 

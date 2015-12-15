@@ -77,9 +77,9 @@ struct ngx_command_s
 {
     ngx_str_t             name;    	/*配置指令的名称*/
     ngx_uint_t            type;		
-    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-    ngx_uint_t            conf;   	/*在上下文中的偏移量*/
-    ngx_uint_t            offset;	
+    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);  /*配置指令处理回调函数*/
+    ngx_uint_t            conf;   	/*存放的值在上下文中的偏移量*/
+    ngx_uint_t            offset;	/*存放的值在结构体中的偏移量*/
     void                 *post;
 };
 
@@ -100,19 +100,20 @@ struct ngx_open_file_s
 
 struct ngx_module_s 
 {
-    ngx_uint_t            ctx_index;	 /*相同模块类型在其父模块上下文中的索引*/
-    ngx_uint_t            index;         /*该模块在全局上下文中的索引位置*/
+    ngx_uint_t            ctx_index;	/*当前模块再同类模块中的序号*/
+    ngx_uint_t            index;       	/*当前模块在所有模块中的序号*/
 
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
     ngx_uint_t            spare2;
     ngx_uint_t            spare3;
 
-    ngx_uint_t            version;
+    ngx_uint_t            version;		/*当前模块版本号*/
 
     void                 *ctx;			/*模块上下文*/
     ngx_command_t        *commands;		/*模块指令*/
-    ngx_uint_t            type;			/*模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE*/
+    ngx_uint_t            type;			/*模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE | NGX_EVENT_MODULE | NGX_HTTP_MODULE | NGX_MAIL_MODULE | NGX_STREAM_MODULE*/
+	
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
     ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
@@ -150,7 +151,8 @@ typedef struct
 } ngx_conf_file_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t             name;
     ngx_buf_t            *buffer;
 } ngx_conf_dump_t;
