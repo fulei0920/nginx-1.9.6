@@ -170,8 +170,9 @@ typedef struct {
 } ngx_http_header_out_t;
 
 
-typedef struct {
-    ngx_list_t                        headers;
+typedef struct 
+{
+    ngx_list_t                        headers;   /*array fo ngx_table_elt_t*/
 
     ngx_table_elt_t                  *host;
     ngx_table_elt_t                  *connection;
@@ -244,7 +245,7 @@ typedef struct {
 typedef struct {
     ngx_list_t                        headers;
 
-    ngx_uint_t                        status;
+    ngx_uint_t                        status;				//http相应的状态码 
     ngx_str_t                         status_line;
 
     ngx_table_elt_t                  *server;
@@ -270,9 +271,9 @@ typedef struct {
 
     ngx_array_t                       cache_control;
 
-    off_t                             content_length_n;
+    off_t                             content_length_n;			//头部content_lenght  
     time_t                            date_time;
-    time_t                            last_modified_time;
+    time_t                            last_modified_time;		//资源的最后修改时间 
 } ngx_http_headers_out_t;
 
 
@@ -353,7 +354,13 @@ struct ngx_http_posted_request_s {
     ngx_http_posted_request_t        *next;
 };
 
-
+/*
+NGX_OK --	当前阶段已经被成功处理，必须进入到下一阶段
+NGX_DECLINED	--	当前回调不处理当前情况，进入到下一个回调处理
+NGX_AGAIN	-- 当前处理所需资源不足，需要等待所以来事件发生
+NGX_DONE	--	当前处理结束，仍需等待进一步事件发生后做处理
+NGX_ERROR, NGX_HTTP_...	当前回调发生错误，需要进入到异常处理流程
+*/
 typedef ngx_int_t (*ngx_http_handler_pt)(ngx_http_request_t *r);
 typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 
@@ -392,7 +399,7 @@ struct ngx_http_request_s
     time_t                            start_sec;
     ngx_msec_t                        start_msec;
 
-    ngx_uint_t                        method;
+    ngx_uint_t                        method;			/*NGX_HTTP_GET | NGX_HTTP_POST| ...*/
     ngx_uint_t                        http_version;
 
     ngx_str_t                         request_line;

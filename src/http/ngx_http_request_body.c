@@ -27,8 +27,7 @@ static ngx_int_t ngx_http_request_body_chunked_filter(ngx_http_request_t *r,
 
 
 ngx_int_t
-ngx_http_read_client_request_body(ngx_http_request_t *r,
-    ngx_http_client_body_handler_pt post_handler)
+ngx_http_read_client_request_body(ngx_http_request_t *r, ngx_http_client_body_handler_pt post_handler)
 {
     size_t                     preread;
     ssize_t                    size;
@@ -48,23 +47,27 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
     }
 #endif
 
-    if (r != r->main || r->request_body || r->discard_body) {
+    if (r != r->main || r->request_body || r->discard_body)
+	{
         r->request_body_no_buffering = 0;
         post_handler(r);
         return NGX_OK;
     }
 
-    if (ngx_http_test_expect(r) != NGX_OK) {
+    if (ngx_http_test_expect(r) != NGX_OK)
+	{
         rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
         goto done;
     }
 
-    if (r->request_body_no_buffering) {
+    if (r->request_body_no_buffering) 
+	{
         r->request_body_in_file_only = 0;
     }
 
     rb = ngx_pcalloc(r->pool, sizeof(ngx_http_request_body_t));
-    if (rb == NULL) {
+    if (rb == NULL)
+	{
         rc = NGX_HTTP_INTERNAL_SERVER_ERROR;
         goto done;
     }
@@ -84,7 +87,8 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
 
     r->request_body = rb;
 
-    if (r->headers_in.content_length_n < 0 && !r->headers_in.chunked) {
+    if (r->headers_in.content_length_n < 0 && !r->headers_in.chunked) 
+	{
         r->request_body_no_buffering = 0;
         post_handler(r);
         return NGX_OK;
@@ -92,12 +96,12 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
 
     preread = r->header_in->last - r->header_in->pos;
 
-    if (preread) {
+    if (preread) 
+	{
 
         /* there is the pre-read part of the request body */
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http client request body preread %uz", preread);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http client request body preread %uz", preread);
 
         out.buf = r->header_in;
         out.next = NULL;
@@ -137,7 +141,8 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
             goto done;
         }
 
-    } else {
+    }
+	else {
         /* set rb->rest */
 
         if (ngx_http_request_body_filter(r, NULL) != NGX_OK) {

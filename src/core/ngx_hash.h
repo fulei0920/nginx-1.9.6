@@ -95,7 +95,8 @@ typedef struct
 } ngx_hash_keys_arrays_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t        hash;
     ngx_str_t         key;
     ngx_str_t         value;

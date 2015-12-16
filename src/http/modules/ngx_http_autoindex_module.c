@@ -118,7 +118,8 @@ static ngx_command_t  ngx_http_autoindex_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_autoindex_module_ctx = {
+static ngx_http_module_t  ngx_http_autoindex_module_ctx =
+{
     NULL,                                  /* preconfiguration */
     ngx_http_autoindex_init,               /* postconfiguration */
 
@@ -132,8 +133,9 @@ static ngx_http_module_t  ngx_http_autoindex_module_ctx = {
     ngx_http_autoindex_merge_loc_conf      /* merge location configuration */
 };
 
-
-ngx_module_t  ngx_http_autoindex_module = {
+//如果是请求的是一个目录下面，可以列出这个目录的文件
+ngx_module_t  ngx_http_autoindex_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_autoindex_module_ctx,        /* module context */
     ngx_http_autoindex_commands,           /* module directives */

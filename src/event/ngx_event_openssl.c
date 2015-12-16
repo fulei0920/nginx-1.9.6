@@ -1342,12 +1342,14 @@ ngx_ssl_recv(ngx_connection_t *c, u_char *buf, size_t size)
 {
     int  n, bytes;
 
-    if (c->ssl->last == NGX_ERROR) {
+    if (c->ssl->last == NGX_ERROR) 
+	{
         c->read->error = 1;
         return NGX_ERROR;
     }
 
-    if (c->ssl->last == NGX_DONE) {
+    if (c->ssl->last == NGX_DONE)
+	{
         c->read->ready = 0;
         c->read->eof = 1;
         return 0;
@@ -1362,13 +1364,15 @@ ngx_ssl_recv(ngx_connection_t *c, u_char *buf, size_t size)
      * until SSL_read() would return no data
      */
 
-    for ( ;; ) {
+    for ( ;; ) 
+	{
 
         n = SSL_read(c->ssl->connection, buf, size);
 
         ngx_log_debug1(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL_read: %d", n);
 
-        if (n > 0) {
+        if (n > 0) 
+		{
             bytes += n;
         }
 
@@ -1421,7 +1425,8 @@ ngx_ssl_handle_recv(ngx_connection_t *c, int n)
     int        sslerr;
     ngx_err_t  err;
 
-    if (c->ssl->renegotiation) {
+    if (c->ssl->renegotiation)
+	{
         /*
          * disable renegotiation (CVE-2009-3555):
          * OpenSSL (at least up to 0.9.8l) does not handle disabled
@@ -1430,9 +1435,9 @@ ngx_ssl_handle_recv(ngx_connection_t *c, int n)
 
         ngx_log_error(NGX_LOG_NOTICE, c->log, 0, "SSL renegotiation disabled");
 
-        while (ERR_peek_error()) {
-            ngx_ssl_error(NGX_LOG_DEBUG, c->log, 0,
-                          "ignoring stale global SSL error");
+        while (ERR_peek_error()) 
+		{
+            ngx_ssl_error(NGX_LOG_DEBUG, c->log, 0, "ignoring stale global SSL error");
         }
 
         ERR_clear_error();
@@ -1443,15 +1448,18 @@ ngx_ssl_handle_recv(ngx_connection_t *c, int n)
         return NGX_ERROR;
     }
 
-    if (n > 0) {
+    if (n > 0) 
+	{
 
-        if (c->ssl->saved_write_handler) {
+        if (c->ssl->saved_write_handler) 
+		{
 
             c->write->handler = c->ssl->saved_write_handler;
             c->ssl->saved_write_handler = NULL;
             c->write->ready = 1;
 
-            if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+            if (ngx_handle_write_event(c->write, 0) != NGX_OK)
+			{
                 return NGX_ERROR;
             }
 
@@ -2015,7 +2023,8 @@ ngx_ssl_connection_error(ngx_connection_t *c, int sslerr, ngx_err_t err,
 static void
 ngx_ssl_clear_error(ngx_log_t *log)
 {
-    while (ERR_peek_error()) {
+    while (ERR_peek_error()) 
+	{
         ngx_ssl_error(NGX_LOG_ALERT, log, 0, "ignoring stale global SSL error");
     }
 

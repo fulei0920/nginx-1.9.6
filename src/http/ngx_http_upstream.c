@@ -577,7 +577,8 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         u->request_bufs = r->request_body->bufs;
     }
 
-    if (u->create_request(r) != NGX_OK) {
+    if (u->create_request(r) != NGX_OK) 
+	{
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
     }
@@ -1094,7 +1095,8 @@ ngx_http_upstream_handler(ngx_event_t *ev)
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "http upstream request: \"%V?%V\"", &r->uri, &r->args);
 
-    if (ev->write) {
+    if (ev->write)
+	{
         u->write_event_handler(r, u);
 
     } else {
@@ -5286,13 +5288,15 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
                                          |NGX_HTTP_UPSTREAM_FAIL_TIMEOUT
                                          |NGX_HTTP_UPSTREAM_DOWN
                                          |NGX_HTTP_UPSTREAM_BACKUP);
-    if (uscf == NULL) {
+    if (uscf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -5300,43 +5304,48 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ctx->main_conf = http_ctx->main_conf;
 
     /* the upstream{}'s srv_conf */
-
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->srv_conf == NULL) {
+    if (ctx->srv_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
     ctx->srv_conf[ngx_http_upstream_module.ctx_index] = uscf;
-
     uscf->srv_conf = ctx->srv_conf;
 
 
     /* the upstream{}'s loc_conf */
-
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->loc_conf == NULL) {
+    if (ctx->loc_conf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
-    for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
+    for (m = 0; ngx_modules[m]; m++)
+	{
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
+		{
             continue;
         }
 
         module = ngx_modules[m]->ctx;
 
-        if (module->create_srv_conf) {
+        if (module->create_srv_conf)
+		{
             mconf = module->create_srv_conf(cf);
-            if (mconf == NULL) {
+            if (mconf == NULL)
+			{
                 return NGX_CONF_ERROR;
             }
 
             ctx->srv_conf[ngx_modules[m]->ctx_index] = mconf;
         }
 
-        if (module->create_loc_conf) {
+        if (module->create_loc_conf) 
+		{
             mconf = module->create_loc_conf(cf);
-            if (mconf == NULL) {
+            if (mconf == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
 
@@ -5344,15 +5353,14 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         }
     }
 
-    uscf->servers = ngx_array_create(cf->pool, 4,
-                                     sizeof(ngx_http_upstream_server_t));
-    if (uscf->servers == NULL) {
+    uscf->servers = ngx_array_create(cf->pool, 4, sizeof(ngx_http_upstream_server_t));
+    if (uscf->servers == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
 
     /* parse inside upstream{} */
-
     pcf = *cf;
     cf->ctx = ctx;
     cf->cmd_type = NGX_HTTP_UPS_CONF;
@@ -5361,13 +5369,14 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
     *cf = pcf;
 
-    if (rv != NGX_CONF_OK) {
+    if (rv != NGX_CONF_OK) 
+	{
         return rv;
     }
 
-    if (uscf->servers->nelts == 0) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "no servers are inside upstream");
+    if (uscf->servers->nelts == 0) 
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "no servers are inside upstream");
         return NGX_CONF_ERROR;
     }
 
@@ -5388,7 +5397,8 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_upstream_server_t  *us;
 
     us = ngx_array_push(uscf->servers);
-    if (us == NULL) {
+    if (us == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -5400,32 +5410,39 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     max_fails = 1;
     fail_timeout = 10;
 
-    for (i = 2; i < cf->args->nelts; i++) {
+    for (i = 2; i < cf->args->nelts; i++)
+	{
 
-        if (ngx_strncmp(value[i].data, "weight=", 7) == 0) {
+        if (ngx_strncmp(value[i].data, "weight=", 7) == 0) 
+		{
 
-            if (!(uscf->flags & NGX_HTTP_UPSTREAM_WEIGHT)) {
+            if (!(uscf->flags & NGX_HTTP_UPSTREAM_WEIGHT))
+			{
                 goto not_supported;
             }
 
             weight = ngx_atoi(&value[i].data[7], value[i].len - 7);
 
-            if (weight == NGX_ERROR || weight == 0) {
+            if (weight == NGX_ERROR || weight == 0) 
+			{
                 goto invalid;
             }
 
             continue;
         }
 
-        if (ngx_strncmp(value[i].data, "max_fails=", 10) == 0) {
+        if (ngx_strncmp(value[i].data, "max_fails=", 10) == 0) 
+		{
 
-            if (!(uscf->flags & NGX_HTTP_UPSTREAM_MAX_FAILS)) {
+            if (!(uscf->flags & NGX_HTTP_UPSTREAM_MAX_FAILS))
+			{
                 goto not_supported;
             }
 
             max_fails = ngx_atoi(&value[i].data[10], value[i].len - 10);
 
-            if (max_fails == NGX_ERROR) {
+            if (max_fails == NGX_ERROR) 
+			{
                 goto invalid;
             }
 
@@ -5434,7 +5451,8 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         if (ngx_strncmp(value[i].data, "fail_timeout=", 13) == 0) {
 
-            if (!(uscf->flags & NGX_HTTP_UPSTREAM_FAIL_TIMEOUT)) {
+            if (!(uscf->flags & NGX_HTTP_UPSTREAM_FAIL_TIMEOUT)) 
+			{
                 goto not_supported;
             }
 
@@ -5443,16 +5461,18 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
             fail_timeout = ngx_parse_time(&s, 1);
 
-            if (fail_timeout == (time_t) NGX_ERROR) {
+            if (fail_timeout == (time_t) NGX_ERROR) 
+			{
                 goto invalid;
             }
 
             continue;
         }
 
-        if (ngx_strcmp(value[i].data, "backup") == 0) {
-
-            if (!(uscf->flags & NGX_HTTP_UPSTREAM_BACKUP)) {
+        if (ngx_strcmp(value[i].data, "backup") == 0) 
+		{
+            if (!(uscf->flags & NGX_HTTP_UPSTREAM_BACKUP)) 
+			{
                 goto not_supported;
             }
 
@@ -5461,9 +5481,10 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strcmp(value[i].data, "down") == 0) {
-
-            if (!(uscf->flags & NGX_HTTP_UPSTREAM_DOWN)) {
+        if (ngx_strcmp(value[i].data, "down") == 0)
+		{
+            if (!(uscf->flags & NGX_HTTP_UPSTREAM_DOWN))
+			{
                 goto not_supported;
             }
 
@@ -5480,10 +5501,11 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.url = value[1];
     u.default_port = 80;
 
-    if (ngx_parse_url(cf->pool, &u) != NGX_OK) {
-        if (u.err) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "%s in upstream \"%V\"", u.err, &u.url);
+    if (ngx_parse_url(cf->pool, &u) != NGX_OK) 
+	{
+        if (u.err) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%s in upstream \"%V\"", u.err, &u.url);
         }
 
         return NGX_CONF_ERROR;
@@ -5523,12 +5545,14 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
     ngx_http_upstream_srv_conf_t   *uscf, **uscfp;
     ngx_http_upstream_main_conf_t  *umcf;
 
-    if (!(flags & NGX_HTTP_UPSTREAM_CREATE)) {
+    if (!(flags & NGX_HTTP_UPSTREAM_CREATE)) 
+	{
 
-        if (ngx_parse_url(cf->pool, u) != NGX_OK) {
-            if (u->err) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "%s in upstream \"%V\"", u->err, &u->url);
+        if (ngx_parse_url(cf->pool, u) != NGX_OK)
+		{
+            if (u->err) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%s in upstream \"%V\"", u->err, &u->url);
             }
 
             return NULL;
@@ -5539,51 +5563,45 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
 
     uscfp = umcf->upstreams.elts;
 
-    for (i = 0; i < umcf->upstreams.nelts; i++) {
+    for (i = 0; i < umcf->upstreams.nelts; i++)
+	{
 
-        if (uscfp[i]->host.len != u->host.len
-            || ngx_strncasecmp(uscfp[i]->host.data, u->host.data, u->host.len)
-               != 0)
+        if (uscfp[i]->host.len != u->host.len || ngx_strncasecmp(uscfp[i]->host.data, u->host.data, u->host.len) != 0)
         {
             continue;
         }
 
-        if ((flags & NGX_HTTP_UPSTREAM_CREATE)
-             && (uscfp[i]->flags & NGX_HTTP_UPSTREAM_CREATE))
+        if ((flags & NGX_HTTP_UPSTREAM_CREATE) && (uscfp[i]->flags & NGX_HTTP_UPSTREAM_CREATE))
         {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "duplicate upstream \"%V\"", &u->host);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "duplicate upstream \"%V\"", &u->host);
             return NULL;
         }
 
-        if ((uscfp[i]->flags & NGX_HTTP_UPSTREAM_CREATE) && !u->no_port) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                               "upstream \"%V\" may not have port %d",
-                               &u->host, u->port);
+        if ((uscfp[i]->flags & NGX_HTTP_UPSTREAM_CREATE) && !u->no_port)
+		{
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "upstream \"%V\" may not have port %d", &u->host, u->port);
             return NULL;
         }
 
-        if ((flags & NGX_HTTP_UPSTREAM_CREATE) && !uscfp[i]->no_port) {
-            ngx_log_error(NGX_LOG_WARN, cf->log, 0,
-                          "upstream \"%V\" may not have port %d in %s:%ui",
-                          &u->host, uscfp[i]->port,
-                          uscfp[i]->file_name, uscfp[i]->line);
+        if ((flags & NGX_HTTP_UPSTREAM_CREATE) && !uscfp[i]->no_port)
+		{
+            ngx_log_error(NGX_LOG_WARN, cf->log, 0, "upstream \"%V\" may not have port %d in %s:%ui",
+                          &u->host, uscfp[i]->port, uscfp[i]->file_name, uscfp[i]->line);
             return NULL;
         }
 
-        if (uscfp[i]->port && u->port
-            && uscfp[i]->port != u->port)
+        if (uscfp[i]->port && u->port && uscfp[i]->port != u->port)
         {
             continue;
         }
 
-        if (uscfp[i]->default_port && u->default_port
-            && uscfp[i]->default_port != u->default_port)
+        if (uscfp[i]->default_port && u->default_port && uscfp[i]->default_port != u->default_port)
         {
             continue;
         }
 
-        if (flags & NGX_HTTP_UPSTREAM_CREATE) {
+        if (flags & NGX_HTTP_UPSTREAM_CREATE)
+		{
             uscfp[i]->flags = flags;
         }
 
@@ -5591,7 +5609,8 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
     }
 
     uscf = ngx_pcalloc(cf->pool, sizeof(ngx_http_upstream_srv_conf_t));
-    if (uscf == NULL) {
+    if (uscf == NULL) 
+	{
         return NULL;
     }
 
@@ -5603,10 +5622,11 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
     uscf->default_port = u->default_port;
     uscf->no_port = u->no_port;
 
-    if (u->naddrs == 1 && (u->port || u->family == AF_UNIX)) {
-        uscf->servers = ngx_array_create(cf->pool, 1,
-                                         sizeof(ngx_http_upstream_server_t));
-        if (uscf->servers == NULL) {
+    if (u->naddrs == 1 && (u->port || u->family == AF_UNIX)) 
+	{
+        uscf->servers = ngx_array_create(cf->pool, 1, sizeof(ngx_http_upstream_server_t));
+        if (uscf->servers == NULL)
+		{
             return NULL;
         }
 
@@ -5622,7 +5642,8 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
     }
 
     uscfp = ngx_array_push(&umcf->upstreams);
-    if (uscfp == NULL) {
+    if (uscfp == NULL) 
+	{
         return NULL;
     }
 

@@ -447,7 +447,11 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     return NGX_OK;
 }
 
-
+/*
+对各个功能模块挂载在不同阶段的回调函数进行重组
+提取出有回调函数的阶段，加上进入回调函数的条件判断函数，
+通过next字段的使用，把原本二维数组实现转化为一维数组实现
+*/
 static ngx_int_t
 ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 {
@@ -466,26 +470,30 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
     n = use_rewrite + use_access + cmcf->try_files + 1 /* find config phase */;
 
-    for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) {
+    for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) 
+	{
         n += cmcf->phases[i].handlers.nelts;
     }
 
-    ph = ngx_pcalloc(cf->pool,
-                     n * sizeof(ngx_http_phase_handler_t) + sizeof(void *));
-    if (ph == NULL) {
+    ph = ngx_pcalloc(cf->pool, n * sizeof(ngx_http_phase_handler_t) + sizeof(void *));
+    if (ph == NULL) 
+	{
         return NGX_ERROR;
     }
 
     cmcf->phase_engine.handlers = ph;
     n = 0;
 
-    for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) {
+    for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) 
+	{
         h = cmcf->phases[i].handlers.elts;
 
-        switch (i) {
+        switch (i)
+		{
 
         case NGX_HTTP_SERVER_REWRITE_PHASE:
-            if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1) {
+            if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1)
+			{
                 cmcf->phase_engine.server_rewrite_index = n;
             }
             checker = ngx_http_core_rewrite_phase;
@@ -502,7 +510,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             continue;
 
         case NGX_HTTP_REWRITE_PHASE:
-            if (cmcf->phase_engine.location_rewrite_index == (ngx_uint_t) -1) {
+            if (cmcf->phase_engine.location_rewrite_index == (ngx_uint_t) -1)
+			{
                 cmcf->phase_engine.location_rewrite_index = n;
             }
             checker = ngx_http_core_rewrite_phase;
@@ -510,7 +519,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             break;
 
         case NGX_HTTP_POST_REWRITE_PHASE:
-            if (use_rewrite) {
+            if (use_rewrite) 
+			{
                 ph->checker = ngx_http_core_post_rewrite_phase;
                 ph->next = find_config_index;
                 n++;
@@ -525,7 +535,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             break;
 
         case NGX_HTTP_POST_ACCESS_PHASE:
-            if (use_access) {
+            if (use_access)
+			{
                 ph->checker = ngx_http_core_post_access_phase;
                 ph->next = n;
                 ph++;
@@ -534,7 +545,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             continue;
 
         case NGX_HTTP_TRY_FILES_PHASE:
-            if (cmcf->try_files) {
+            if (cmcf->try_files)
+			{
                 ph->checker = ngx_http_core_try_files_phase;
                 n++;
                 ph++;
@@ -552,7 +564,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
         n += cmcf->phases[i].handlers.nelts;
 
-        for (j = cmcf->phases[i].handlers.nelts - 1; j >=0; j--) {
+        for (j = cmcf->phases[i].handlers.nelts - 1; j >=0; j--)
+		{
             ph->checker = checker;
             ph->handler = h[j];
             ph->next = n;
@@ -1278,14 +1291,15 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
 
     for (i = 0; i < port->addrs.nelts; i++) 
 	{
-
-        if (ngx_memcmp(p, addr[i].opt.u.sockaddr_data + off, len) != 0) {
+		//检查ip地址是否相同
+        if (ngx_memcmp(p, addr[i].opt.u.sockaddr_data + off, len) != 0)
+		{
             continue;
         }
 
         /* the address is already in the address list */
-
-        if (ngx_http_add_server(cf, cscf, &addr[i]) != NGX_OK) {
+        if (ngx_http_add_server(cf, cscf, &addr[i]) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
@@ -1301,11 +1315,12 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
         http2 = lsopt->http2 || addr[i].opt.http2;
 #endif
 
-        if (lsopt->set) {
+        if (lsopt->set) 
+		{
 
-            if (addr[i].opt.set) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                        "duplicate listen options for %s", addr[i].opt.addr);
+            if (addr[i].opt.set) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "duplicate listen options for %s", addr[i].opt.addr);
                 return NGX_ERROR;
             }
 
@@ -1314,11 +1329,12 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
 
         /* check the duplicate "default" server for this address:port */
 
-        if (lsopt->default_server) {
+        if (lsopt->default_server) 
+		{
 
-            if (default_server) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                        "a duplicate default server for %s", addr[i].opt.addr);
+            if (default_server) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "a duplicate default server for %s", addr[i].opt.addr);
                 return NGX_ERROR;
             }
 
@@ -1407,8 +1423,7 @@ ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_con
 
     if (addr->servers.elts == NULL) 
 	{
-        if (ngx_array_init(&addr->servers, cf->temp_pool, 4, sizeof(ngx_http_core_srv_conf_t *))
-            != NGX_OK)
+        if (ngx_array_init(&addr->servers, cf->temp_pool, 4, sizeof(ngx_http_core_srv_conf_t *)) != NGX_OK)
         {
             return NGX_ERROR;
         }

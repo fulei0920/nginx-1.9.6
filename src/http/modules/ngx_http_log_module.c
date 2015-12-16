@@ -195,9 +195,7 @@ static ngx_http_module_t  ngx_http_log_module_ctx = {
 };
 
 
-/*
-负责记录请求访问日志
-*/
+/*负责记录请求访问日志*/
 ngx_module_t  ngx_http_log_module = 
 {
     NGX_MODULE_V1,

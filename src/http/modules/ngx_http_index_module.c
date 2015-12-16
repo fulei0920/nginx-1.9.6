@@ -17,9 +17,10 @@ typedef struct {
 } ngx_http_index_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_array_t             *indices;    /* array of ngx_http_index_t */
-    size_t                   max_index_len;
+    size_t                   max_index_len;   /*index名字的最大长度*/
 } ngx_http_index_loc_conf_t;
 
 
@@ -69,8 +70,9 @@ static ngx_http_module_t  ngx_http_index_module_ctx =
     ngx_http_index_merge_loc_conf          /* merge location configuration */
 };
 
-
-ngx_module_t  ngx_http_index_module = {
+//如果请求的路径下面有个默认的index文件，直接返回index文件的内容
+ngx_module_t  ngx_http_index_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_index_module_ctx,            /* module context */
     ngx_http_index_commands,               /* module directives */
@@ -112,11 +114,13 @@ ngx_http_index_handler(ngx_http_request_t *r)
     ngx_http_index_loc_conf_t    *ilcf;
     ngx_http_script_len_code_pt   lcode;
 
-    if (r->uri.data[r->uri.len - 1] != '/') {
+    if (r->uri.data[r->uri.len - 1] != '/') 
+	{
         return NGX_DECLINED;
     }
 
-    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD|NGX_HTTP_POST))) {
+    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD|NGX_HTTP_POST))) 
+	{
         return NGX_DECLINED;
     }
 
@@ -393,7 +397,8 @@ ngx_http_index_create_loc_conf(ngx_conf_t *cf)
     ngx_http_index_loc_conf_t  *conf;
 
     conf = ngx_palloc(cf->pool, sizeof(ngx_http_index_loc_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 
@@ -451,7 +456,8 @@ ngx_http_index_init(ngx_conf_t *cf)
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers);
-    if (h == NULL) {
+    if (h == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -473,32 +479,34 @@ ngx_http_index_set_index(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_index_t           *index;
     ngx_http_script_compile_t   sc;
 
-    if (ilcf->indices == NULL) {
+    if (ilcf->indices == NULL) 
+	{
         ilcf->indices = ngx_array_create(cf->pool, 2, sizeof(ngx_http_index_t));
-        if (ilcf->indices == NULL) {
+        if (ilcf->indices == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
     }
 
     value = cf->args->elts;
 
-    for (i = 1; i < cf->args->nelts; i++) {
+    for (i = 1; i < cf->args->nelts; i++)
+	{
 
-        if (value[i].data[0] == '/' && i != cf->args->nelts - 1) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                               "only the last index in \"index\" directive "
-                               "should be absolute");
+        if (value[i].data[0] == '/' && i != cf->args->nelts - 1)
+		{
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "only the last index in \"index\" directive should be absolute");
         }
 
-        if (value[i].len == 0) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "index \"%V\" in \"index\" directive is invalid",
-                               &value[1]);
+        if (value[i].len == 0) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "index \"%V\" in \"index\" directive is invalid", &value[1]);
             return NGX_CONF_ERROR;
         }
 
         index = ngx_array_push(ilcf->indices);
-        if (index == NULL) {
+        if (index == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -509,12 +517,15 @@ ngx_http_index_set_index(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         n = ngx_http_script_variables_count(&value[i]);
 
-        if (n == 0) {
-            if (ilcf->max_index_len < index->name.len) {
+        if (n == 0) 
+		{
+            if (ilcf->max_index_len < index->name.len) 
+			{
                 ilcf->max_index_len = index->name.len;
             }
 
-            if (index->name.data[0] == '/') {
+            if (index->name.data[0] == '/')
+			{
                 continue;
             }
 
@@ -534,7 +545,8 @@ ngx_http_index_set_index(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         sc.complete_lengths = 1;
         sc.complete_values = 1;
 
-        if (ngx_http_script_compile(&sc) != NGX_OK) {
+        if (ngx_http_script_compile(&sc) != NGX_OK) 
+		{
             return NGX_CONF_ERROR;
         }
     }

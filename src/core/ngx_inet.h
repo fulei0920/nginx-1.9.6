@@ -70,7 +70,8 @@ typedef struct
 } ngx_cidr_t;
 
 
-typedef struct {
+typedef struct 
+{
     struct sockaddr          *sockaddr;
     socklen_t                 socklen;
     ngx_str_t                 name;

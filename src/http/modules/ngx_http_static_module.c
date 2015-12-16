@@ -63,12 +63,16 @@ ngx_http_static_handler(ngx_http_request_t *r)
     ngx_open_file_info_t       of;
     ngx_http_core_loc_conf_t  *clcf;
 
-    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD|NGX_HTTP_POST))) {
+	//检查客户端的http请求类型
+    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD|NGX_HTTP_POST)))    
+	{
         return NGX_HTTP_NOT_ALLOWED;
     }
 
-    if (r->uri.data[r->uri.len - 1] == '/') {
-        return NGX_DECLINED;
+	//检查请求的url的结尾字符是不是斜杠‘/’，如果是说明请求的不是一个文件，给后续的handler去处理
+    if (r->uri.data[r->uri.len - 1] == '/')
+	{
+        return NGX_DECLINED;		
     }
 
     log = r->connection->log;
@@ -79,14 +83,18 @@ ngx_http_static_handler(ngx_http_request_t *r)
      */
 
     last = ngx_http_map_uri_to_path(r, &path, &root, 0);
-    if (last == NULL) {
+    if (last == NULL) 
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    path.len = last - path.data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0,
-                   "http filename: \"%s\"", path.data);
+	//根据转化出来的具体路径，去打开文件，打开文件的时候做了2种检查，
+	//一种是，如果请求的文件是个symbol link，根据配置，是否允许符号链接，不允许返回错误。
+	//还有一个检查是，如果请求的是一个名称，是一个目录的名字，也返回错误。如果都没有错误，就读取文件，返回内容。其实说返回内容可能不是特别准确，比较准确的说法是，把产生的内容传递给后续的filter去处理。
+    path.len = last - path.data;	//last是指向路径的最后一个字符的地址，因此这里求的是路径的长度 
+
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0, "http filename: \"%s\"", path.data);
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
@@ -99,7 +107,8 @@ ngx_http_static_handler(ngx_http_request_t *r)
     of.errors = clcf->open_file_cache_errors;
     of.events = clcf->open_file_cache_events;
 
-    if (ngx_http_set_disable_symlinks(r, clcf, &path, &of) != NGX_OK) {
+    if (ngx_http_set_disable_symlinks(r, clcf, &path, &of) != NGX_OK)
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 

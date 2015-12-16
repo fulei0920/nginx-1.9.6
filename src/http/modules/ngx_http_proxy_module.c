@@ -251,14 +251,17 @@ static ngx_conf_enum_t  ngx_http_proxy_http_version[] = {
 ngx_module_t  ngx_http_proxy_module;
 
 
-static ngx_command_t  ngx_http_proxy_commands[] = {
+static ngx_command_t  ngx_http_proxy_commands[] = 
+{
 
-    { ngx_string("proxy_pass"),
-      NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_HTTP_LMT_CONF|NGX_CONF_TAKE1,
-      ngx_http_proxy_pass,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("proxy_pass"),
+		NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_HTTP_LMT_CONF|NGX_CONF_TAKE1,
+		ngx_http_proxy_pass,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("proxy_redirect"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
@@ -714,7 +717,8 @@ static ngx_http_module_t  ngx_http_proxy_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_proxy_module = {
+ngx_module_t  ngx_http_proxy_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_proxy_module_ctx,            /* module context */
     ngx_http_proxy_commands,               /* module directives */
@@ -843,7 +847,8 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 
     u = r->upstream;
 
-    if (plcf->proxy_lengths == NULL) {
+    if (plcf->proxy_lengths == NULL)
+	{
         ctx->vars = plcf->vars;
         u->schema = plcf->vars.schema;
 #if (NGX_HTTP_SSL)
@@ -3610,7 +3615,8 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_core_loc_conf_t   *clcf;
     ngx_http_script_compile_t   sc;
 
-    if (plcf->upstream.upstream || plcf->proxy_lengths) {
+    if (plcf->upstream.upstream || plcf->proxy_lengths)
+	{
         return "is duplicate";
     }
 
@@ -3618,7 +3624,8 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     clcf->handler = ngx_http_proxy_handler;
 
-    if (clcf->name.data[clcf->name.len - 1] == '/') {
+    if (clcf->name.data[clcf->name.len - 1] == '/')
+	{
         clcf->auto_redirect = 1;
     }
 
@@ -3628,7 +3635,8 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     n = ngx_http_script_variables_count(url);
 
-    if (n) {
+    if (n) 
+	{
 
         ngx_memzero(&sc, sizeof(ngx_http_script_compile_t));
 
@@ -3640,7 +3648,8 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         sc.complete_lengths = 1;
         sc.complete_values = 1;
 
-        if (ngx_http_script_compile(&sc) != NGX_OK) {
+        if (ngx_http_script_compile(&sc) != NGX_OK) 
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -3651,11 +3660,14 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_OK;
     }
 
-    if (ngx_strncasecmp(url->data, (u_char *) "http://", 7) == 0) {
+    if (ngx_strncasecmp(url->data, (u_char *) "http://", 7) == 0) 
+	{
         add = 7;
         port = 80;
 
-    } else if (ngx_strncasecmp(url->data, (u_char *) "https://", 8) == 0) {
+    } 
+	else if (ngx_strncasecmp(url->data, (u_char *) "https://", 8) == 0) 
+	{
 
 #if (NGX_HTTP_SSL)
         plcf->ssl = 1;
@@ -3663,12 +3675,13 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         add = 8;
         port = 443;
 #else
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "https protocol requires SSL support");
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "https protocol requires SSL support");
         return NGX_CONF_ERROR;
 #endif
 
-    } else {
+    } 
+	else 
+	{
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid URL prefix");
         return NGX_CONF_ERROR;
     }
@@ -3682,7 +3695,8 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.no_resolve = 1;
 
     plcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
-    if (plcf->upstream.upstream == NULL) {
+    if (plcf->upstream.upstream == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 

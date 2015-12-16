@@ -89,11 +89,12 @@ typedef struct {
 } ngx_http_upstream_peer_t;
 
 
-typedef struct {
+typedef struct
+{
     ngx_str_t                        name;
     ngx_addr_t                      *addrs;
     ngx_uint_t                       naddrs;
-    ngx_uint_t                       weight;
+    ngx_uint_t                       weight;			/*ШЈжи*/
     ngx_uint_t                       max_fails;
     time_t                           fail_timeout;
 
@@ -110,7 +111,8 @@ typedef struct {
 #define NGX_HTTP_UPSTREAM_BACKUP        0x0020
 
 
-struct ngx_http_upstream_srv_conf_s {
+struct ngx_http_upstream_srv_conf_s 
+{
     ngx_http_upstream_peer_t         peer;
     void                           **srv_conf;
 

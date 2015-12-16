@@ -395,9 +395,9 @@ ngx_http_init_connection(ngx_connection_t *c)
 }
 
 /*
-deal with the first packet for http request
-alloc buffer to store request data
-alloc requtest structure to hold request state
+处理http请求的第一个包
+分配缓存空间以存储请求数据
+分配ngx_http_request_t结构以记录请求信息
 */
 static void
 ngx_http_wait_request_handler(ngx_event_t *rev)
@@ -1022,7 +1022,8 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 return;
             }
 
-            if (r->host_start && r->host_end) {
+            if (r->host_start && r->host_end) 
+			{
 
                 host.len = r->host_end - r->host_start;
                 host.data = r->host_start;
@@ -1048,11 +1049,10 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 r->headers_in.server = host;
             }
 
-            if (r->http_version < NGX_HTTP_VERSION_10) {
+            if (r->http_version < NGX_HTTP_VERSION_10) 
+			{
 
-                if (r->headers_in.server.len == 0
-                    && ngx_http_set_virtual_server(r, &r->headers_in.server)
-                       == NGX_ERROR)
+                if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r, &r->headers_in.server) == NGX_ERROR)
                 {
                     return;
                 }
@@ -1062,9 +1062,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
             }
 
 
-            if (ngx_list_init(&r->headers_in.headers, r->pool, 20,
-                              sizeof(ngx_table_elt_t))
-                != NGX_OK)
+            if (ngx_list_init(&r->headers_in.headers, r->pool, 20, sizeof(ngx_table_elt_t)) != NGX_OK)
             {
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
@@ -1272,12 +1270,14 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
                 rv = ngx_http_alloc_large_header_buffer(r, 0);
 
-                if (rv == NGX_ERROR) {
+                if (rv == NGX_ERROR)
+				{
                     ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return;
                 }
 
-                if (rv == NGX_DECLINED) {
+                if (rv == NGX_DECLINED) 
+				{
                     p = r->header_name_start;
 
                     r->lingering_close = 1;
@@ -1436,12 +1436,12 @@ ngx_http_read_request_header(ngx_http_request_t *r)
 
     n = r->header_in->last - r->header_in->pos;
 
-    if (n > 0) 
+    if (n > 0)   //buffer中有数据直接返回
 	{
         return n;
     }
 
-    if (rev->ready)
+    if (rev->ready)		//能够读，则从socket中获取数据
 	{
         n = c->recv(c, r->header_in->last, r->header_in->end - r->header_in->last);
     }
@@ -1450,7 +1450,7 @@ ngx_http_read_request_header(ngx_http_request_t *r)
         n = NGX_AGAIN;
     }
 
-    if (n == NGX_AGAIN)
+    if (n == NGX_AGAIN)  //将该事件重新加入到io复用模型中
 	{
         if (!rev->timer_set) 
 		{
@@ -1529,25 +1529,26 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
 	else if (hc->nbusy < cscf->large_client_header_buffers.num)
 	{
 
-        if (hc->busy == NULL) {
-            hc->busy = ngx_palloc(r->connection->pool,
-                  cscf->large_client_header_buffers.num * sizeof(ngx_buf_t *));
-            if (hc->busy == NULL) {
+        if (hc->busy == NULL) 
+		{
+            hc->busy = ngx_palloc(r->connection->pool, cscf->large_client_header_buffers.num * sizeof(ngx_buf_t *));
+            if (hc->busy == NULL) 
+			{
                 return NGX_ERROR;
             }
         }
 
-        b = ngx_create_temp_buf(r->connection->pool,
-                                cscf->large_client_header_buffers.size);
-        if (b == NULL) {
+        b = ngx_create_temp_buf(r->connection->pool, cscf->large_client_header_buffers.size);
+        if (b == NULL)
+		{
             return NGX_ERROR;
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http large header alloc: %p %uz",
-                       b->pos, b->end - b->last);
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http large header alloc: %p %uz", b->pos, b->end - b->last);
 
-    } else {
+    } 
+	else
+	{
         return NGX_DECLINED;
     }
 
@@ -1565,8 +1566,7 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
         return NGX_OK;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http large header copy: %d", r->header_in->pos - old);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http large header copy: %d", r->header_in->pos - old);
 
     new = b->start;
 
@@ -3585,7 +3585,8 @@ ngx_http_log_request(ngx_http_request_t *r)
     log_handler = cmcf->phases[NGX_HTTP_LOG_PHASE].handlers.elts;
     n = cmcf->phases[NGX_HTTP_LOG_PHASE].handlers.nelts;
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) 
+	{
         log_handler[i](r);
     }
 }

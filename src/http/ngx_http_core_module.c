@@ -277,12 +277,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       0,
       NULL },
 
-    { ngx_string("listen"),
-      NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
-      ngx_http_core_listen,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+    	ngx_string("listen"),
+		NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
+		ngx_http_core_listen,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("server_name"),
       NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
@@ -845,11 +847,13 @@ ngx_http_core_run_phases(ngx_http_request_t *r)
 
     ph = cmcf->phase_engine.handlers;
 
-    while (ph[r->phase_handler].checker) {
+    while (ph[r->phase_handler].checker) 
+	{
 
         rc = ph[r->phase_handler].checker(r, &ph[r->phase_handler]);
 
-        if (rc == NGX_OK) {
+        if (rc == NGX_OK)
+		{
             return;
         }
     }
@@ -1058,29 +1062,31 @@ ngx_http_core_post_rewrite_phase(ngx_http_request_t *r,
     return NGX_AGAIN;
 }
 
-
 ngx_int_t
 ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     ngx_int_t                  rc;
     ngx_http_core_loc_conf_t  *clcf;
 
-    if (r != r->main) {
+	/*当前不是主请求，无需进行访问权限检测，状态机直接进入下一个处理阶段*/
+    if (r != r->main)		
+	{
         r->phase_handler = ph->next;
         return NGX_AGAIN;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "access phase: %ui", r->phase_handler);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "access phase: %ui", r->phase_handler);
 
     rc = ph->handler(r);
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED) 
+	{
         r->phase_handler++;
         return NGX_AGAIN;
     }
 
-    if (rc == NGX_AGAIN || rc == NGX_DONE) {
+    if (rc == NGX_AGAIN || rc == NGX_DONE) 
+	{
         return NGX_OK;
     }
 
@@ -1368,7 +1374,8 @@ ngx_http_core_content_phase(ngx_http_request_t *r,
     ngx_int_t  rc;
     ngx_str_t  path;
 
-    if (r->content_handler) {
+    if (r->content_handler) 
+	{
         r->write_event_handler = ngx_http_request_empty_handler;
         ngx_http_finalize_request(r, r->content_handler(r));
         return NGX_OK;
@@ -1420,7 +1427,8 @@ ngx_http_update_location_config(ngx_http_request_t *r)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-    if (r->method & clcf->limit_except) {
+    if (r->method & clcf->limit_except) 
+	{
         r->loc_conf = clcf->limit_except_loc_conf;
         clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
     }
@@ -1489,7 +1497,8 @@ ngx_http_update_location_config(ngx_http_request_t *r)
         r->limit_rate = clcf->limit_rate;
     }
 
-    if (clcf->handler) {
+    if (clcf->handler)
+	{
         r->content_handler = clcf->handler;
     }
 }
@@ -1939,17 +1948,19 @@ ngx_http_send_response(ngx_http_request_t *r, ngx_uint_t status,
 ngx_int_t
 ngx_http_send_header(ngx_http_request_t *r)
 {
-    if (r->post_action) {
+    if (r->post_action)
+	{
         return NGX_OK;
     }
 
-    if (r->header_sent) {
-        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
-                      "header already sent");
+    if (r->header_sent) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "header already sent");
         return NGX_ERROR;
     }
 
-    if (r->err_status) {
+    if (r->err_status) 
+	{
         r->headers_out.status = r->err_status;
         r->headers_out.status_line.len = 0;
     }
@@ -1971,7 +1982,8 @@ ngx_http_output_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     rc = ngx_http_top_body_filter(r, in);
 
-    if (rc == NGX_ERROR) {
+    if (rc == NGX_ERROR) 
+	{
         /* NGX_ERROR may be returned by any filter */
         c->error = 1;
     }
@@ -1979,10 +1991,9 @@ ngx_http_output_filter(ngx_http_request_t *r, ngx_chain_t *in)
     return rc;
 }
 
-
+//把请求的http协议的路径转化成一个文件系统的路径
 u_char *
-ngx_http_map_uri_to_path(ngx_http_request_t *r, ngx_str_t *path,
-    size_t *root_length, size_t reserved)
+ngx_http_map_uri_to_path(ngx_http_request_t *r, ngx_str_t *path, size_t *root_length, size_t reserved)
 {
     u_char                    *last;
     size_t                     alias;
@@ -3037,7 +3048,8 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
     *cf = pcf;
 
-    if (rv == NGX_CONF_OK && !cscf->listen) {
+    if (rv == NGX_CONF_OK && !cscf->listen)
+	{
         ngx_memzero(&lsopt, sizeof(ngx_http_listen_opt_t));
 
         sin = &lsopt.u.sockaddr_in;
@@ -3063,10 +3075,10 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 #endif
         lsopt.wildcard = 1;
 
-        (void) ngx_sock_ntop(&lsopt.u.sockaddr, lsopt.socklen, lsopt.addr,
-                             NGX_SOCKADDR_STRLEN, 1);
+        (void) ngx_sock_ntop(&lsopt.u.sockaddr, lsopt.socklen, lsopt.addr, NGX_SOCKADDR_STRLEN, 1);
 
-        if (ngx_http_add_listen(cf, cscf, &lsopt) != NGX_OK) {
+        if (ngx_http_add_listen(cf, cscf, &lsopt) != NGX_OK) 
+		{
             return NGX_CONF_ERROR;
         }
     }
@@ -4005,6 +4017,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
+
+	//解析linsten第一个url参数
     ngx_memzero(&u, sizeof(ngx_url_t));
 
     u.url = value[1];
@@ -4021,8 +4035,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
+	//根据第一个参数解析结果及后续参数设置ngx_http_listen_opt_t相关值
     ngx_memzero(&lsopt, sizeof(ngx_http_listen_opt_t));
-
     ngx_memcpy(&lsopt.u.sockaddr, u.sockaddr, u.socklen);
 
     lsopt.socklen = u.socklen;
@@ -4044,7 +4058,6 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     for (n = 2; n < cf->args->nelts; n++)
 	{
-
         if (ngx_strcmp(value[n].data, "default_server") == 0 || ngx_strcmp(value[n].data, "default") == 0)
         {
             lsopt.default_server = 1;
@@ -4076,7 +4089,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
 
 #if (NGX_HAVE_TCP_FASTOPEN)
-        if (ngx_strncmp(value[n].data, "fastopen=", 9) == 0) {
+        if (ngx_strncmp(value[n].data, "fastopen=", 9) == 0) 
+		{
             lsopt.fastopen = ngx_atoi(value[n].data + 9, value[n].len - 9);
             lsopt.set = 1;
             lsopt.bind = 1;
@@ -4091,14 +4105,15 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 #endif
 
-        if (ngx_strncmp(value[n].data, "backlog=", 8) == 0) {
+        if (ngx_strncmp(value[n].data, "backlog=", 8) == 0) 
+		{
             lsopt.backlog = ngx_atoi(value[n].data + 8, value[n].len - 8);
             lsopt.set = 1;
             lsopt.bind = 1;
 
-            if (lsopt.backlog == NGX_ERROR || lsopt.backlog == 0) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid backlog \"%V\"", &value[n]);
+            if (lsopt.backlog == NGX_ERROR || lsopt.backlog == 0) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid backlog \"%V\"", &value[n]);
                 return NGX_CONF_ERROR;
             }
 
@@ -4168,7 +4183,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strncmp(value[n].data, "ipv6only=o", 10) == 0) {
+        if (ngx_strncmp(value[n].data, "ipv6only=o", 10) == 0) 
+		{
 #if (NGX_HAVE_INET6 && defined IPV6_V6ONLY)
             struct sockaddr  *sa;
 
@@ -4342,13 +4358,13 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
         }
 
-        if (ngx_strcmp(value[n].data, "proxy_protocol") == 0) {
+        if (ngx_strcmp(value[n].data, "proxy_protocol") == 0) 
+		{
             lsopt.proxy_protocol = 1;
             continue;
         }
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid parameter \"%V\"", &value[n]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter \"%V\"", &value[n]);
         return NGX_CONF_ERROR;
     }
 

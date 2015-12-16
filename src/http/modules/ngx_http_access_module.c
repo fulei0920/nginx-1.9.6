@@ -10,7 +10,8 @@
 #include <ngx_http.h>
 
 
-typedef struct {
+typedef struct 
+{
     in_addr_t         mask;
     in_addr_t         addr;
     ngx_uint_t        deny;      /* unsigned  deny:1; */
@@ -34,7 +35,8 @@ typedef struct {
 
 #endif
 
-typedef struct {
+typedef struct 
+{
     ngx_array_t      *rules;     /* array of ngx_http_access_rule_t */
 #if (NGX_HAVE_INET6)
     ngx_array_t      *rules6;    /* array of ngx_http_access_rule6_t */
@@ -57,31 +59,32 @@ static ngx_int_t ngx_http_access_unix(ngx_http_request_t *r,
     ngx_http_access_loc_conf_t *alcf);
 #endif
 static ngx_int_t ngx_http_access_found(ngx_http_request_t *r, ngx_uint_t deny);
-static char *ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static void *ngx_http_access_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_access_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 static ngx_int_t ngx_http_access_init(ngx_conf_t *cf);
 
 
-static ngx_command_t  ngx_http_access_commands[] = {
+static ngx_command_t  ngx_http_access_commands[] = 
+{
+    { 
+		ngx_string("allow"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LMT_CONF|NGX_CONF_TAKE1,
+		ngx_http_access_rule,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
-    { ngx_string("allow"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LMT_CONF
-                        |NGX_CONF_TAKE1,
-      ngx_http_access_rule,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
-
-    { ngx_string("deny"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LMT_CONF
-                        |NGX_CONF_TAKE1,
-      ngx_http_access_rule,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("deny"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LMT_CONF|NGX_CONF_TAKE1,
+		ngx_http_access_rule,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
@@ -132,11 +135,14 @@ ngx_http_access_handler(ngx_http_request_t *r)
 #endif
 
     alcf = ngx_http_get_module_loc_conf(r, ngx_http_access_module);
-
-    switch (r->connection->sockaddr->sa_family) {
+	//主要是根据客户端地址的类型，来分别选择ipv4类型的处理函数ngx_http_access_inet
+	//还是ipv6类型的处理函数ngx_http_access_inet6
+    switch (r->connection->sockaddr->sa_family)
+	{
 
     case AF_INET:
-        if (alcf->rules) {
+        if (alcf->rules) 
+		{
             sin = (struct sockaddr_in *) r->connection->sockaddr;
             return ngx_http_access_inet(r, alcf, sin->sin_addr.s_addr);
         }
@@ -179,22 +185,20 @@ ngx_http_access_handler(ngx_http_request_t *r)
     return NGX_DECLINED;
 }
 
-
+//循环检查每个规则，检查是否有匹配的规则，如果有就返回匹配的结果，如果都没有匹配，就默认拒绝
 static ngx_int_t
-ngx_http_access_inet(ngx_http_request_t *r, ngx_http_access_loc_conf_t *alcf,
-    in_addr_t addr)
+ngx_http_access_inet(ngx_http_request_t *r, ngx_http_access_loc_conf_t *alcf, in_addr_t addr)
 {
     ngx_uint_t               i;
     ngx_http_access_rule_t  *rule;
 
     rule = alcf->rules->elts;
-    for (i = 0; i < alcf->rules->nelts; i++) {
+    for (i = 0; i < alcf->rules->nelts; i++) 
+	{
+        ngx_log_debug3(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "access: %08XD %08XD %08XD", addr, rule[i].mask, rule[i].addr);
 
-        ngx_log_debug3(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "access: %08XD %08XD %08XD",
-                       addr, rule[i].mask, rule[i].addr);
-
-        if ((addr & rule[i].mask) == rule[i].addr) {
+        if ((addr & rule[i].mask) == rule[i].addr)
+		{
             return ngx_http_access_found(r, rule[i].deny);
         }
     }
@@ -278,12 +282,13 @@ ngx_http_access_found(ngx_http_request_t *r, ngx_uint_t deny)
 {
     ngx_http_core_loc_conf_t  *clcf;
 
-    if (deny) {
+    if (deny) 
+	{
         clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-        if (clcf->satisfy == NGX_HTTP_SATISFY_ALL) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "access forbidden by rule");
+        if (clcf->satisfy == NGX_HTTP_SATISFY_ALL)
+		{
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "access forbidden by rule");
         }
 
         return NGX_HTTP_FORBIDDEN;
@@ -460,7 +465,8 @@ ngx_http_access_init(ngx_conf_t *cf)
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers);
-    if (h == NULL) {
+    if (h == NULL) 
+	{
         return NGX_ERROR;
     }
 

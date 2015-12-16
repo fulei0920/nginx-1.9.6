@@ -121,38 +121,39 @@ typedef struct
 
 typedef enum 
 {
-    NGX_HTTP_POST_READ_PHASE = 0,
+    NGX_HTTP_POST_READ_PHASE = 0,	//读取请求phase  
 
-    NGX_HTTP_SERVER_REWRITE_PHASE,
+    NGX_HTTP_SERVER_REWRITE_PHASE,	//这个阶段主要是处理全局的(server block)的rewrite。
 
-    NGX_HTTP_FIND_CONFIG_PHASE,
-    NGX_HTTP_REWRITE_PHASE,
-    NGX_HTTP_POST_REWRITE_PHASE,
+    NGX_HTTP_FIND_CONFIG_PHASE,		//这个阶段主要是通过uri来查找对应的location。然后将uri和location的数据关联起来  
+    NGX_HTTP_REWRITE_PHASE,			//这个主要处理location的rewrite。
+    NGX_HTTP_POST_REWRITE_PHASE,	//post rewrite，这个主要是进行一些校验以及收尾工作，以便于交给后面的模块。
 
-    NGX_HTTP_PREACCESS_PHASE,
+    NGX_HTTP_PREACCESS_PHASE,		//比如流控这种类型的access就放在这个phase，也就是说它主要是进行一些比较粗粒度的access。 
 
-    NGX_HTTP_ACCESS_PHASE,
-    NGX_HTTP_POST_ACCESS_PHASE,
+    NGX_HTTP_ACCESS_PHASE,			//这个比如存取控制，权限验证就放在这个phase，一般来说处理动作是交给下面的模块做的.这个主要是做一些细粒度的access。  
+    NGX_HTTP_POST_ACCESS_PHASE,		//一般来说当上面的access模块得到access_code之后就会由这个模块根据access_code来进行操作  
 
-    NGX_HTTP_TRY_FILES_PHASE,
-    NGX_HTTP_CONTENT_PHASE,
+    NGX_HTTP_TRY_FILES_PHASE,		//try_file模块，也就是对应配置文件中的try_files指令
+    NGX_HTTP_CONTENT_PHASE,			//内容处理模块，我们一般的handle都是处于这个模块  
 
-    NGX_HTTP_LOG_PHASE
+    NGX_HTTP_LOG_PHASE				//log模块  
 } ngx_http_phases;
 
 typedef struct ngx_http_phase_handler_s  ngx_http_phase_handler_t;
 
-typedef ngx_int_t (*ngx_http_phase_handler_pt)(ngx_http_request_t *r,
-    ngx_http_phase_handler_t *ph);
+typedef ngx_int_t (*ngx_http_phase_handler_pt)(ngx_http_request_t *r, ngx_http_phase_handler_t *ph);
 
-struct ngx_http_phase_handler_s {
-    ngx_http_phase_handler_pt  checker;
-    ngx_http_handler_pt        handler;
+struct ngx_http_phase_handler_s 
+{
+    ngx_http_phase_handler_pt  checker;		/*进入回调函数的条件判断函数*/
+    ngx_http_handler_pt        handler;		/*模块注册的回调函数*/
     ngx_uint_t                 next;
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_phase_handler_t  *handlers;
     ngx_uint_t                 server_rewrite_index;
     ngx_uint_t                 location_rewrite_index;
@@ -161,7 +162,7 @@ typedef struct {
 
 typedef struct 
 {
-    ngx_array_t                handlers;
+    ngx_array_t                handlers;		/*array of ngx_http_handler_pt*/
 } ngx_http_phase_t;
 
 
@@ -190,7 +191,7 @@ typedef struct
 
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
 
-    ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1];
+    ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1];  	/*记录各个功能模块在不同阶段挂载的回调函数*/
 } ngx_http_core_main_conf_t;
 
 
@@ -212,7 +213,7 @@ typedef struct
     ngx_flag_t                  merge_slashes;
     ngx_flag_t                  underscores_in_headers;
 
-    unsigned                    listen:1;
+    unsigned                    listen:1;			//表示是否配置listen 指令
 #if (NGX_PCRE)
     unsigned                    captures:1;
 #endif
