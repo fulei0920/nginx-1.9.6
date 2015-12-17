@@ -34,9 +34,8 @@ static ngx_int_t ngx_http_validate_host(ngx_str_t *host, ngx_pool_t *pool,
     ngx_uint_t alloc);
 static ngx_int_t ngx_http_set_virtual_server(ngx_http_request_t *r,
     ngx_str_t *host);
-static ngx_int_t ngx_http_find_virtual_server(ngx_connection_t *c,
-    ngx_http_virtual_names_t *virtual_names, ngx_str_t *host,
-    ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp);
+static ngx_int_t ngx_http_find_virtual_server(ngx_connection_t *c, ngx_http_virtual_names_t *virtual_names, 
+	ngx_str_t *host, ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp);
 
 static void ngx_http_request_handler(ngx_event_t *ev);
 static void ngx_http_terminate_request(ngx_http_request_t *r, ngx_int_t rc);
@@ -77,16 +76,13 @@ static char *ngx_http_client_errors[] = {
 };
 
 
-ngx_http_header_t  ngx_http_headers_in[] = {
-    { ngx_string("Host"), offsetof(ngx_http_headers_in_t, host),
-                 ngx_http_process_host },
+ngx_http_header_t  ngx_http_headers_in[] = 
+{
+    { ngx_string("Host"), offsetof(ngx_http_headers_in_t, host), ngx_http_process_host },
 
-    { ngx_string("Connection"), offsetof(ngx_http_headers_in_t, connection),
-                 ngx_http_process_connection },
+    { ngx_string("Connection"), offsetof(ngx_http_headers_in_t, connection), ngx_http_process_connection },
 
-    { ngx_string("If-Modified-Since"),
-                 offsetof(ngx_http_headers_in_t, if_modified_since),
-                 ngx_http_process_unique_header_line },
+    { ngx_string("If-Modified-Since"), offsetof(ngx_http_headers_in_t, if_modified_since), ngx_http_process_unique_header_line },
 
     { ngx_string("If-Unmodified-Since"),
                  offsetof(ngx_http_headers_in_t, if_unmodified_since),
@@ -216,9 +212,8 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->data = hc;
 
     /* find the server configuration for the address:port */
-
     port = c->listening->servers;
-
+	
     if (port->naddrs > 1) 
 	{
         /*
@@ -265,6 +260,10 @@ ngx_http_init_connection(ngx_connection_t *c)
 
             for (i = 0; i < port->naddrs - 1; i++)
 			{
+				//查找当前请求对应属于到端口上的哪个服务ip地址是通过对比目的ip来进行的。
+				//如果某端口上设置有任意ip监听，比如*:80，那么即便还有其他指定ip的监听，
+				//比如192.168.1.1:80,也只会创建一个监听套接字，所以对于该套接字上接收到
+				//的连接请求首先要进行目的ip地址匹配
                 if (addr[i].addr == sin->sin_addr.s_addr) 
 				{
                     break;
@@ -361,13 +360,11 @@ ngx_http_init_connection(ngx_connection_t *c)
         hc->proxy_protocol = 1;
         c->log->action = "reading PROXY protocol";
     }
-
-	/* 若读事件准备就绪，则判断是否使用同步锁，
-     * 根据同步锁情况判断决定是否立即处理该事件；
-     */
+ 
+	/*对于TCP_DEFER_ACCEPT和iocp事件驱动，accept接受这个监听套接字上的客户端链接请求时，请求的具体数据内容已经到达*/
     if (rev->ready)
 	{
-        /* the deferred accept(), iocp */
+       	//如果有加锁，先把该事件对象加入到ngx_posted_events链表，函数返回解锁后再进行实际处理
         if (ngx_use_accept_mutex) 
 		{
             ngx_post_event(rev, &ngx_posted_events);
@@ -377,10 +374,8 @@ ngx_http_init_connection(ngx_connection_t *c)
         rev->handler(rev);
         return;
     }
-	 /*
-     * 若当前连接的读事件未准备就绪，
-     * 则将其添加到定时器事件机制，并注册到epoll事件机制中；
-     */
+	
+	/*else rev->ready == 0*/
 
 	/* 将当前连接的读事件添加到定时器机制中 */
     ngx_add_timer(rev, c->listening->post_accept_timeout);
@@ -1042,7 +1037,8 @@ ngx_http_process_request_line(ngx_event_t *rev)
                     return;
                 }
 
-                if (ngx_http_set_virtual_server(r, &host) == NGX_ERROR) {
+                if (ngx_http_set_virtual_server(r, &host) == NGX_ERROR)
+				{
                     return;
                 }
 
@@ -1292,7 +1288,8 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
                     len = r->header_in->end - p;
 
-                    if (len > NGX_MAX_ERROR_STR - 300) {
+                    if (len > NGX_MAX_ERROR_STR - 300) 
+					{
                         len = NGX_MAX_ERROR_STR - 300;
                     }
 
@@ -1300,8 +1297,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
                                 "client sent too long header line: \"%*s...\"",
                                 len, r->header_name_start);
 
-                    ngx_http_finalize_request(r,
-                                            NGX_HTTP_REQUEST_HEADER_TOO_LARGE);
+                    ngx_http_finalize_request(r, NGX_HTTP_REQUEST_HEADER_TOO_LARGE);
                     return;
                 }
             }
@@ -1319,25 +1315,25 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
         rc = ngx_http_parse_header_line(r, r->header_in, cscf->underscores_in_headers);
 
-        if (rc == NGX_OK) {
+        if (rc == NGX_OK) 
+		{
 
             r->request_length += r->header_in->pos - r->header_name_start;
 
-            if (r->invalid_header && cscf->ignore_invalid_headers) {
+            if (r->invalid_header && cscf->ignore_invalid_headers)
+			{
 
                 /* there was error while a header line parsing */
 
-                ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                              "client sent invalid header line: \"%*s\"",
-                              r->header_end - r->header_name_start,
-                              r->header_name_start);
+                ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent invalid header line: \"%*s\"", r->header_end - r->header_name_start, r->header_name_start);
                 continue;
             }
 
             /* a header line has been parsed successfully */
 
             h = ngx_list_push(&r->headers_in.headers);
-            if (h == NULL) {
+            if (h == NULL) 
+			{
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
@@ -1353,46 +1349,47 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             h->value.data[h->value.len] = '\0';
 
             h->lowcase_key = ngx_pnalloc(r->pool, h->key.len);
-            if (h->lowcase_key == NULL) {
+            if (h->lowcase_key == NULL) 
+			{
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
 
-            if (h->key.len == r->lowcase_index) {
+            if (h->key.len == r->lowcase_index)
+			{
                 ngx_memcpy(h->lowcase_key, r->lowcase_header, h->key.len);
-
-            } else {
+            } 
+			else 
+			{
                 ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
             }
 
-            hh = ngx_hash_find(&cmcf->headers_in_hash, h->hash,
-                               h->lowcase_key, h->key.len);
+            hh = ngx_hash_find(&cmcf->headers_in_hash, h->hash, h->lowcase_key, h->key.len);
 
-            if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
+            if (hh && hh->handler(r, h, hh->offset) != NGX_OK) 
+			{
                 return;
             }
 
-            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                           "http header: \"%V: %V\"",
-                           &h->key, &h->value);
+            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http header: \"%V: %V\"", &h->key, &h->value);
 
             continue;
         }
 
-        if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
+        if (rc == NGX_HTTP_PARSE_HEADER_DONE)
+		{
 
             /* a whole header has been parsed successfully */
 
-            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                           "http header done");
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http header done");
 
             r->request_length += r->header_in->pos - r->header_name_start;
 
             r->http_state = NGX_HTTP_PROCESS_REQUEST_STATE;
-
+			//做一个简单的检查
             rc = ngx_http_process_request_header(r);
-
-            if (rc != NGX_OK) {
+            if (rc != NGX_OK) 
+			{
                 return;
             }
 
@@ -1401,7 +1398,8 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             return;
         }
 
-        if (rc == NGX_AGAIN) {
+        if (rc == NGX_AGAIN)
+		{
 
             /* a header line parsing is still not complete */
 
@@ -1670,8 +1668,7 @@ ngx_http_process_unique_header_line(ngx_http_request_t *r, ngx_table_elt_t *h,
 
 
 static ngx_int_t
-ngx_http_process_host(ngx_http_request_t *r, ngx_table_elt_t *h,
-    ngx_uint_t offset)
+ngx_http_process_host(ngx_http_request_t *r, ngx_table_elt_t *h, ngx_uint_t offset)
 {
     ngx_int_t  rc;
     ngx_str_t  host;
@@ -1830,9 +1827,7 @@ ngx_http_process_multi_header_lines(ngx_http_request_t *r, ngx_table_elt_t *h,
 ngx_int_t
 ngx_http_process_request_header(ngx_http_request_t *r)
 {
-    if (r->headers_in.server.len == 0
-        && ngx_http_set_virtual_server(r, &r->headers_in.server)
-           == NGX_ERROR)
+    if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r, &r->headers_in.server) == NGX_ERROR)
     {
         return NGX_ERROR;
     }
@@ -1906,7 +1901,8 @@ ngx_http_process_request(ngx_http_request_t *r)
 
 #if (NGX_HTTP_SSL)
 
-    if (r->http_connection->ssl) {
+    if (r->http_connection->ssl) 
+	{
         long                      rc;
         X509                     *cert;
         ngx_http_ssl_srv_conf_t  *sscf;
@@ -1958,7 +1954,8 @@ ngx_http_process_request(ngx_http_request_t *r)
 
 #endif
 
-    if (c->read->timer_set) {
+    if (c->read->timer_set) 
+	{
         ngx_del_timer(c->read);
     }
 
@@ -2106,9 +2103,7 @@ ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host)
 
 #endif
 
-    rc = ngx_http_find_virtual_server(r->connection,
-                                      hc->addr_conf->virtual_names,
-                                      host, r, &cscf);
+    rc = ngx_http_find_virtual_server(r->connection, hc->addr_conf->virtual_names, host, r, &cscf);
 
     if (rc == NGX_ERROR) {
         ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -2250,13 +2245,14 @@ ngx_http_request_handler(ngx_event_t *ev)
 
     ngx_http_set_log_request(c->log, r);
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http run request: \"%V?%V\"", &r->uri, &r->args);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http run request: \"%V?%V\"", &r->uri, &r->args);
 
-    if (ev->write) {
+    if (ev->write)
+	{
         r->write_event_handler(r);
-
-    } else {
+    } 
+	else
+	{
         r->read_event_handler(r);
     }
 
@@ -2769,15 +2765,14 @@ ngx_http_request_finalizer(ngx_http_request_t *r)
 void
 ngx_http_block_reading(ngx_http_request_t *r)
 {
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http reading blocked");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http reading blocked");
 
     /* aio does not call this handler */
 
-    if ((ngx_event_flags & NGX_USE_LEVEL_EVENT)
-        && r->connection->read->active)
+    if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && r->connection->read->active)
     {
-        if (ngx_del_event(r->connection->read, NGX_READ_EVENT, 0) != NGX_OK) {
+        if (ngx_del_event(r->connection->read, NGX_READ_EVENT, 0) != NGX_OK) 
+		{
             ngx_http_close_request(r, 0);
         }
     }

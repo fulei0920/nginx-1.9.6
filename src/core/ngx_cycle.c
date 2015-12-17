@@ -618,6 +618,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
     }
 
+	//Ê¹ÄÜ¼àÌýÌ×½Ó×Ö
     if (ngx_open_listening_sockets(cycle) != NGX_OK)
 	{
         goto failed;

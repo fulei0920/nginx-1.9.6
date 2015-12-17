@@ -43,7 +43,7 @@ struct ngx_event_s
     unsigned         disabled:1;
 
     /* the ready event; in aio mode 0 means that no operation can be posted */
-    unsigned         ready:1;
+    unsigned         ready:1;			/*事件已经发生，可以做对应的处理*/
 
     unsigned         oneshot:1;
 

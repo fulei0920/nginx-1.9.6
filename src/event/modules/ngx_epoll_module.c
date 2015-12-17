@@ -522,7 +522,7 @@ ngx_epoll_add_event(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags)
 
     events = (uint32_t) event;
 
-	/*获取需要删除的事件的反向事件*/
+	/*获取需要添加的事件的反向事件*/
     if (event == NGX_READ_EVENT) 
 	{
         e = c->write;

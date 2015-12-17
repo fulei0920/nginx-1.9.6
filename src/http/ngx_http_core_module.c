@@ -226,12 +226,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_srv_conf_t, request_pool_size),
       &ngx_http_core_pool_size_p },
 
-    { ngx_string("client_header_timeout"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_msec_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, client_header_timeout),
-      NULL },
+    { 
+		ngx_string("client_header_timeout"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_msec_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, client_header_timeout),
+		NULL 
+    },
 
     { 
     	ngx_string("client_header_buffer_size"),
@@ -637,12 +639,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       0,
       NULL },
 
-    { ngx_string("try_files"),
-      NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_2MORE,
-      ngx_http_core_try_files,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("try_files"),
+		NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_2MORE,
+		ngx_http_core_try_files,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("post_action"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
@@ -800,8 +804,10 @@ ngx_http_handler(ngx_http_request_t *r)
 
     r->connection->unexpected_eof = 0;
 
-    if (!r->internal) {
-        switch (r->headers_in.connection_type) {
+    if (!r->internal) 
+	{
+        switch (r->headers_in.connection_type) 
+		{
         case 0:
             r->keepalive = (r->http_version > NGX_HTTP_VERSION_10);
             break;
@@ -815,11 +821,12 @@ ngx_http_handler(ngx_http_request_t *r)
             break;
         }
 
-        r->lingering_close = (r->headers_in.content_length_n > 0
-                              || r->headers_in.chunked);
+        r->lingering_close = (r->headers_in.content_length_n > 0 || r->headers_in.chunked);
         r->phase_handler = 0;
 
-    } else {
+    } 
+	else
+	{
         cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
         r->phase_handler = cmcf->phase_engine.server_rewrite_index;
     }
@@ -870,17 +877,18 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
      * used by the post read and pre-access phases
      */
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "generic phase: %ui", r->phase_handler);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "generic phase: %ui", r->phase_handler);
 
     rc = ph->handler(r);
 
-    if (rc == NGX_OK) {
+    if (rc == NGX_OK) 
+	{
         r->phase_handler = ph->next;
         return NGX_AGAIN;
     }
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED) 
+	{
         r->phase_handler++;
         return NGX_AGAIN;
     }
@@ -902,17 +910,18 @@ ngx_http_core_rewrite_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     ngx_int_t  rc;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "rewrite phase: %ui", r->phase_handler);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "rewrite phase: %ui", r->phase_handler);
 
     rc = ph->handler(r);
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED) 
+	{
         r->phase_handler++;
         return NGX_AGAIN;
     }
 
-    if (rc == NGX_DONE) {
+    if (rc == NGX_DONE) 
+	{
         return NGX_OK;
     }
 
@@ -3048,6 +3057,9 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
     *cf = pcf;
 
+	//若server{}内没有配置监听端口(listen指令)，
+	//那么创建一个默认的监听端口
+	//确保meigeserver配置至少有一个监听套接口
     if (rv == NGX_CONF_OK && !cscf->listen)
 	{
         ngx_memzero(&lsopt, sizeof(ngx_http_listen_opt_t));
@@ -4018,7 +4030,7 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value = cf->args->elts;
 
 
-	//解析linsten第一个url参数
+	//解析listen指令第一个url参数
     ngx_memzero(&u, sizeof(ngx_url_t));
 
     u.url = value[1];
@@ -4035,7 +4047,7 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-	//根据第一个参数解析结果及后续参数设置ngx_http_listen_opt_t相关值
+	//根据第一个参数解析结果及后续参数设置lsopt相关值
     ngx_memzero(&lsopt, sizeof(ngx_http_listen_opt_t));
     ngx_memcpy(&lsopt.u.sockaddr, u.sockaddr, u.socklen);
 
@@ -4170,7 +4182,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strcmp(value[n].data, "deferred") == 0) {
+        if (ngx_strcmp(value[n].data, "deferred") == 0) 
+		{
 #if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
             lsopt.deferred_accept = 1;
             lsopt.set = 1;
@@ -4975,7 +4988,8 @@ ngx_http_core_try_files(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_script_compile_t   sc;
     ngx_http_core_main_conf_t  *cmcf;
 
-    if (clcf->try_files) {
+    if (clcf->try_files) 
+	{
         return "is duplicate";
     }
 
@@ -4984,7 +4998,8 @@ ngx_http_core_try_files(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cmcf->try_files = 1;
 
     tf = ngx_pcalloc(cf->pool, cf->args->nelts * sizeof(ngx_http_try_file_t));
-    if (tf == NULL) {
+    if (tf == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -4992,7 +5007,8 @@ ngx_http_core_try_files(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    for (i = 0; i < cf->args->nelts - 1; i++) {
+    for (i = 0; i < cf->args->nelts - 1; i++) 
+	{
 
         tf[i].name = value[i + 1];
 

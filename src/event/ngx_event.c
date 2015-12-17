@@ -857,6 +857,9 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
         rev->handler = ngx_event_accept;
 
+		//如果没有启动accept_mutex，就将监听套接字所对应的事件对象加入到nginx的事件监控机制里面，
+		//否则就需要在核心执行函数ngx_process_events_and_timers()内进行竞争，只有抢占到accept_mutex锁，
+		//进程才会把它加入到自己的事件监控机制内
         if (ngx_use_accept_mutex
 #if (NGX_HAVE_REUSEPORT)
             && !ls[i].reuseport

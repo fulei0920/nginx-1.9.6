@@ -122,7 +122,6 @@ typedef struct
 typedef enum 
 {
     NGX_HTTP_POST_READ_PHASE = 0,	//读取请求phase  
-
     NGX_HTTP_SERVER_REWRITE_PHASE,	//这个阶段主要是处理全局的(server block)的rewrite。
 
     NGX_HTTP_FIND_CONFIG_PHASE,		//这个阶段主要是通过uri来查找对应的location。然后将uri和location的数据关联起来  
@@ -155,8 +154,8 @@ struct ngx_http_phase_handler_s
 typedef struct 
 {
     ngx_http_phase_handler_t  *handlers;
-    ngx_uint_t                 server_rewrite_index;
-    ngx_uint_t                 location_rewrite_index;
+    ngx_uint_t                 server_rewrite_index;     	/*server rewrite 类型的处理函数在handlers指向的数组的索引*/
+    ngx_uint_t                 location_rewrite_index;		/*location rewrite 类型的处理函数在handlers指向的数组的索引*/
 } ngx_http_phase_engine_t;
 
 
@@ -187,7 +186,7 @@ typedef struct
 
     ngx_hash_keys_arrays_t    *variables_keys;  /* 以name为key，以ngx_http_variable_t为value的表*/
 
-    ngx_array_t               *ports;			/* array of ngx_http_conf_port_t */
+    ngx_array_t               *ports;			/* array of ngx_http_conf_port_t; 以端口port分类存储所有的监听套接字设置*/
 
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
 
@@ -262,7 +261,7 @@ struct ngx_http_addr_conf_s
 
 typedef struct 
 {
-    in_addr_t                  addr;
+    in_addr_t                  addr;  /*IP地址，网络字节序*/
     ngx_http_addr_conf_t       conf;
 } ngx_http_in_addr_t;
 
@@ -282,7 +281,7 @@ typedef struct
 {
     /* ngx_http_in_addr_t or ngx_http_in6_addr_t */
     void                      *addrs;
-    ngx_uint_t                 naddrs;
+    ngx_uint_t                 naddrs;		/*addrs指向的对象的元素的个数*/
 } ngx_http_port_t;
 
 
@@ -290,7 +289,7 @@ typedef struct
 {
     ngx_int_t                  family;
     in_port_t                  port;		/*端口号(网络字节序)*/
-    ngx_array_t                addrs;     	/* array of ngx_http_conf_addr_t */
+    ngx_array_t                addrs;     	/* array of ngx_http_conf_addr_t， 记录相同端口下的不同IP地址*/
 } ngx_http_conf_port_t;
 
 
@@ -309,7 +308,7 @@ typedef struct
 
     /* the default server configuration for this address:port */
     ngx_http_core_srv_conf_t  *default_server;
-    ngx_array_t                servers;  	/* array of (ngx_http_core_srv_conf_t*) */
+    ngx_array_t                servers;  	/* array of (ngx_http_core_srv_conf_t*), 记录相同IP下的不同server{}配置*/
 } ngx_http_conf_addr_t;
 
 
@@ -321,7 +320,8 @@ typedef struct {
 } ngx_http_err_page_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_array_t               *lengths;
     ngx_array_t               *values;
     ngx_str_t                  name;

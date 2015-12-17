@@ -36,7 +36,7 @@ struct ngx_listening_s
     /* handler of accepted connection */
     ngx_connection_handler_pt   handler;
 
-    void               *servers;  /* array of ngx_http_in_addr_t, for example */   
+    void               *servers;  /* array of ngx_http_in_addr_t, for example 该监听套接字关联的server{}配置*/   
     ngx_log_t           log;
     ngx_log_t          *logp;
 
@@ -53,12 +53,12 @@ struct ngx_listening_s
 
     unsigned            open:1;
     unsigned            remain:1;
-    unsigned            ignore:1;				/* ignore this one */
+    unsigned            ignore:1;				/* 忽略该套接字 */
 
     unsigned            bound:1;       			/* already bound */
     unsigned            inherited:1;   			/* inherited from previous process */
     unsigned            nonblocking_accept:1;
-    unsigned            listen:1;				/* listen state*/
+    unsigned            listen:1;				/* listen状态*/
     unsigned            nonblocking:1;
     unsigned            shared:1;    			/* shared between threads or processes */
     unsigned            addr_ntop:1;
@@ -67,13 +67,13 @@ struct ngx_listening_s
     unsigned            ipv6only:1;
 #endif
 #if (NGX_HAVE_REUSEPORT)
-    unsigned            reuseport:1;			/* reuseport state*/	
-    unsigned            add_reuseport:1;       	/* need to make it reuseport*/
+    unsigned            reuseport:1;			/* reuseport状态*/	
+    unsigned            add_reuseport:1;       	/* 是否允许reuseport*/
 #endif
     unsigned            keepalive:2;
 
 #if (NGX_HAVE_DEFERRED_ACCEPT)
-    unsigned            deferred_accept:1;
+    unsigned            deferred_accept:1;   	/*设置TCP_DEFER_ACCEPT标志*/
     unsigned            delete_deferred:1;
     unsigned            add_deferred:1;
 #ifdef SO_ACCEPTFILTER
@@ -125,13 +125,13 @@ struct ngx_connection_s
     void               *data;
     ngx_event_t        *read;
     ngx_event_t        *write;
-    ngx_socket_t        fd;    		/*该连接对应的描述符*/
+    ngx_socket_t        fd;    			/*该连接对应的描述符*/
     ngx_recv_pt         recv;
     ngx_send_pt         send;
     ngx_recv_chain_pt   recv_chain;
     ngx_send_chain_pt   send_chain;
 
-    ngx_listening_t    *listening;
+    ngx_listening_t    *listening;		/*该链接对应的监听套接字*/
 
     off_t               sent;
 

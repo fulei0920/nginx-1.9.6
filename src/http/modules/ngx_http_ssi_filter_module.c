@@ -175,7 +175,8 @@ static ngx_command_t  ngx_http_ssi_filter_commands[] = {
 
 
 
-static ngx_http_module_t  ngx_http_ssi_filter_module_ctx = {
+static ngx_http_module_t  ngx_http_ssi_filter_module_ctx = 
+{
     ngx_http_ssi_preconfiguration,         /* preconfiguration */
     ngx_http_ssi_filter_init,              /* postconfiguration */
 
@@ -190,7 +191,8 @@ static ngx_http_module_t  ngx_http_ssi_filter_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_ssi_filter_module = {
+ngx_module_t  ngx_http_ssi_filter_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_ssi_filter_module_ctx,       /* module context */
     ngx_http_ssi_filter_commands,          /* module directives */

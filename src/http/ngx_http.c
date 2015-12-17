@@ -148,7 +148,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
-    /* count the number of the http modules and set up their indices */
+	//统计http模块的数目，并设置他们在http模块中的序号
     ngx_http_max_module = 0;
     for (m = 0; ngx_modules[m]; m++)
 	{
@@ -168,7 +168,6 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-
     /* the http null srv_conf context, it is used to merge the server{}s' srv_conf's */
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->srv_conf == NULL)
@@ -176,14 +175,12 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-
     /* the http null loc_conf context, it is used to merge the server{}s' loc_conf's */
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL)
 	{
         return NGX_CONF_ERROR;
     }
-
 
     /* create the main_conf's, the null srv_conf's, and the null loc_conf's of the all http modules */
     for (m = 0; ngx_modules[m]; m++) 
@@ -290,14 +287,15 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     /* create location trees */
     for (s = 0; s < cmcf->servers.nelts; s++) 
 	{
-
         clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
 
-        if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK) {
+        if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK) 
+		{
             return NGX_CONF_ERROR;
         }
 
-        if (ngx_http_init_static_location_trees(cf, clcf) != NGX_OK) {
+        if (ngx_http_init_static_location_trees(cf, clcf) != NGX_OK) 
+		{
             return NGX_CONF_ERROR;
         }
     }
@@ -308,7 +306,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_http_init_headers_in_hash(cf, cmcf) != NGX_OK) {
+    if (ngx_http_init_headers_in_hash(cf, cmcf) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -324,7 +323,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         if (module->postconfiguration)
 		{
-            if (module->postconfiguration(cf) != NGX_OK) {
+            if (module->postconfiguration(cf) != NGX_OK) 
+			{
                 return NGX_CONF_ERROR;
             }
         }
@@ -415,15 +415,16 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     ngx_hash_init_t     hash;
     ngx_http_header_t  *header;
 
-    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t))
-        != NGX_OK)
+    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t)) != NGX_OK)
     {
         return NGX_ERROR;
     }
 
-    for (header = ngx_http_headers_in; header->name.len; header++) {
+    for (header = ngx_http_headers_in; header->name.len; header++) 
+	{
         hk = ngx_array_push(&headers_in);
-        if (hk == NULL) {
+        if (hk == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -440,7 +441,8 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     hash.pool = cf->pool;
     hash.temp_pool = NULL;
 
-    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK) {
+    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -469,7 +471,6 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     use_access = cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers.nelts ? 1 : 0;
 
     n = use_rewrite + use_access + cmcf->try_files + 1 /* find config phase */;
-
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) 
 	{
         n += cmcf->phases[i].handlers.nelts;
@@ -480,10 +481,9 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 	{
         return NGX_ERROR;
     }
-
     cmcf->phase_engine.handlers = ph;
+	
     n = 0;
-
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) 
 	{
         h = cmcf->phases[i].handlers.elts;
@@ -564,6 +564,9 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
         n += cmcf->phases[i].handlers.nelts;
 
+
+		//cmcf->phases[i].handlers中的元素由头插法插入，故逆序调整，
+		//使得回调函数顺序与该模块在全局模块列表ngx_modules中的顺序相同
         for (j = cmcf->phases[i].handlers.nelts - 1; j >=0; j--)
 		{
             ph->checker = checker;
@@ -1160,7 +1163,9 @@ inclusive:
     return node;
 }
 
-
+/*
+将所有的linsten配置组织在核心配置ngx_http_core_main_conf_t下的ports数组字段内
+*/
 ngx_int_t
 ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_listen_opt_t *lsopt)
 {
@@ -1383,10 +1388,8 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_co
 
     if (lsopt->http2 && lsopt->ssl)
 	{
-        ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                           "nginx was built with OpenSSL that lacks ALPN "
-                           "and NPN support, HTTP/2 is not enabled for %s",
-                           lsopt->addr);
+        ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "nginx was built with OpenSSL that lacks ALPN "
+                           "and NPN support, HTTP/2 is not enabled for %s", lsopt->addr);
     }
 
 #endif
@@ -1710,7 +1713,8 @@ ngx_http_cmp_dns_wildcards(const void *one, const void *two)
     return ngx_dns_strcmp(first->key.data, second->key.data);
 }
 
-
+//如果某端口上有任意目的IP的listen配置，那么该端口上只会创建一个结构体变量ngx_listening_s,
+//不管是否还有其他IP在该端口上的listen配置，在后面创建监听套接口描述符时也会只创建一个
 static ngx_int_t
 ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
 {
@@ -1742,6 +1746,10 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
 
     i = 0;
 
+
+	//last -- 剩余节点个数
+	//i -- 需要的连续节点个数 -1
+	//addr-- 需要的连续节点的起始位置
     while (i < last) 
 	{
 
@@ -1757,6 +1765,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             return NGX_ERROR;
         }
 
+		//关联监听套接口与server{}配置块
         hport = ngx_pcalloc(cf->pool, sizeof(ngx_http_port_t));
         if (hport == NULL) 
 		{
@@ -1881,23 +1890,23 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
 
 
 static ngx_int_t
-ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport,
-    ngx_http_conf_addr_t *addr)
+ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport, ngx_http_conf_addr_t *addr)
 {
     ngx_uint_t                 i;
     ngx_http_in_addr_t        *addrs;
     struct sockaddr_in        *sin;
     ngx_http_virtual_names_t  *vn;
 
-    hport->addrs = ngx_pcalloc(cf->pool,
-                               hport->naddrs * sizeof(ngx_http_in_addr_t));
-    if (hport->addrs == NULL) {
+    hport->addrs = ngx_pcalloc(cf->pool, hport->naddrs * sizeof(ngx_http_in_addr_t));
+    if (hport->addrs == NULL)
+	{
         return NGX_ERROR;
     }
 
     addrs = hport->addrs;
 
-    for (i = 0; i < hport->naddrs; i++) {
+    for (i = 0; i < hport->naddrs; i++) 
+	{
 
         sin = &addr[i].opt.u.sockaddr_in;
         addrs[i].addr = sin->sin_addr.s_addr;
@@ -1924,7 +1933,8 @@ ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport,
         }
 
         vn = ngx_palloc(cf->pool, sizeof(ngx_http_virtual_names_t));
-        if (vn == NULL) {
+        if (vn == NULL)
+		{
             return NGX_ERROR;
         }
 

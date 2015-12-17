@@ -42,10 +42,17 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
     ls->sockaddr = sa;
     ls->socklen = socklen;
 
-    len = ngx_sock_ntop(sa, socklen, text, NGX_SOCKADDR_STRLEN, 1);
-    ls->addr_text.len = len;
 
 	/*set the text socket address*/
+    len = ngx_sock_ntop(sa, socklen, text, NGX_SOCKADDR_STRLEN, 1);
+    ls->addr_text.len = len;
+	ls->addr_text.data = ngx_pnalloc(cf->pool, len);
+    if (ls->addr_text.data == NULL) 
+	{
+        return NULL;
+    }
+    ngx_memcpy(ls->addr_text.data, text, len);
+
     switch (ls->sockaddr->sa_family) 
 	{
 #if (NGX_HAVE_INET6)
@@ -66,12 +73,6 @@ ngx_create_listening(ngx_conf_t *cf, void *sockaddr, socklen_t socklen)
          ls->addr_text_max_len = NGX_SOCKADDR_STRLEN;
          break;
     }
-    ls->addr_text.data = ngx_pnalloc(cf->pool, len);
-    if (ls->addr_text.data == NULL) 
-	{
-        return NULL;
-    }
-    ngx_memcpy(ls->addr_text.data, text, len);
 
     ls->fd = (ngx_socket_t) -1;
     ls->type = SOCK_STREAM;
@@ -777,11 +778,12 @@ ngx_configure_listening_sockets(ngx_cycle_t *cycle)
 #endif
 
 #ifdef TCP_DEFER_ACCEPT
-
+		//TCP_DEFER_ACCEPT特性意味着当工作进程accept接受这个监听套接字上的客户端连接请求时，请求的具体数据内容已经到达了
         if (ls[i].add_deferred || ls[i].delete_deferred) 
 		{
 
-            if (ls[i].add_deferred) {
+            if (ls[i].add_deferred) 
+			{
                 /*
                  * There is no way to find out how long a connection was
                  * in queue (and a connection may bypass deferred queue at all
@@ -790,24 +792,21 @@ ngx_configure_listening_sockets(ngx_cycle_t *cycle)
                  */
                 value = 1;
 
-            } else {
+            } 
+			else
+			{
                 value = 0;
             }
 
-            if (setsockopt(ls[i].fd, IPPROTO_TCP, TCP_DEFER_ACCEPT,
-                           &value, sizeof(int))
-                == -1)
+            if (setsockopt(ls[i].fd, IPPROTO_TCP, TCP_DEFER_ACCEPT, &value, sizeof(int)) == -1)
             {
-                ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_socket_errno,
-                              "setsockopt(TCP_DEFER_ACCEPT, %d) for %V failed, "
-                              "ignored",
-                              value, &ls[i].addr_text);
-
+                ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_socket_errno, "setsockopt(TCP_DEFER_ACCEPT, %d) for %V failed, ignored",value, &ls[i].addr_text);
                 continue;
             }
         }
 
-        if (ls[i].add_deferred) {
+        if (ls[i].add_deferred)
+		{
             ls[i].deferred_accept = 1;
         }
 
@@ -1145,6 +1144,7 @@ ngx_close_idle_connections(ngx_cycle_t *cycle)
 }
 
 /*get the local text ip address*/
+/*获取链接的本地ip地址*/
 ngx_int_t
 ngx_connection_local_sockaddr(ngx_connection_t *c, ngx_str_t *s, ngx_uint_t port)
 {

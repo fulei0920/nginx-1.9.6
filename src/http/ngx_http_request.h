@@ -157,7 +157,8 @@ typedef enum {
 } ngx_http_state_e;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                         name;
     ngx_uint_t                        offset;
     ngx_http_header_handler_pt        handler;
@@ -172,7 +173,7 @@ typedef struct {
 
 typedef struct 
 {
-    ngx_list_t                        headers;   /*array fo ngx_table_elt_t*/
+    ngx_list_t                        headers;   /*array fo ngx_table_elt_t; 存储请求头，例如Host: 127.0.0.1*/
 
     ngx_table_elt_t                  *host;
     ngx_table_elt_t                  *connection;
@@ -242,8 +243,9 @@ typedef struct
 } ngx_http_headers_in_t;
 
 
-typedef struct {
-    ngx_list_t                        headers;
+typedef struct
+{
+    ngx_list_t                        headers;				// list of ngx_table_elt_t
 
     ngx_uint_t                        status;				//http相应的状态码 
     ngx_str_t                         status_line;
@@ -422,7 +424,7 @@ struct ngx_http_request_s
     ngx_http_handler_pt               content_handler;
     ngx_uint_t                        access_code;
 
-    ngx_http_variable_value_t        *variables;
+    ngx_http_variable_value_t        *variables;		/*array of ngx_http_variable_value_t*/
 
 #if (NGX_PCRE)
     ngx_uint_t                        ncaptures;
@@ -555,10 +557,10 @@ struct ngx_http_request_s
     ngx_uint_t                        lowcase_index;
     u_char                            lowcase_header[NGX_HTTP_LC_HEADER_LEN];
 
-    u_char                           *header_name_start;
-    u_char                           *header_name_end;
-    u_char                           *header_start;
-    u_char                           *header_end;
+    u_char                           *header_name_start;    //请求头key字段起始地址
+    u_char                           *header_name_end;		//请求头key字段结束地址
+    u_char                           *header_start;			//请求头value字段起始地址
+    u_char                           *header_end;			//请求头value字段结束地址
 
     /*
      * a memory that can be reused after parsing a request line
