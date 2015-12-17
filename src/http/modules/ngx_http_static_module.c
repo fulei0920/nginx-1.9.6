@@ -145,9 +145,9 @@ ngx_http_static_handler(ngx_http_request_t *r)
             break;
         }
 
-        if (rc != NGX_HTTP_NOT_FOUND || clcf->log_not_found) {
-            ngx_log_error(level, log, of.err,
-                          "%s \"%s\" failed", of.failed, path.data);
+        if (rc != NGX_HTTP_NOT_FOUND || clcf->log_not_found) 
+		{
+            ngx_log_error(level, log, of.err, "%s \"%s\" failed", of.failed, path.data);
         }
 
         return rc;
@@ -157,25 +157,30 @@ ngx_http_static_handler(ngx_http_request_t *r)
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, log, 0, "http static fd: %d", of.fd);
 
-    if (of.is_dir) {
+    if (of.is_dir)
+	{
 
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, log, 0, "http dir");
 
         ngx_http_clear_location(r);
 
         r->headers_out.location = ngx_palloc(r->pool, sizeof(ngx_table_elt_t));
-        if (r->headers_out.location == NULL) {
+        if (r->headers_out.location == NULL) 
+		{
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
 
         len = r->uri.len + 1;
 
-        if (!clcf->alias && clcf->root_lengths == NULL && r->args.len == 0) {
+        if (!clcf->alias && clcf->root_lengths == NULL && r->args.len == 0) 
+		{
             location = path.data + clcf->root.len;
 
             *last = '/';
 
-        } else {
+        }
+		else
+		{
             if (r->args.len) {
                 len += r->args.len + 1;
             }
@@ -208,30 +213,31 @@ ngx_http_static_handler(ngx_http_request_t *r)
 
 #if !(NGX_WIN32) /* the not regular files are probably Unix specific */
 
-    if (!of.is_file) {
-        ngx_log_error(NGX_LOG_CRIT, log, 0,
-                      "\"%s\" is not a regular file", path.data);
+    if (!of.is_file)
+	{
+        ngx_log_error(NGX_LOG_CRIT, log, 0, "\"%s\" is not a regular file", path.data);
 
         return NGX_HTTP_NOT_FOUND;
     }
 
 #endif
 
-    if (r->method & NGX_HTTP_POST) {
+    if (r->method & NGX_HTTP_POST)
+	{
         return NGX_HTTP_NOT_ALLOWED;
     }
 
     rc = ngx_http_discard_request_body(r);
-
-    if (rc != NGX_OK) {
+    if (rc != NGX_OK) 
+	{
         return rc;
     }
 
     log->action = "sending response to client";
 
     r->headers_out.status = NGX_HTTP_OK;
-    r->headers_out.content_length_n = of.size;
-    r->headers_out.last_modified_time = of.mtime;
+    r->headers_out.content_length_n = of.size;   //通过文件大小来设置Content-Length响应头
+    r->headers_out.last_modified_time = of.mtime;	//通过文件修改时间来设置Last-Modified响应头
 
     if (ngx_http_set_etag(r) != NGX_OK) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -261,7 +267,8 @@ ngx_http_static_handler(ngx_http_request_t *r)
 
     rc = ngx_http_send_header(r);
 
-    if (rc == NGX_ERROR || rc > NGX_OK || r->header_only) {
+    if (rc == NGX_ERROR || rc > NGX_OK || r->header_only)
+	{
         return rc;
     }
 
