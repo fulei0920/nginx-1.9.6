@@ -689,8 +689,7 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations,
 
 
 static ngx_int_t
-ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
-    ngx_http_core_loc_conf_t *pclcf)
+ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf)
 {
     ngx_uint_t                   n;
     ngx_queue_t                 *q, *locations, *named, tail;
@@ -704,7 +703,8 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
     locations = pclcf->locations;
 
-    if (locations == NULL) {
+    if (locations == NULL) 
+	{
         return NGX_OK;
     }
 
@@ -717,24 +717,25 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     r = 0;
 #endif
 
-    for (q = ngx_queue_head(locations);
-         q != ngx_queue_sentinel(locations);
-         q = ngx_queue_next(q))
+    for (q = ngx_queue_head(locations); q != ngx_queue_sentinel(locations); q = ngx_queue_next(q))
     {
         lq = (ngx_http_location_queue_t *) q;
 
         clcf = lq->exact ? lq->exact : lq->inclusive;
 
-        if (ngx_http_init_locations(cf, NULL, clcf) != NGX_OK) {
+        if (ngx_http_init_locations(cf, NULL, clcf) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
 #if (NGX_PCRE)
 
-        if (clcf->regex) {
+        if (clcf->regex) 
+		{
             r++;
 
-            if (regex == NULL) {
+            if (regex == NULL) 
+			{
                 regex = q;
             }
 
@@ -743,10 +744,12 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
 
 #endif
 
-        if (clcf->named) {
+        if (clcf->named) 
+		{
             n++;
 
-            if (named == NULL) {
+            if (named == NULL)
+			{
                 named = q;
             }
 
@@ -758,7 +761,10 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
         }
     }
 
-    if (q != ngx_queue_sentinel(locations)) {
+	//对前面排序好的队列做拆分，
+	//具体点将就是把正则匹配location和命名location给拆出来。
+    if (q != ngx_queue_sentinel(locations)) 
+	{
         ngx_queue_split(locations, q, &tail);
     }
 

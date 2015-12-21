@@ -3170,26 +3170,35 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
             clcf->name = *name;
             clcf->exact_match = 1;
 
-        } else if (len == 2 && mod[0] == '^' && mod[1] == '~') {
+        } 
+		else if (len == 2 && mod[0] == '^' && mod[1] == '~')
+		{
 
             clcf->name = *name;
             clcf->noregex = 1;
 
-        } else if (len == 1 && mod[0] == '~') {
+        } 
+		else if (len == 1 && mod[0] == '~') 
+		{
 
-            if (ngx_http_core_regex_location(cf, clcf, name, 0) != NGX_OK) {
+            if (ngx_http_core_regex_location(cf, clcf, name, 0) != NGX_OK) 
+			{
                 return NGX_CONF_ERROR;
             }
 
-        } else if (len == 2 && mod[0] == '~' && mod[1] == '*') {
+        }
+		else if (len == 2 && mod[0] == '~' && mod[1] == '*') 
+		{
 
-            if (ngx_http_core_regex_location(cf, clcf, name, 1) != NGX_OK) {
+            if (ngx_http_core_regex_location(cf, clcf, name, 1) != NGX_OK)
+			{
                 return NGX_CONF_ERROR;
             }
 
-        } else {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid location modifier \"%V\"", &value[1]);
+        }
+		else 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid location modifier \"%V\"", &value[1]);
             return NGX_CONF_ERROR;
         }
 
@@ -3201,7 +3210,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         if (name->data[0] == '=') 
 		{
             clcf->name.len = name->len - 1;
-            clcf->name.data = name->data + 1;
+            clcf->namkjhe.data = name->data + 1;
             clcf->exact_match = 1;
 
         } 
@@ -3289,9 +3298,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         if (ngx_filename_cmp(clcf->name.data, pclcf->name.data, len) != 0)
 #endif
         {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "location \"%V\" is outside location \"%V\"",
-                               &clcf->name, &pclcf->name);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "location \"%V\" is outside location \"%V\"", &clcf->name, &pclcf->name);
             return NGX_CONF_ERROR;
         }
     }
@@ -3312,10 +3319,9 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     return rv;
 }
 
-
+//caseless -- 1 不区分大小写， 0 区分大小写
 static ngx_int_t
-ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf,
-    ngx_str_t *regex, ngx_uint_t caseless)
+ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf, ngx_str_t *regex, ngx_uint_t caseless)
 {
 #if (NGX_PCRE)
     ngx_regex_compile_t  rc;
@@ -3344,9 +3350,7 @@ ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf,
 
 #else
 
-    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                       "using regex \"%V\" requires PCRE library",
-                       regex);
+    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "using regex \"%V\" requires PCRE library", regex);
     return NGX_ERROR;
 
 #endif
