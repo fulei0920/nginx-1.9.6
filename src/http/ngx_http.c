@@ -12,10 +12,8 @@
 
 static char *ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf);
-static ngx_int_t ngx_http_init_headers_in_hash(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf);
-static ngx_int_t ngx_http_init_phase_handlers(ngx_conf_t *cf,
-    ngx_http_core_main_conf_t *cmcf);
+static ngx_int_t ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf);
+static ngx_int_t ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf);
 
 static ngx_int_t ngx_http_add_addresses(ngx_conf_t *cf,
     ngx_http_core_srv_conf_t *cscf, ngx_http_conf_port_t *port,
@@ -454,6 +452,8 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 提取出有回调函数的阶段，加上进入回调函数的条件判断函数，
 通过next字段的使用，把原本二维数组实现转化为一维数组实现
 */
+
+//有4个阶段不能注册模块，并且POST_REWRITE和POST_ACCESS这2个阶段分别只有在REWRITE和ACCESS阶段注册了模块时才存在，另外TRY_FILES阶段只有在配置了try_files指令的时候才存在，最后FIND_CONFIG阶段虽然不能注册模块，
 static ngx_int_t
 ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 {

@@ -25,8 +25,7 @@ static ngx_int_t ngx_http_process_multi_header_lines(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
 static ngx_int_t ngx_http_process_host(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
-static ngx_int_t ngx_http_process_connection(ngx_http_request_t *r,
-    ngx_table_elt_t *h, ngx_uint_t offset);
+static ngx_int_t ngx_http_process_connection(ngx_http_request_t *r, ngx_table_elt_t *h, ngx_uint_t offset);
 static ngx_int_t ngx_http_process_user_agent(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
 
@@ -84,13 +83,9 @@ ngx_http_header_t  ngx_http_headers_in[] =
 
     { ngx_string("If-Modified-Since"), offsetof(ngx_http_headers_in_t, if_modified_since), ngx_http_process_unique_header_line },
 
-    { ngx_string("If-Unmodified-Since"),
-                 offsetof(ngx_http_headers_in_t, if_unmodified_since),
-                 ngx_http_process_unique_header_line },
+    { ngx_string("If-Unmodified-Since"), offsetof(ngx_http_headers_in_t, if_unmodified_since), ngx_http_process_unique_header_line },
 
-    { ngx_string("If-Match"),
-                 offsetof(ngx_http_headers_in_t, if_match),
-                 ngx_http_process_unique_header_line },
+    { ngx_string("If-Match"), offsetof(ngx_http_headers_in_t, if_match), ngx_http_process_unique_header_line },
 
     { ngx_string("If-None-Match"),
                  offsetof(ngx_http_headers_in_t, if_none_match),
@@ -1708,13 +1703,15 @@ ngx_http_process_host(ngx_http_request_t *r, ngx_table_elt_t *h, ngx_uint_t offs
 
 
 static ngx_int_t
-ngx_http_process_connection(ngx_http_request_t *r, ngx_table_elt_t *h,
-    ngx_uint_t offset)
+ngx_http_process_connection(ngx_http_request_t *r, ngx_table_elt_t *h, ngx_uint_t offset)
 {
-    if (ngx_strcasestrn(h->value.data, "close", 5 - 1)) {
+    if (ngx_strcasestrn(h->value.data, "close", 5 - 1)) 
+	{
         r->headers_in.connection_type = NGX_HTTP_CONNECTION_CLOSE;
 
-    } else if (ngx_strcasestrn(h->value.data, "keep-alive", 10 - 1)) {
+    } 
+	else if (ngx_strcasestrn(h->value.data, "keep-alive", 10 - 1)) 
+   	{
         r->headers_in.connection_type = NGX_HTTP_CONNECTION_KEEP_ALIVE;
     }
 
@@ -2259,48 +2256,54 @@ ngx_http_request_handler(ngx_event_t *ev)
     ngx_http_run_posted_requests(c);
 }
 
-
+//遍历处理所有的子请求
 void
 ngx_http_run_posted_requests(ngx_connection_t *c)
 {
     ngx_http_request_t         *r;
     ngx_http_posted_request_t  *pr;
 
-    for ( ;; ) {
-
-        if (c->destroyed) {
+    for ( ;; ) 
+	{
+		/* 连接已经断开，直接返回 */  
+        if (c->destroyed) 
+		{
             return;
         }
 
         r = c->data;
+		 /* 从posted_requests链表的队头开始遍历 */  
         pr = r->main->posted_requests;
 
-        if (pr == NULL) {
+        if (pr == NULL) 
+		{
             return;
         }
 
+		/* 从链表中移除即将要遍历的节点 */
         r->main->posted_requests = pr->next;
-
+		 /* 得到该节点中保存的请求 */  
         r = pr->request;
 
         ngx_http_set_log_request(c->log, r);
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                       "http posted request: \"%V?%V\"", &r->uri, &r->args);
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http posted request: \"%V?%V\"", &r->uri, &r->args);
 
         r->write_event_handler(r);
     }
 }
 
-
+//将子请求加入到主请求待处理链表posted_requestes里
 ngx_int_t
 ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr)
 {
     ngx_http_posted_request_t  **p;
 
-    if (pr == NULL) {
+    if (pr == NULL) 
+	{
         pr = ngx_palloc(r->pool, sizeof(ngx_http_posted_request_t));
-        if (pr == NULL) {
+        if (pr == NULL) 
+		{
             return NGX_ERROR;
         }
     }
@@ -2316,6 +2319,8 @@ ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr)
 }
 
 
+//r -- 待关闭的请求对象
+//rc -- 关闭的程度状态值
 void
 ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 {
@@ -2325,16 +2330,18 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 
     c = r->connection;
 
-    ngx_log_debug5(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http finalize request: %d, \"%V?%V\" a:%d, c:%d",
-                   rc, &r->uri, &r->args, r == c->data, r->main->count);
+    ngx_log_debug5(NGX_LOG_DEBUG_HTTP, c->log, 0, "http finalize request: %d, \"%V?%V\" a:%d, c:%d", rc, &r->uri, &r->args, r == c->data, r->main->count);
 
-    if (rc == NGX_DONE) {
+	//NGX_DONE表示http请求已经明确正常结束，所以开始进入到http连接的结束流程上，
+	//否则表示当前http请求可能还有一些事情需要进一步处理，比如判错、删除定时器等
+    if (rc == NGX_DONE) 
+	{
         ngx_http_finalize_connection(r);
         return;
     }
 
-    if (rc == NGX_OK && r->filter_finalize) {
+    if (rc == NGX_OK && r->filter_finalize)
+	{
         c->error = 1;
     }
 
@@ -2599,10 +2606,7 @@ ngx_http_finalize_connection(ngx_http_request_t *r)
         r->lingering_close = 1;
     }
 
-    if (!ngx_terminate
-         && !ngx_exiting
-         && r->keepalive
-         && clcf->keepalive_timeout > 0)
+    if (!ngx_terminate && !ngx_exiting && r->keepalive && clcf->keepalive_timeout > 0)
     {
         ngx_http_set_keepalive(r);
         return;
@@ -2913,7 +2917,8 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "set http keepalive handler");
 
-    if (r->discard_body) {
+    if (r->discard_body) 
+	{
         r->write_event_handler = ngx_http_request_empty_handler;
         r->lingering_time = ngx_time() + (time_t) (clcf->lingering_time / 1000);
         ngx_add_timer(rev, clcf->lingering_timeout);
@@ -2924,12 +2929,12 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     hc = r->http_connection;
     b = r->header_in;
-
-    if (b->pos < b->last) {
-
-        /* the pipelined request */
-
-        if (b != c->buffer) {
+	//pipelining请求的最大特征是客户端在发出第n+1个请求前不必等待是否已收到第n个请求的响应数据，
+	//这就意味着服务端在刚结束客户端第n个请求的处理时，其存放请求的缓存区里就已经有了客户端第n+1个请求的请求头
+    if (b->pos < b->last)   /* the pipelined request */
+	{
+        if (b != c->buffer)
+		{
 
             /*
              * If the large header buffers were allocated while the previous
@@ -2941,17 +2946,19 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
             cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
 
-            if (hc->free == NULL) {
-                hc->free = ngx_palloc(c->pool,
-                  cscf->large_client_header_buffers.num * sizeof(ngx_buf_t *));
+            if (hc->free == NULL)
+			{
+                hc->free = ngx_palloc(c->pool, cscf->large_client_header_buffers.num * sizeof(ngx_buf_t *));
 
-                if (hc->free == NULL) {
+                if (hc->free == NULL)
+				{
                     ngx_http_close_request(r, 0);
                     return;
                 }
             }
 
-            for (i = 0; i < hc->nbusy - 1; i++) {
+            for (i = 0; i < hc->nbusy - 1; i++) 
+			{
                 f = hc->busy[i];
                 hc->free[hc->nfree++] = f;
                 f->pos = f->start;
@@ -2970,7 +2977,8 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     c->data = hc;
 
-    if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+    if (ngx_handle_read_event(rev, 0) != NGX_OK) 
+	{
         ngx_http_close_connection(c);
         return;
     }
@@ -2978,14 +2986,16 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
     wev = c->write;
     wev->handler = ngx_http_empty_handler;
 
-    if (b->pos < b->last) {
+    if (b->pos < b->last)
+	{
 
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "pipelined request");
 
         c->log->action = "reading client pipelined request line";
 
         r = ngx_http_create_request(c);
-        if (r == NULL) {
+        if (r == NULL) 
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -2997,11 +3007,13 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
         c->sent = 0;
         c->destroyed = 0;
 
-        if (rev->timer_set) {
+        if (rev->timer_set) 
+		{
             ngx_del_timer(rev);
         }
 
         rev->handler = ngx_http_process_request_line;
+		//把读对象rev主动推送到ngx_posted_events链表里，从而开始一个新的http请求处理过程
         ngx_post_event(rev, &ngx_posted_events);
         return;
     }
@@ -3015,7 +3027,8 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     b = c->buffer;
 
-    if (ngx_pfree(c->pool, b->start) == NGX_OK) {
+    if (ngx_pfree(c->pool, b->start) == NGX_OK) 
+	{
 
         /*
          * the special note for ngx_http_keepalive_handler() that
@@ -3024,13 +3037,14 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
         b->pos = NULL;
 
-    } else {
+    }
+	else
+	{
         b->pos = b->start;
         b->last = b->start;
     }
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "hc free: %p %d",
-                   hc->free, hc->nfree);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "hc free: %p %d", hc->free, hc->nfree);
 
     if (hc->free) {
         for (i = 0; i < hc->nfree; i++) {
@@ -3041,11 +3055,12 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
         hc->nfree = 0;
     }
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "hc busy: %p %d",
-                   hc->busy, hc->nbusy);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "hc busy: %p %d", hc->busy, hc->nbusy);
 
-    if (hc->busy) {
-        for (i = 0; i < hc->nbusy; i++) {
+    if (hc->busy) 
+	{
+        for (i = 0; i < hc->nbusy; i++) 
+		{
             ngx_pfree(c->pool, hc->busy[i]->start);
             hc->busy[i] = NULL;
         }
@@ -3054,12 +3069,13 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
     }
 
 #if (NGX_HTTP_SSL)
-    if (c->ssl) {
+    if (c->ssl)
+	{
         ngx_ssl_free_buffer(c);
     }
 #endif
 
-    rev->handler = ngx_http_keepalive_handler;
+    rev->handler = ngx_http_keepalive_handler;  //
 
     if (wev->active && (ngx_event_flags & NGX_USE_LEVEL_EVENT)) {
         if (ngx_del_event(wev, NGX_WRITE_EVENT, 0) != NGX_OK) {
@@ -3120,7 +3136,8 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     ngx_add_timer(rev, clcf->keepalive_timeout);
 
-    if (rev->ready) {
+    if (rev->ready) 
+	{
         ngx_post_event(rev, &ngx_posted_events);
     }
 }
@@ -3138,15 +3155,19 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http keepalive handler");
 
-    if (rev->timedout || c->close) {
+	//超时则关闭连接退出
+    if (rev->timedout || c->close)
+	{
         ngx_http_close_connection(c);
         return;
     }
 
 #if (NGX_HAVE_KQUEUE)
 
-    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
-        if (rev->pending_eof) {
+    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) 
+	{
+        if (rev->pending_eof) 
+		{
             c->log->handler = NULL;
             ngx_log_error(NGX_LOG_INFO, c->log, rev->kq_errno,
                           "kevent() reported that client %V closed "
@@ -3166,7 +3187,8 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
     b = c->buffer;
     size = b->end - b->start;
 
-    if (b->pos == NULL) {
+    if (b->pos == NULL)
+	{
 
         /*
          * The c->buffer's memory was freed by ngx_http_set_keepalive().
@@ -3175,7 +3197,8 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
          */
 
         b->pos = ngx_palloc(c->pool, size);
-        if (b->pos == NULL) {
+        if (b->pos == NULL)
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -3185,10 +3208,7 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
         b->end = b->pos + size;
     }
 
-    /*
-     * MSIE closes a keepalive connection with RST flag
-     * so we ignore ECONNRESET here.
-     */
+    /* MSIE closes a keepalive connection with RST flag so we ignore ECONNRESET here. */
 
     c->log_error = NGX_ERROR_IGNORE_ECONNRESET;
     ngx_set_socket_errno(0);
@@ -3196,8 +3216,10 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
     n = c->recv(c, b->last, size);
     c->log_error = NGX_ERROR_INFO;
 
-    if (n == NGX_AGAIN) {
-        if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+    if (n == NGX_AGAIN) 
+	{
+        if (ngx_handle_read_event(rev, 0) != NGX_OK)
+		{
             ngx_http_close_connection(c);
             return;
         }
@@ -3207,8 +3229,8 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
          * c->buffer's memory for a keepalive connection.
          */
 
-        if (ngx_pfree(c->pool, b->start) == NGX_OK) {
-
+        if (ngx_pfree(c->pool, b->start) == NGX_OK) 
+		{
             /*
              * the special note that c->buffer's memory was freed
              */
@@ -3219,16 +3241,17 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
         return;
     }
 
-    if (n == NGX_ERROR) {
+    if (n == NGX_ERROR) 
+	{
         ngx_http_close_connection(c);
         return;
     }
 
     c->log->handler = NULL;
 
-    if (n == 0) {
-        ngx_log_error(NGX_LOG_INFO, c->log, ngx_socket_errno,
-                      "client %V closed keepalive connection", &c->addr_text);
+    if (n == 0)
+	{
+        ngx_log_error(NGX_LOG_INFO, c->log, ngx_socket_errno, "client %V closed keepalive connection", &c->addr_text);
         ngx_http_close_connection(c);
         return;
     }
@@ -3242,7 +3265,8 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
     ngx_reusable_connection(c, 0);
 
     c->data = ngx_http_create_request(c);
-    if (c->data == NULL) {
+    if (c->data == NULL) 
+	{
         ngx_http_close_connection(c);
         return;
     }

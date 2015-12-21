@@ -60,8 +60,8 @@
 
 
 /* unused                                  1 */
-#define NGX_HTTP_SUBREQUEST_IN_MEMORY      2
-#define NGX_HTTP_SUBREQUEST_WAITED         4
+#define NGX_HTTP_SUBREQUEST_IN_MEMORY      2      	//结果数据是否可以可存放于内存中
+#define NGX_HTTP_SUBREQUEST_WAITED         4		//先结束的子请求是否需要等待前面子请求的结束才设置done标记
 #define NGX_HTTP_LOG_UNSAFE                8
 
 
@@ -331,10 +331,10 @@ struct ngx_http_cleanup_s {
 };
 
 
-typedef ngx_int_t (*ngx_http_post_subrequest_pt)(ngx_http_request_t *r,
-    void *data, ngx_int_t rc);
+typedef ngx_int_t (*ngx_http_post_subrequest_pt)(ngx_http_request_t *r, void *data, ngx_int_t rc);
 
-typedef struct {
+typedef struct 
+{
     ngx_http_post_subrequest_pt       handler;
     void                             *data;
 } ngx_http_post_subrequest_t;
@@ -342,16 +342,18 @@ typedef struct {
 
 typedef struct ngx_http_postponed_request_s  ngx_http_postponed_request_t;
 
-struct ngx_http_postponed_request_s {
+struct ngx_http_postponed_request_s 
+{
     ngx_http_request_t               *request;
-    ngx_chain_t                      *out;
+    ngx_chain_t                      *out;		//临时保存当前请求处理后的结果数据，也就是为了组织最终的响应数据而设计
     ngx_http_postponed_request_t     *next;
 };
 
 
 typedef struct ngx_http_posted_request_s  ngx_http_posted_request_t;
 
-struct ngx_http_posted_request_s {
+struct ngx_http_posted_request_s 
+{
     ngx_http_request_t               *request;
     ngx_http_posted_request_t        *next;
 };
@@ -414,11 +416,11 @@ struct ngx_http_request_s
     ngx_str_t                         http_protocol;
 
     ngx_chain_t                      *out;
-    ngx_http_request_t               *main;
-    ngx_http_request_t               *parent;
-    ngx_http_postponed_request_t     *postponed;
-    ngx_http_post_subrequest_t       *post_subrequest;
-    ngx_http_posted_request_t        *posted_requests;
+    ngx_http_request_t               *main;				//主请求，通过这个域我们能够判断当前的请求是否是子请求
+    ngx_http_request_t               *parent;			//当前请求的父请求
+    ngx_http_postponed_request_t     *postponed;		//当前请求的子请求链表	
+    ngx_http_post_subrequest_t       *post_subrequest;	//回调函数以及可传递给该回调函数的数据，回调函数在当前子请求结束时被调用，因此可以做进一步自定义处理
+    ngx_http_posted_request_t        *posted_requests;	//记录当前所有需要被执行的子请求的链表，该字段仅主请求有效
 
     ngx_int_t                         phase_handler;
     ngx_http_handler_pt               content_handler;
@@ -523,7 +525,7 @@ struct ngx_http_request_s
     unsigned                          lingering_close:1;
     unsigned                          discard_body:1;
     unsigned                          reading_body:1;
-    unsigned                          internal:1;
+    unsigned                          internal:1;			//该请求属于内部请求对象(例如内部跳转、命名location跳转、子请求等)
     unsigned                          error_page:1;
     unsigned                          filter_finalize:1;
     unsigned                          post_action:1;

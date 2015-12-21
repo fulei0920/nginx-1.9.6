@@ -54,13 +54,15 @@ struct ngx_buf_s
 };
 
 
-struct ngx_chain_s {
+struct ngx_chain_s 
+{
     ngx_buf_t    *buf;
     ngx_chain_t  *next;
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_int_t    num;
     size_t       size;
 } ngx_bufs_t;

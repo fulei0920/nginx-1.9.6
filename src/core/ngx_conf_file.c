@@ -1360,19 +1360,22 @@ ngx_conf_set_bufs_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     bufs = (ngx_bufs_t *) (p + cmd->offset);
-    if (bufs->num) {
+    if (bufs->num) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
     bufs->num = ngx_atoi(value[1].data, value[1].len);
-    if (bufs->num == NGX_ERROR || bufs->num == 0) {
+    if (bufs->num == NGX_ERROR || bufs->num == 0) 
+	{
         return "invalid value";
     }
 
     bufs->size = ngx_parse_size(&value[2]);
-    if (bufs->size == (size_t) NGX_ERROR || bufs->size == 0) {
+    if (bufs->size == (size_t) NGX_ERROR || bufs->size == 0) 
+	{
         return "invalid value";
     }
 

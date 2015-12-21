@@ -289,7 +289,8 @@ static ngx_http_ssi_param_t  ngx_http_ssi_no_params[] = {
 };
 
 
-static ngx_http_ssi_command_t  ngx_http_ssi_commands[] = {
+static ngx_http_ssi_command_t  ngx_http_ssi_commands[] = 
+{
     { ngx_string("include"), ngx_http_ssi_include,
                        ngx_http_ssi_include_params, 0, 0, 1 },
     { ngx_string("echo"), ngx_http_ssi_echo,

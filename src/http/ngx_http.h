@@ -121,8 +121,7 @@ void ngx_http_process_request(ngx_http_request_t *r);
 void ngx_http_update_location_config(ngx_http_request_t *r);
 void ngx_http_handler(ngx_http_request_t *r);
 void ngx_http_run_posted_requests(ngx_connection_t *c);
-ngx_int_t ngx_http_post_request(ngx_http_request_t *r,
-    ngx_http_posted_request_t *pr);
+ngx_int_t ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr);
 void ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc);
 void ngx_http_free_request(ngx_http_request_t *r, ngx_int_t rc);
 

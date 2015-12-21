@@ -476,8 +476,7 @@ ngx_http_special_response_handler(ngx_http_request_t *r, ngx_int_t error)
 
 
 ngx_int_t
-ngx_http_filter_finalize_request(ngx_http_request_t *r, ngx_module_t *m,
-    ngx_int_t error)
+ngx_http_filter_finalize_request(ngx_http_request_t *r, ngx_module_t *m, ngx_int_t error)
 {
     void       *ctx;
     ngx_int_t   rc;
@@ -486,14 +485,16 @@ ngx_http_filter_finalize_request(ngx_http_request_t *r, ngx_module_t *m,
 
     ctx = NULL;
 
-    if (m) {
+    if (m) 
+	{
         ctx = r->ctx[m->ctx_index];
     }
 
     /* clear the modules contexts */
     ngx_memzero(r->ctx, sizeof(void *) * ngx_http_max_module);
 
-    if (m) {
+    if (m) 
+	{
         r->ctx[m->ctx_index] = ctx;
     }
 
@@ -518,9 +519,7 @@ ngx_http_filter_finalize_request(ngx_http_request_t *r, ngx_module_t *m,
 void
 ngx_http_clean_header(ngx_http_request_t *r)
 {
-    ngx_memzero(&r->headers_out.status,
-                sizeof(ngx_http_headers_out_t)
-                    - offsetof(ngx_http_headers_out_t, status));
+    ngx_memzero(&r->headers_out.status, sizeof(ngx_http_headers_out_t) - offsetof(ngx_http_headers_out_t, status));
 
     r->headers_out.headers.part.nelts = 0;
     r->headers_out.headers.part.next = NULL;

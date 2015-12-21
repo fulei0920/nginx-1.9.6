@@ -1367,8 +1367,7 @@ ngx_http_script_return_code(ngx_http_script_engine_t *e)
         || code->text.value.len
         || code->text.lengths)
     {
-        e->status = ngx_http_send_response(e->request, code->status, NULL,
-                                           &code->text);
+        e->status = ngx_http_send_response(e->request, code->status, NULL, &code->text);
     } else {
         e->status = code->status;
     }

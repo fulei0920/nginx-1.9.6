@@ -76,8 +76,7 @@ ngx_http_not_modified_header_filter(ngx_http_request_t *r)
     if (r->headers_in.if_match
         && !ngx_http_test_if_match(r, r->headers_in.if_match, 0))
     {
-        return ngx_http_filter_finalize_request(r, NULL,
-                                                NGX_HTTP_PRECONDITION_FAILED);
+        return ngx_http_filter_finalize_request(r, NULL, NGX_HTTP_PRECONDITION_FAILED);
     }
 
     if (r->headers_in.if_modified_since || r->headers_in.if_none_match) {

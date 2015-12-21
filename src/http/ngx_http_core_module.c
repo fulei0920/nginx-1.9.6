@@ -244,12 +244,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
 		NULL 
     },
 
-    { ngx_string("large_client_header_buffers"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE2,
-      ngx_conf_set_bufs_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, large_client_header_buffers),
-      NULL },
+    { 
+		ngx_string("large_client_header_buffers"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE2,
+		ngx_conf_set_bufs_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, large_client_header_buffers),
+		NULL 
+    },
 
     { ngx_string("ignore_invalid_headers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
@@ -1877,8 +1879,7 @@ ngx_http_weak_etag(ngx_http_request_t *r)
 
 
 ngx_int_t
-ngx_http_send_response(ngx_http_request_t *r, ngx_uint_t status,
-    ngx_str_t *ct, ngx_http_complex_value_t *cv)
+ngx_http_send_response(ngx_http_request_t *r, ngx_uint_t status, ngx_str_t *ct, ngx_http_complex_value_t *cv)
 {
     ngx_int_t     rc;
     ngx_str_t     val;
@@ -2438,10 +2439,15 @@ ngx_http_gzip_quantity(u_char *p, u_char *last)
 
 #endif
 
-
+//创建子请求
+//r -- 当前创建子请求的请求对象，也就是父请求
+//uri -- 子请求的uri地址
+//args -- 子请求的get参数
+//psr -- 一个传出参数，用于获取新创建的子请求
+//ps -- 指定子请求的回调处理函数
+//flags -- 标志值, NGX_HTTP_SUBREQUEST_WAITED | NGX_HTTP_SUBREQUEST_IN_MEMORY
 ngx_int_t
-ngx_http_subrequest(ngx_http_request_t *r,
-    ngx_str_t *uri, ngx_str_t *args, ngx_http_request_t **psr,
+ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_http_request_t **psr,
     ngx_http_post_subrequest_t *ps, ngx_uint_t flags)
 {
     ngx_time_t                    *tp;
@@ -2450,19 +2456,18 @@ ngx_http_subrequest(ngx_http_request_t *r,
     ngx_http_core_srv_conf_t      *cscf;
     ngx_http_postponed_request_t  *pr, *p;
 
-    if (r->subrequests == 0) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "subrequests cycle while processing \"%V\"", uri);
+    if (r->subrequests == 0) 
+	{
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "subrequests cycle while processing \"%V\"", uri);
         return NGX_ERROR;
     }
 
     /*
      * 1000 is reserved for other purposes.
      */
-    if (r->main->count >= 65535 - 1000) {
-        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0,
-                      "request reference counter overflow "
-                      "while processing \"%V\"", uri);
+    if (r->main->count >= 65535 - 1000) 
+	{
+        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0, "request reference counter overflow while processing \"%V\"", uri);
         return NGX_ERROR;
     }
 
@@ -2481,9 +2486,7 @@ ngx_http_subrequest(ngx_http_request_t *r,
         return NGX_ERROR;
     }
 
-    if (ngx_list_init(&sr->headers_out.headers, r->pool, 20,
-                      sizeof(ngx_table_elt_t))
-        != NGX_OK)
+    if (ngx_list_init(&sr->headers_out.headers, r->pool, 20, sizeof(ngx_table_elt_t)) != NGX_OK)
     {
         return NGX_ERROR;
     }
@@ -2513,12 +2516,12 @@ ngx_http_subrequest(ngx_http_request_t *r,
     sr->request_line = r->request_line;
     sr->uri = *uri;
 
-    if (args) {
+    if (args)
+	{
         sr->args = *args;
     }
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http subrequest \"%V?%V\"", uri, &sr->args);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http subrequest \"%V?%V\"", uri, &sr->args);
 
     sr->subrequest_in_memory = (flags & NGX_HTTP_SUBREQUEST_IN_MEMORY) != 0;
     sr->waited = (flags & NGX_HTTP_SUBREQUEST_WAITED) != 0;
@@ -2535,7 +2538,9 @@ ngx_http_subrequest(ngx_http_request_t *r,
     sr->read_event_handler = ngx_http_request_empty_handler;
     sr->write_event_handler = ngx_http_handler;
 
-    if (c->data == r && r->postponed == NULL) {
+	//如果当前排在最前面的请求是父请求并且子请求是该父请求的第一个，那么就做切换
+    if (c->data == r && r->postponed == NULL) 
+	{
         c->data = sr;
     }
 
@@ -2552,11 +2557,14 @@ ngx_http_subrequest(ngx_http_request_t *r,
     pr->out = NULL;
     pr->next = NULL;
 
-    if (r->postponed) {
+    if (r->postponed) 
+	{
         for (p = r->postponed; p->next; p = p->next) { /* void */ }
         p->next = pr;
 
-    } else {
+    }
+	else 
+	{
         r->postponed = pr;
     }
 

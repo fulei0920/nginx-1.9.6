@@ -60,7 +60,8 @@ ngx_alloc_chain_link(ngx_pool_t *pool)
     }
 
     cl = ngx_palloc(pool, sizeof(ngx_chain_t));
-    if (cl == NULL) {
+    if (cl == NULL) 
+	{
         return NULL;
     }
 
@@ -126,6 +127,8 @@ ngx_create_chain_of_bufs(ngx_pool_t *pool, ngx_bufs_t *bufs)
 }
 
 
+
+//拷贝in链表中的所有数据到chain链表的末尾
 ngx_int_t
 ngx_chain_add_copy(ngx_pool_t *pool, ngx_chain_t **chain, ngx_chain_t *in)
 {
@@ -133,13 +136,16 @@ ngx_chain_add_copy(ngx_pool_t *pool, ngx_chain_t **chain, ngx_chain_t *in)
 
     ll = chain;
 
-    for (cl = *chain; cl; cl = cl->next) {
+    for (cl = *chain; cl; cl = cl->next)
+	{
         ll = &cl->next;
     }
 
-    while (in) {
+    while (in)
+	{
         cl = ngx_alloc_chain_link(pool);
-        if (cl == NULL) {
+        if (cl == NULL) 
+		{
             return NGX_ERROR;
         }
 
