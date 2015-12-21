@@ -129,7 +129,7 @@ struct ngx_connection_s
     ngx_recv_pt         recv;
     ngx_send_pt         send;
     ngx_recv_chain_pt   recv_chain;
-    ngx_send_chain_pt   send_chain;
+    ngx_send_chain_pt   send_chain;		/*根据系统环境的不同指向不同的函数*/
 
     ngx_listening_t    *listening;		/*该链接对应的监听套接字*/
 

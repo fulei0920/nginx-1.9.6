@@ -68,7 +68,8 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     /* find the size, the flush point and the last link of the saved chain */
 
-    for (cl = r->out; cl; cl = cl->next) {
+    for (cl = r->out; cl; cl = cl->next) 
+	{
         ll = &cl->next;
 
         ngx_log_debug7(NGX_LOG_DEBUG_EVENT, c->log, 0,

@@ -148,7 +148,9 @@ ngx_http_header_out_t  ngx_http_headers_out[] = {
     { ngx_null_string, 0 }
 };
 
-
+//完成响应头字符串数据的组织工作。
+//该函数申请一个buf缓存块，然后进过最初设置以及经过过滤链的修改后的相关响应头字段值，
+//组织响应头数据，以字符串的形式存储在该缓存块内。
 static ngx_int_t
 ngx_http_header_filter(ngx_http_request_t *r)
 {

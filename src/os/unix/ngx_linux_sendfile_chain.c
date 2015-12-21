@@ -42,7 +42,7 @@ static void ngx_linux_sendfile_thread_handler(void *data, ngx_log_t *log);
 
 #define NGX_SENDFILE_MAXSIZE  2147483647L
 
-
+//遍历r->out上的每一个缓存块，根据缓存块里的数据类型调用不同的系统接口函数将数据写出到客户端。
 ngx_chain_t *
 ngx_linux_sendfile_chain(ngx_connection_t *c, ngx_chain_t *in, off_t limit)
 {
