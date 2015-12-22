@@ -887,6 +887,9 @@ ngx_close_listening_sockets(ngx_cycle_t *cycle)
 }
 
 /*get a connection structure from free_connections and initialize it*/
+//从连接池中获取一个ngx_connection_t结构体，同事获取相应的读/写事件
+//s -- 这条连接的套接字句柄
+//log -- 记录日志的对象
 ngx_connection_t *
 ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
 {
@@ -952,9 +955,8 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
     return c;
 }
 
-/*
-put the connection structure back to free_connection
-*/
+//将这个连接回收到连接池中
+//c -- 需要回收的连接
 void
 ngx_free_connection(ngx_connection_t *c)
 {

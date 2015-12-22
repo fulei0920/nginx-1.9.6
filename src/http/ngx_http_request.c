@@ -14,8 +14,7 @@ static void ngx_http_wait_request_handler(ngx_event_t *ev);
 static void ngx_http_process_request_line(ngx_event_t *rev);
 static void ngx_http_process_request_headers(ngx_event_t *rev);
 static ssize_t ngx_http_read_request_header(ngx_http_request_t *r);
-static ngx_int_t ngx_http_alloc_large_header_buffer(ngx_http_request_t *r,
-    ngx_uint_t request_line);
+static ngx_int_t ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_line);
 
 static ngx_int_t ngx_http_process_header_line(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
@@ -356,10 +355,11 @@ ngx_http_init_connection(ngx_connection_t *c)
         c->log->action = "reading PROXY protocol";
     }
  
-	/*对于TCP_DEFER_ACCEPT和iocp事件驱动，accept接受这个监听套接字上的客户端链接请求时，请求的具体数据内容已经到达*/
+	/*对于TCP_DEFER_ACCEPT, rtsig, aio, iocp事件驱动，accept接受这个监听套接字上的客户端链接请求时，请求的具体数据内容已经到达*/
     if (rev->ready)
 	{
        	//如果有加锁，先把该事件对象加入到ngx_posted_events链表，函数返回解锁后再进行实际处理
+       	//否则直接开始处理
         if (ngx_use_accept_mutex) 
 		{
             ngx_post_event(rev, &ngx_posted_events);
@@ -1020,9 +1020,9 @@ ngx_http_process_request_line(ngx_event_t *rev)
 
                 rc = ngx_http_validate_host(&host, r->pool, 0);
 
-                if (rc == NGX_DECLINED) {
-                    ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                                  "client sent invalid host in request line");
+                if (rc == NGX_DECLINED)
+				{
+                    ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent invalid host in request line");
                     ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
                     return;
                 }
@@ -1107,9 +1107,12 @@ ngx_http_process_request_uri(ngx_http_request_t *r)
 {
     ngx_http_core_srv_conf_t  *cscf;
 
-    if (r->args_start) {
+    if (r->args_start) 
+	{
         r->uri.len = r->args_start - 1 - r->uri_start;
-    } else {
+    } 
+	else
+	{
         r->uri.len = r->uri_end - r->uri_start;
     }
 
@@ -1132,7 +1135,9 @@ ngx_http_process_request_uri(ngx_http_request_t *r)
             return NGX_ERROR;
         }
 
-    } else {
+    }
+	else 
+	{
         r->uri.data = r->uri_start;
     }
 
@@ -1206,14 +1211,11 @@ ngx_http_process_request_uri(ngx_http_request_t *r)
     }
 #endif
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http uri: \"%V\"", &r->uri);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http uri: \"%V\"", &r->uri);
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http args: \"%V\"", &r->args);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http args: \"%V\"", &r->args);
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http exten: \"%V\"", &r->exten);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http exten: \"%V\"", &r->exten);
 
     return NGX_OK;
 }
@@ -1273,11 +1275,10 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
                     r->lingering_close = 1;
 
-                    if (p == NULL) {
-                        ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                                      "client sent too large request");
-                        ngx_http_finalize_request(r,
-                                            NGX_HTTP_REQUEST_HEADER_TOO_LARGE);
+                    if (p == NULL) 
+					{
+                        ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent too large request");
+                        ngx_http_finalize_request(r, NGX_HTTP_REQUEST_HEADER_TOO_LARGE);
                         return;
                     }
 
@@ -1501,17 +1502,21 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
         return NGX_OK;
     }
 
+	//old表示是这个buf从哪开始转到large buf中，如果是request_line扩充buf，
+	//那么就肯定是从buf的开始，如果是header，那么就从当前未解析的那个header开始，
+	//因为之前的header都已经解析完了，也就不需要那段空间了。
     old = request_line ? r->request_start : r->header_name_start;
 
     cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
-
+	//如果迁移的这段空间和large buf一样大，那么就报错，那么这里就说明了只能一个request line和每一个header只能分配一次large buf
     if (r->state != 0 && (size_t) (r->header_in->pos - old) >= cscf->large_client_header_buffers.size)
     {
         return NGX_DECLINED;
     }
 
+	//pipeline请求共享这个hc 
     hc = r->http_connection;
-
+	 //free就是pipeline请求共享的那个large buf，如果nfree大于0，表示之前的请求有large buf，那么这个请求直接用那个空间就可以了，不需要再次分配large buf 了
     if (hc->nfree) 
 	{
         b = hc->free[--hc->nfree];
@@ -1519,11 +1524,13 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http large header free: %p %uz", b->pos, b->end - b->last);
 
     }
+	//每个请求分配的large buf的数目不会超过那个配置中设置的数目
 	else if (hc->nbusy < cscf->large_client_header_buffers.num)
 	{
-
+		//busy表示当前请求已经用的large buf
         if (hc->busy == NULL) 
 		{
+			 //如果还没有用这个large buf，那么重新分配空间，
             hc->busy = ngx_palloc(r->connection->pool, cscf->large_client_header_buffers.num * sizeof(ngx_buf_t *));
             if (hc->busy == NULL) 
 			{
@@ -1541,7 +1548,7 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
 
     } 
 	else
-	{
+	{	  //如果超过了large buf的个数，那么直接400错误
         return NGX_DECLINED;
     }
 
@@ -2345,7 +2352,8 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         c->error = 1;
     }
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED)
+	{
         r->content_handler = NULL;
         r->write_event_handler = ngx_http_core_run_phases;
         ngx_http_core_run_phases(r);
@@ -3394,8 +3402,7 @@ ngx_http_empty_handler(ngx_event_t *wev)
 void
 ngx_http_request_empty_handler(ngx_http_request_t *r)
 {
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http request empty handler");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http request empty handler");
 
     return;
 }

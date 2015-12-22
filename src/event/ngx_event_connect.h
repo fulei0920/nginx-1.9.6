@@ -21,45 +21,45 @@
 
 typedef struct ngx_peer_connection_s  ngx_peer_connection_t;
 
-typedef ngx_int_t (*ngx_event_get_peer_pt)(ngx_peer_connection_t *pc, void *data);
-typedef void (*ngx_event_free_peer_pt)(ngx_peer_connection_t *pc, void *data, ngx_uint_t state);
+
+typedef ngx_int_t (*ngx_event_get_peer_pt)(ngx_peer_connection_t *pc, void *data);	//当使用长连接与上游服务器通信时，可通过该方法由连接池中获取一个新连接
+typedef void (*ngx_event_free_peer_pt)(ngx_peer_connection_t *pc, void *data, ngx_uint_t state); //当使用长连接与上游服务器通信时，通过该方法将使用完毕的连接释放给连接池
 
 #if (NGX_SSL)
 typedef ngx_int_t (*ngx_event_set_peer_session_pt)(ngx_peer_connection_t *pc, void *data);
 typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc, void *data);
 #endif
 
-
+//(主动连接)Nginx主动向其他上游服务器建立链接，并以此连接与上游服务器通信
 struct ngx_peer_connection_s 
 {
-    ngx_connection_t                *connection;
+    ngx_connection_t                *connection;	//一个主动连接实际上也需要ngx_connection_t结构体中的大部分成员，并且出于重用的考虑而定义了connection成员
 
-    struct sockaddr                 *sockaddr;
-    socklen_t                        socklen;
-    ngx_str_t                       *name;
+    struct sockaddr                 *sockaddr;		//远端服务器socket地址
+    socklen_t                        socklen;		//sockaddr地址长度
+    ngx_str_t                       *name;			//远端服务器的名称
 
-    ngx_uint_t                       tries;
+    ngx_uint_t                       tries;			//在连接一个远端服务器时，当前连接出现异常失败后可以重试的次数，也就是允许的最多失败次数
     ngx_msec_t                       start_time;
 
-    ngx_event_get_peer_pt            get;
-    ngx_event_free_peer_pt           free;
-    void                            *data;
+    ngx_event_get_peer_pt            get;			//获取连接的方法，如果使用长连接构成的连接池，那么必须要实现get方法	
+    ngx_event_free_peer_pt           free;			//与get方法对应的释放连接的方法	
+    void                            *data;			//这个data指针仅用于和上面的get、free方法配合传递参数，它的具体含义与实现get方法、free方法的模块相关，可参照ngx_event_get_peer_pt和ngx_event_free_peer_pt方法原型中的data参数
 
 #if (NGX_SSL)
     ngx_event_set_peer_session_pt    set_session;
     ngx_event_save_peer_session_pt   save_session;
 #endif
 
-    ngx_addr_t                      *local;
+    ngx_addr_t                      *local;			//本机地址信息
 
-    int                              rcvbuf;
+    int                              rcvbuf;		//套接字的接收缓冲区大小
 
-    ngx_log_t                       *log;
+    ngx_log_t                       *log;			//记录日志的ngx_log_t对象
 
-    unsigned                         cached:1;
-
-                                     /* ngx_connection_log_error_e */
-    unsigned                         log_error:2;
+    unsigned                         cached:1;		//标志位，为 1时表示上面的connection连接已经缓存
+                                    
+    unsigned                         log_error:2;		 /* ngx_connection_log_error_e */
 };
 
 

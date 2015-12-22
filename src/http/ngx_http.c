@@ -448,12 +448,11 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 }
 
 /*
-对各个功能模块挂载在不同阶段的回调函数进行重组
+对各个handler模块挂载在不同阶段的回调函数进行重组
 提取出有回调函数的阶段，加上进入回调函数的条件判断函数，
 通过next字段的使用，把原本二维数组实现转化为一维数组实现
 */
 
-//有4个阶段不能注册模块，并且POST_REWRITE和POST_ACCESS这2个阶段分别只有在REWRITE和ACCESS阶段注册了模块时才存在，另外TRY_FILES阶段只有在配置了try_files指令的时候才存在，最后FIND_CONFIG阶段虽然不能注册模块，
 static ngx_int_t
 ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 {
@@ -470,6 +469,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     use_rewrite = cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers.nelts ? 1 : 0;
     use_access = cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers.nelts ? 1 : 0;
 
+	//有4个阶段不能注册模块，并且POST_REWRITE和POST_ACCESS这2个阶段分别只有在REWRITE和ACCESS阶段注册了模块时才存在，
+	//另外TRY_FILES阶段只有在配置了try_files指令的时候才存在，最后FIND_CONFIG阶段虽然不能注册模块，但它是必须存在的.
     n = use_rewrite + use_access + cmcf->try_files + 1 /* find config phase */;
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) 
 	{
@@ -482,7 +483,17 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
         return NGX_ERROR;
     }
     cmcf->phase_engine.handlers = ph;
-	
+
+	//POST_READ_PHASE阶段的节点的next域指向SERVER_REWRITE阶段的第1个节点
+	//SERVER_REWRITE阶段的节点的next域指向FIND_CONFIG阶段的第1个节点
+	//REWRITE阶段的next域指向POST_REWRITE阶段的第1个节点
+	//POST_REWRITE阶段的next域则指向FIND_CONFIG，因为当出现location级别的uri重写时，可能需要重新匹配新的location
+	//PREACCESS阶段的节点的next域指向ACCESS阶段的第1个节点
+	//ACCESS阶段的节点的next域指向CONTENT阶段的第1个节点, 当然如果TRY_FILES阶段存在的话，则是指向TRY_FILES阶段的第1个节点
+	//POST_ACCESS阶段的节点的next域指向CONTENT阶段的第1个节点, 当然如果TRY_FILES阶段存在的话，则是指向TRY_FILES阶段的第1个节点
+	//CONTENT阶段的节点的next域指向LOG阶段的第1个节点
+
+
     n = 0;
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) 
 	{
@@ -490,8 +501,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
         switch (i)
 		{
-
-        case NGX_HTTP_SERVER_REWRITE_PHASE:
+        case NGX_HTTP_SERVER_REWRITE_PHASE:    
             if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1)
 			{
                 cmcf->phase_engine.server_rewrite_index = n;
@@ -500,7 +510,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
             break;
 
-        case NGX_HTTP_FIND_CONFIG_PHASE:
+        case NGX_HTTP_FIND_CONFIG_PHASE:		
             find_config_index = n;
 
             ph->checker = ngx_http_core_find_config_phase;
@@ -509,7 +519,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
             continue;
 
-        case NGX_HTTP_REWRITE_PHASE:
+        case NGX_HTTP_REWRITE_PHASE:			
             if (cmcf->phase_engine.location_rewrite_index == (ngx_uint_t) -1)
 			{
                 cmcf->phase_engine.location_rewrite_index = n;
@@ -518,7 +528,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
             break;
 
-        case NGX_HTTP_POST_REWRITE_PHASE:
+        case NGX_HTTP_POST_REWRITE_PHASE:		
             if (use_rewrite) 
 			{
                 ph->checker = ngx_http_core_post_rewrite_phase;
@@ -545,7 +555,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             continue;
 
         case NGX_HTTP_TRY_FILES_PHASE:
-            if (cmcf->try_files)
+            if (cmcf->try_files)	//TRY_FILES阶段只有在配置了try_files指令的时候才存在
 			{
                 ph->checker = ngx_http_core_try_files_phase;
                 n++;
@@ -553,11 +563,11 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             }
 
             continue;
-
-        case NGX_HTTP_CONTENT_PHASE:
+		
+        case NGX_HTTP_CONTENT_PHASE:		//CONTENT阶段的next域指向LOG阶段
             checker = ngx_http_core_content_phase;
             break;
-
+		//PREACCESS阶段的next域指向ACCESS域
         default:
             checker = ngx_http_core_generic_phase;
         }

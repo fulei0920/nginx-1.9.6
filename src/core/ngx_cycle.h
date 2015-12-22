@@ -38,41 +38,41 @@ struct ngx_shm_zone_s
 
 struct ngx_cycle_s 
 {
-    void                  ****conf_ctx;   		//NGX_CORE_MODULEÀàĞÍµÄÄ£¿éµÄÉÏÏÂÎÄ
-    ngx_pool_t               *pool;
-
-    ngx_log_t                *log;
-    ngx_log_t                 new_log;
+    void                  ****conf_ctx;   		//±£´æ×ÅËùÓĞÄ£¿é´æ´¢ÅäÖÃÏîµÄ½á¹¹ÌåµÄÖ¸Õë
+    ngx_pool_t               *pool;				//ÄÚ´æ³Ø
+												
+    ngx_log_t                *log;				//ÈÕÖ¾Ä£¿éÖĞÌá¹©ÁËÉú³É»ù±¾ngx_log_tÈÕÖ¾¶ÔÏóµÄ¹¦ÄÜ£¬ÕâÀïµÄlogÊµ¼ÊÉÏÊÇÔÚ»¹Ã»ÓĞÖ´ĞĞngx_init_cycle·½·¨Ç°£¬Ò²¾ÍÊÇ»¹Ã»ÓĞ½âÎöÅäÖÃÇ°£¬Èç¹ûÓĞĞÅĞèÒªÊä³öµ½ÈÕÖ¾£¬¾Í»áÔİÊ±Ê¹ÓÃlog¶ÔÏó£¬Ëü»áÊä³öµ½ÆÁÄ»¡£ÔÚngx_init_cycle·½·¨Ö´ĞĞºó£¬½«»á¸ù¾İnginx.confÅäÖÃÎÄ¼şÖĞµÄÅäÖÃÏî£¬¹¹Ôì³öÕıÈ·µÄÈÕÖ¾ÎÄ¼ş£¬´ËÊ±»á¶ÔlogÖØĞÂ¸³Öµ
+    ngx_log_t                 new_log;			//ÓÉnginx.confÅäÖÃÎÄ¼ş¶ÁÈ¡µ½ÈÕÖ¾ÎÄ¼şÂ·¾¶ºó£¬½«¿ªÊ¼³õÊ¼»¯error_logÈÕÖ¾ÎÄ¼ş£¬ÓÉÓÚlog¶ÔÏó»¹ÔÚÓÃÓÚÊä³öÈÕÖ¾µ½ÆÁÄ»£¬ÕâÊ±»áÓÃnew_log¶ÔÏóÔİÊ±ĞÔµÄÌæ´úlogÈÕÖ¾£¬´ı³õÊ¼»¯³É¹¦ºó£¬»áÓÃnew_logµÄµØÖ·¸²¸ÇÉÏÃæµÄlogÖ¸Õë
 
     ngx_uint_t                log_use_stderr;  		/* unsigned  log_use_stderr:1; */
 
-    ngx_connection_t        **files;				/*Á¬½ÓÎÄ¼ş*/
-    ngx_connection_t         *free_connections;		/*¿ÕÏĞÁ¬½ÓÁ´±í±íÍ·*/	
-    ngx_uint_t                free_connection_n;	/*¿ÕÏĞÁ¬½ÓÁ´±í½áµãÊıÁ¿*/
+    ngx_connection_t        **files;				//¶ÔÓÚpoll¡¢rtsigÕâÑùµÄÊÂ¼şÄ£¿é£¬»áÒÔÓĞĞ§ÎÄ¼ş¾ä±úÊıÀ´Ô¤ÏÈ½¨Á¢ÕâĞ©ngx_connection_t½á¹¹Ìå£¬ÒÔ¼ÓËÙÊÂ¼şµÄÊÕ¼¯¡¢·Ö·¢¡£ÕâÊ±files¾Í»á±£´æËùÓĞngx_connection_tµÄÖ¸Õë×é³ÉµÄÊı×é£¬files_n¾ÍÊÇÖ¸ÕëµÄ×ÜÊı£¬¶øÎÄ¼ş¾ä±úµÄÖµÓÃÀ´·ÃÎÊfilesÊı×é³ÉÔ±
+    ngx_connection_t         *free_connections;				//¿ÉÓÃÁ¬½Ó³Ø£¬Óëfree_connection_nÅäºÏÊ¹ÓÃ
+    ngx_uint_t                free_connection_n;			//¿ÉÓÃÁ¬½Ó³ØÖĞÁ¬½ÓµÄ×ÜÊı
 
-    ngx_queue_t               reusable_connections_queue; 	/*¸´ÓÃÁ¬½Ó¶ÓÁĞ*/
+    ngx_queue_t               reusable_connections_queue; 	//ngx_connection_tÀàĞÍµÄË«ÏòÁ´±íÈİÆ÷£¬±íÊ¾¿ÉÖØ¸´Ê¹ÓÃµÄÁ¬½ÓµÄ¶ÓÁĞ
 
-    ngx_array_t               listening;		/*ngx_listening_tÀàĞÍµÄÊı×é*/
-    ngx_array_t               paths;			/*ngx_path_t*ÀàĞÍµÄÊı×é*/
+    ngx_array_t               listening;		//ngx_listening_tÀàĞÍµÄ¶¯Ì¬Êı×é£¬±íÊ¾¼àÌı¶Ë¿Ú¼°Ïà¹Ø²ÎÊı
+    ngx_array_t               paths;			//ngx_path_t*ÀàĞÍµÄ¶¯Ì¬Êı×é£¬±£´æ×ÅNginxËùÓĞÒª²Ù×÷µÄÄ¿Â¼¡£Èç¹ûÓĞÄ¿Â¼²»´æÔÚ£¬¶ø´´½¨Ä¿Â¼Ê§°Ü»áµ¼ÖÂNginxÆô¶¯Ê§°Ü¡£ÀıÈç£¬ÉÏ´«ÎÄ¼şµÄÁÙÊ±Ä¿Â¼Ò²ÔÚpathesÖĞ£¬Èç¹ûÃ»ÓĞÈ¨ÏŞ´´½¨£¬Ôò»áµ¼ÖÂNginxÎŞ·¨Æô¶¯
     ngx_array_t               config_dump;		/*ngx_conf_dump_tÀàĞÍµÄÊı×é*/
-    ngx_list_t                open_files;		/*ngx_open_file_t ÀàĞÍµÄÁ´±í*/
-    ngx_list_t                shared_memory;    /*ngx_shm_zone_t ÀàĞÍµÄÁ´±í£¬´æ´¢ËùÓĞÄ£¿é·ÖÅäµÄ¹²ÏíÄÚ´æ*/
+    ngx_list_t                open_files;		//ngx_open_file_t ÀàĞÍµÄµ¥Á´±í£¬±íÊ¾NginxÒÑ¾­´ò¿ªµÄËùÓĞÎÄ¼ş¡£ÊÂÊµÉÏ£¬Nginx¿ò¼Ü²»»áÏòopen_filesÁ´±íÖĞÌí¼ÓÎÄ¼ş£¬¶øÊÇÓÉ¸ĞĞËÈ¤µÄÄ£¿éÏòÆäÖĞÌí¼ÓÎÄ¼şÂ·¾¶Ãû£¬Nginx¿ò¼Ü»áÔÚngx_init_cycle·½·¨ÖĞ´ò¿ªÕâĞ©ÎÄ¼ş
+    ngx_list_t                shared_memory;    //ngx_shm_zone_t ÀàĞÍµÄµ¥Á´±í£¬´æ´¢ËùÓĞÄ£¿é·ÖÅäµÄ¹²ÏíÄÚ´æ
 
-    ngx_uint_t                connection_n;		/*connectionsÊı×éµÄ´óĞ¡, Ã¿¸ö¹¤×÷½ø³ÌµÄÁ¬½Ó×î´óÊı*/	
-    ngx_uint_t                files_n;
+    ngx_uint_t                connection_n;		//µ±Ç°½ø³ÌÖĞËùÓĞÁ¬½Ó¶ÔÏóµÄ×ÜÊı£¬Óëconnections³ÉÔ±ÅäºÏÊ¹ÓÃ
+    ngx_uint_t                files_n;			//ÓëÉÏÃæµÄfiles³ÉÔ±ÅäºÏÊ¹ÓÃ£¬Ö¸³öfilesÊı×éÀïÔªËØµÄ×ÜÊı
 
-    ngx_connection_t         *connections;     	/*Ö¸ÏòËù·ÖÅäµÄËùÓĞµÄconnection*/
-    ngx_event_t              *read_events;
-    ngx_event_t              *write_events;
+    ngx_connection_t         *connections;     	//Ö¸Ïòµ±Ç°½ø³ÌÖĞµÄËùÓĞÁ¬½Ó¶ÔÏó£¬Óëconnection_n³ÉÔ±ÅäºÏÊ¹ÓÃ
+    ngx_event_t              *read_events;		//Ö¸Ïòµ±Ç°½ø³ÌÖĞµÄËùÓĞ¶ÁÊÂ¼ş¶ÔÏó£¬connection_nÍ¬Ê±±íÊ¾ËùÓĞĞ´ÊÂ¼şµÄ×ÜÊı
+    ngx_event_t              *write_events;		//Ö¸Ïòµ±Ç°½ø³ÌÖĞµÄËùÓĞĞ´ÊÂ¼ş¶ÔÏó£¬connection_nÍ¬Ê±±íÊ¾ËùÓĞĞ´ÊÂ¼şµÄ×ÜÊı
 
-    ngx_cycle_t              *old_cycle;
+    ngx_cycle_t              *old_cycle;		//¾ÉµÄngx_cycle_t¶ÔÏóÓÃÓÚÒıÓÃÉÏÒ»¸öngx_cycle_t¶ÔÏóÖĞµÄ³ÉÔ±¡£ÀıÈç£¬ngx_init_cycle·½·¨£¬ÔÚÆô¶¯³õÆÚ£¬ĞèÒª½¨Á¢Ò»¸öÁÙÊ±µÄngx_cycle_t¶ÔÏó±£´æÒ»Ğ©±äÁ¿£¬ÔÙµ÷ÓÃngx_init_cycle·½·¨Ê±¾Í¿ÉÒÔ°Ñ¾ÉµÄngx_cycle_t¶ÔÏó´«µİ½øÈ¥£¬¶øÕâÊ±old_cycle¶ÔÏó¾Í»á±£´æÕâ¸öÇ°ÆÚµÄngx_cycle_t¶ÔÏó
 
-    ngx_str_t                 conf_file;			/*nginx.confÅäÖÃÎÄ¼şÂ·¾¶*/
-    ngx_str_t                 conf_param;			/*´æ´¢Æô¶¯²ÎÊı-gÉèÖÃµÄÖµå??*/
-    ngx_str_t                 conf_prefix;			/*ÅäÖÃÂ·¾¶Ç°×º*/
-    ngx_str_t                 prefix;				/*Ç°×ºÂ·¾¶*/
-    ngx_str_t                 lock_file;
-    ngx_str_t                 hostname;
+    ngx_str_t                 conf_file;		//ÅäÖÃÎÄ¼ş(Ò»°ãÊÇnginx.conf)Ïà¶ÔÓÚ°²×°Ä¿Â¼µÄÂ·¾¶Ãû³Æ
+    ngx_str_t                 conf_param;		//Nginx´¦ÀíÅäÖÃÎÄ¼şÊ±ĞèÒªÌØÊâ´¦ÀíµÄÃüÃûĞ¯´øµÄ²ÎÊı£¬Ò»°ãÊÇ-gÑ¡ÏîĞ¯´øµÄ²ÎÊı
+    ngx_str_t                 conf_prefix;		//NginxÅäÖÃÎÄ¼şËùÔÚÄ¿Â¼µÄÂ·¾¶
+    ngx_str_t                 prefix;			//Nginx°²×°Ä¿Â¼µÄÂ·¾¶
+    ngx_str_t                 lock_file;		//ÓÃÓÚ½ø³Ì¼äÍ¬²½µÄÎÄ¼şËøÃû³Æ
+    ngx_str_t                 hostname;			//Ê¹ÓÃgethostnameÏµÍ³µ÷ÓÃµÃµ½µÄÖ÷»úÃû
 };
 
 

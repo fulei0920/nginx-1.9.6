@@ -845,6 +845,9 @@ ngx_http_handler(ngx_http_request_t *r)
 }
 
 
+//由于回调函数的返回值会影响到同一阶段的后续回调函数的处理与否，
+//而nginx又采用先进后出的方案，即先注册的模块，其回调函数反而后执行，
+//所以回调函数或者说模块的前后顺序非常重要
 void
 ngx_http_core_run_phases(ngx_http_request_t *r)
 {
@@ -874,12 +877,16 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     ngx_int_t  rc;
 
-    /*
-     * generic phase checker,
-     * used by the post read and pre-access phases
-     */
-
+    /* generic phase checker, used by the post read and pre-access phases */
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "generic phase: %ui", r->phase_handler);
+
+	/*
+	NGX_OK --	当前阶段已经被成功处理，必须进入到下一阶段
+	NGX_DECLINED	--	当前回调不处理当前情况，进入到下一个回调处理
+	NGX_AGAIN	-- 当前处理所需资源不足，需要等待所以来事件发生
+	NGX_DONE	--	当前处理结束，仍需等待进一步事件发生后做处理
+	NGX_ERROR, NGX_HTTP_...	当前回调发生错误，需要进入到异常处理流程
+	*/
 
     rc = ph->handler(r);
 
@@ -895,7 +902,8 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
         return NGX_AGAIN;
     }
 
-    if (rc == NGX_AGAIN || rc == NGX_DONE) {
+    if (rc == NGX_AGAIN || rc == NGX_DONE) 
+	{
         return NGX_OK;
     }
 
@@ -1036,10 +1044,10 @@ ngx_http_core_post_rewrite_phase(ngx_http_request_t *r,
 {
     ngx_http_core_srv_conf_t  *cscf;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "post rewrite phase: %ui", r->phase_handler);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "post rewrite phase: %ui", r->phase_handler);
 
-    if (!r->uri_changed) {
+    if (!r->uri_changed)
+	{
         r->phase_handler++;
         return NGX_AGAIN;
     }
@@ -1079,7 +1087,7 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
     ngx_int_t                  rc;
     ngx_http_core_loc_conf_t  *clcf;
 
-	/*当前不是主请求，无需进行访问权限检测，状态机直接进入下一个处理阶段*/
+	/*当前请求不是主请求，无需进行访问权限检测，状态机直接进入下一个处理阶段*/
     if (r != r->main)		
 	{
         r->phase_handler = ph->next;
@@ -1103,9 +1111,11 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-    if (clcf->satisfy == NGX_HTTP_SATISFY_ALL) {
+    if (clcf->satisfy == NGX_HTTP_SATISFY_ALL) 
+	{
 
-        if (rc == NGX_OK) {
+        if (rc == NGX_OK)
+		{
             r->phase_handler++;
             return NGX_AGAIN;
         }
@@ -3577,9 +3587,7 @@ ngx_http_core_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_msec_value(conf->client_header_timeout,
                               prev->client_header_timeout, 60000);
     ngx_conf_merge_size_value(conf->client_header_buffer_size, prev->client_header_buffer_size, 1024);
-    ngx_conf_merge_bufs_value(conf->large_client_header_buffers,
-                              prev->large_client_header_buffers,
-                              4, 8192);
+    ngx_conf_merge_bufs_value(conf->large_client_header_buffers, prev->large_client_header_buffers, 4, 8192);
 
     if (conf->large_client_header_buffers.size < conf->connection_pool_size) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
