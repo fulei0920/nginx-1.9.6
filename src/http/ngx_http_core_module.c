@@ -3008,7 +3008,8 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 	{
         return NGX_CONF_ERROR;
     }
-    /* the server{}'s loc_conf */
+	
+	//仅用于合并location相关的配置项
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->loc_conf == NULL)
 	{
