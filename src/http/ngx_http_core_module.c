@@ -274,12 +274,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_srv_conf_t, underscores_in_headers),
       NULL },
 
-    { ngx_string("location"),
-      NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE12,
-      ngx_http_core_location,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+    	ngx_string("location"),
+		NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE12,
+		ngx_http_core_location,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { 
     	ngx_string("listen"),
@@ -871,7 +873,12 @@ ngx_http_core_run_phases(ngx_http_request_t *r)
     }
 }
 
-
+//NGX_HTTP_POST_READ_PHASE | NGX_HTTP_PREACCESS_PHASE | NGX_HTTP_LOG_PHASE阶段下HTTP模块的ngx_http_handler_pt方法返回值意义
+//NGX_OK --	当前阶段已经被成功处理，必须进入到下一阶段
+//NGX_DECLINED	--	当前回调不处理当前情况，进入到下一个回调处理
+//NGX_AGAIN	-- 当前处理所需资源不足，需要等待所以来事件发生
+//NGX_DONE	--	当前处理结束，仍需等待进一步事件发生后做处理
+//NGX_ERROR, NGX_HTTP_...	当前回调发生错误，需要进入到异常处理流程
 ngx_int_t
 ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
@@ -880,41 +887,41 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
     /* generic phase checker, used by the post read and pre-access phases */
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "generic phase: %ui", r->phase_handler);
 
-	/*
-	NGX_OK --	当前阶段已经被成功处理，必须进入到下一阶段
-	NGX_DECLINED	--	当前回调不处理当前情况，进入到下一个回调处理
-	NGX_AGAIN	-- 当前处理所需资源不足，需要等待所以来事件发生
-	NGX_DONE	--	当前处理结束，仍需等待进一步事件发生后做处理
-	NGX_ERROR, NGX_HTTP_...	当前回调发生错误，需要进入到异常处理流程
-	*/
-
+	//调用这一阶段中各HTTP模块添加的handler处理方法
     rc = ph->handler(r);
 
+	//如果handler方法返回NGX_OK，之后将进入下一个阶段处理，而不会理会当前阶段中是否还有其他的处理方法
     if (rc == NGX_OK) 
 	{
         r->phase_handler = ph->next;
         return NGX_AGAIN;
     }
 
+	//如果handler方法返回NGX_DECLINED，那么将进入下一个处理方法，这个处理方法既可能属于当前阶段，也可能属于下一个阶段。
     if (rc == NGX_DECLINED) 
 	{
         r->phase_handler++;
         return NGX_AGAIN;
     }
 
+	//如果handler方法返回NGX_AGAIN或者NGX_DONE，那么当前请求将仍然停留在这一个处理阶段中
     if (rc == NGX_AGAIN || rc == NGX_DONE) 
 	{
         return NGX_OK;
     }
 
-    /* rc == NGX_ERROR || rc == NGX_HTTP_...  */
-
+    //rc == NGX_ERROR || rc == NGX_HTTP_... 
+	//如果handler方法返回NGX_ERROR或者或者类似NGX_HTTP_开头的返回码，那么调用ngx_http_finalize_request结束请求
     ngx_http_finalize_request(r, rc);
 
     return NGX_OK;
 }
 
 
+//NGX_HTTP_SERVER_REWRITE_PHASE | NGX_HTTP_REWRITE_PHASE 阶段下HTTP模块的ngx_http_handler_pt方法返回值意义
+//NGX_DONE	--	当前的ngx_http_handler_pt处理方法尚未结束，这意味着该处理方法在当前阶段中有机会再次被调用
+//NGX_DECLINED	--	当前的ngx_http_handler_pt处理方法执行完毕，按照顺序执行下一个ngx_http_handler_pt处理方法
+//NGX_OK, NGX_AGAIN, NGX_ERROR, NGX_HTTP_... --需要的调用ngx_http_finalize_request结束请求
 ngx_int_t
 ngx_http_core_rewrite_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
@@ -936,16 +943,15 @@ ngx_http_core_rewrite_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
     }
 
     /* NGX_OK, NGX_AGAIN, NGX_ERROR, NGX_HTTP_...  */
-
     ngx_http_finalize_request(r, rc);
 
     return NGX_OK;
 }
 
-
+//根据NGX_HTTP_SERVER_REWRITE_PHASE步骤重写后的URI检索出匹配的location块的，
+//其原理为从location组成的静态二叉查找树中快速检索
 ngx_int_t
-ngx_http_core_find_config_phase(ngx_http_request_t *r,
-    ngx_http_phase_handler_t *ph)
+ngx_http_core_find_config_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     u_char                    *p;
     size_t                     len;
@@ -969,10 +975,8 @@ ngx_http_core_find_config_phase(ngx_http_request_t *r,
         return NGX_OK;
     }
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "using configuration \"%s%V\"",
-                   (clcf->noname ? "*" : (clcf->exact_match ? "=" : "")),
-                   &clcf->name);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "using configuration \"%s%V\"", 
+			(clcf->noname ? "*" : (clcf->exact_match ? "=" : "")), &clcf->name);
 
     ngx_http_update_location_config(r);
 
@@ -1037,10 +1041,9 @@ ngx_http_core_find_config_phase(ngx_http_request_t *r,
     return NGX_AGAIN;
 }
 
-
+//检查rewrite重写URL的次数不可以超过10次，以此防止由于rewrite死循环而造成整个Nginx服务都不可用
 ngx_int_t
-ngx_http_core_post_rewrite_phase(ngx_http_request_t *r,
-    ngx_http_phase_handler_t *ph)
+ngx_http_core_post_rewrite_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     ngx_http_core_srv_conf_t  *cscf;
 
@@ -1081,6 +1084,14 @@ ngx_http_core_post_rewrite_phase(ngx_http_request_t *r,
     return NGX_AGAIN;
 }
 
+//NGX_HTTP_ACCESS_PHASE 阶段下HTTP模块的ngx_http_handler_pt方法返回值意义
+//NGX_OK -- 如果在nginx.conf中配置了satisfy all，那么将按照顺序执行下一个ngx_http_handler_pt处理方法;
+//			如果在nginx.conf中配置了satisfy any，那么将执行下一个ngx_http_phases阶段中的第一个ngx_http_handler_pt处理方法;
+//NGX_DONE，NGX_AGAIN	--	当前的ngx_http_handler_pt处理方法尚未结束，这意味着该处理方法在当前阶段中有机会再次被调用。
+//			这时会把控制权交还给事件模块，下次可写事件发生时会再次执行到该ngx_http_handler_pt处理方法
+//NGX_DECLINED	--	当前的ngx_http_handler_pt处理方法执行完毕，按照顺序执行下一个ngx_http_handler_pt处理方法
+//NGX_HTTP_FORBIDDEN, NGX_HTTP_UNAUTHORIZED -- 
+//NGX_ERROR, NGX_HTTP_... --需要的调用ngx_http_finalize_request结束请求
 ngx_int_t
 ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
@@ -1148,22 +1159,22 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
     return NGX_OK;
 }
 
-
+//检查ngx_http_request_t请求中的access_code成员，当前不为0时就结束请求(表示没有访问权限)，
+//否则继续执行下一个ngx_http_handler_pt处理方法
 ngx_int_t
-ngx_http_core_post_access_phase(ngx_http_request_t *r,
-    ngx_http_phase_handler_t *ph)
+ngx_http_core_post_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     ngx_int_t  access_code;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "post access phase: %ui", r->phase_handler);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "post access phase: %ui", r->phase_handler);
 
     access_code = r->access_code;
 
-    if (access_code) {
-        if (access_code == NGX_HTTP_FORBIDDEN) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "access forbidden by rule");
+    if (access_code) 
+	{
+        if (access_code == NGX_HTTP_FORBIDDEN) 
+		{
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "access forbidden by rule");
         }
 
         r->access_code = 0;
@@ -1175,10 +1186,11 @@ ngx_http_core_post_access_phase(ngx_http_request_t *r,
     return NGX_AGAIN;
 }
 
-
+//与nginx.conf中try_files配置项密切相关，如果后指定的静态文件资源中有一个可以访问，
+//这时就会直接读取文件并发送响应给用户，不会再向下执行后续阶段；如果所有静态文件资源
+//都无法执行，将会继续执行ngx_http_phase_engine_t中的下一个ngx_http_phase_handler_t处理方法
 ngx_int_t
-ngx_http_core_try_files_phase(ngx_http_request_t *r,
-    ngx_http_phase_handler_t *ph)
+ngx_http_core_try_files_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     size_t                        len, root, alias, reserve, allocated;
     u_char                       *p, *name;
@@ -1402,12 +1414,12 @@ ngx_http_core_content_phase(ngx_http_request_t *r,
         return NGX_OK;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "content phase: %ui", r->phase_handler);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "content phase: %ui", r->phase_handler);
 
     rc = ph->handler(r);
 
-    if (rc != NGX_DECLINED) {
+    if (rc != NGX_DECLINED) 
+	{
         ngx_http_finalize_request(r, rc);
         return NGX_OK;
     }
@@ -1416,18 +1428,20 @@ ngx_http_core_content_phase(ngx_http_request_t *r,
 
     ph++;
 
-    if (ph->checker) {
+    if (ph->checker)
+	{
         r->phase_handler++;
         return NGX_AGAIN;
     }
 
     /* no content handler was found */
 
-    if (r->uri.data[r->uri.len - 1] == '/') {
+    if (r->uri.data[r->uri.len - 1] == '/')
+	{
 
-        if (ngx_http_map_uri_to_path(r, &path, &root, 0) != NULL) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "directory index of \"%s\" is forbidden", path.data);
+        if (ngx_http_map_uri_to_path(r, &path, &root, 0) != NULL)
+		{
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "directory index of \"%s\" is forbidden", path.data);
         }
 
         ngx_http_finalize_request(r, NGX_HTTP_FORBIDDEN);
@@ -2993,6 +3007,9 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ngx_http_core_srv_conf_t    *cscf, **cscfp;
     ngx_http_core_main_conf_t   *cmcf;
 
+	//建立属于这个server块ngx_http_conf_ctx_t结构体
+	//main_conf将指向所属的http块下ngx_http_conf_ctx_t结构体main_conf指针数组
+	//而srv_conf和loc_conf都将指向重新分配大小为ngx_http_max_module的指针数组
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
     if (ctx == NULL) 
 	{
@@ -3016,6 +3033,8 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         return NGX_CONF_ERROR;
     }
 
+	//循环调用所有HTTP模块create_srv_conf方法和create_loc_conf方法，
+	//将返回的结构体指针按照模块序号ctx_index保存到srv_conf和loc_conf指针数组中
     for (i = 0; ngx_modules[i]; i++) 
 	{
         if (ngx_modules[i]->type != NGX_HTTP_MODULE)
@@ -3050,12 +3069,12 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     /* the server configuration context */
+	//ngx_http_core_module模块的create_srv_conf方法生成的ngx_http_core_srv_conf_t配置结构体对应着当前正在解析的server块
+	//将ngx_http_core_srv_conf_t添加到全局ngx_http_core_main_conf_t结构体的servers动态数组中
     cscf = ctx->srv_conf[ngx_http_core_module.ctx_index];
     cscf->ctx = ctx;
 
-
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
-
     cscfp = ngx_array_push(&cmcf->servers);
     if (cscfp == NULL) 
 	{
@@ -3065,7 +3084,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     *cscfp = cscf;
 
 
-    /* parse inside server{} */
+    //解析当前server{}块内的所有配置项
 
     pcf = *cf;
     cf->ctx = ctx;
@@ -3077,7 +3096,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 	//若server{}内没有配置监听端口(listen指令)，
 	//那么创建一个默认的监听端口
-	//确保meigeserver配置至少有一个监听套接口
+	//确保每个server配置至少有一个监听套接口
     if (rv == NGX_CONF_OK && !cscf->listen)
 	{
         ngx_memzero(&lsopt, sizeof(ngx_http_listen_opt_t));
@@ -3130,6 +3149,11 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     ngx_http_conf_ctx_t       *ctx, *pctx;
     ngx_http_core_loc_conf_t  *clcf, *pclcf;
 
+	//建立属于这个location块ngx_http_conf_ctx_t结构体
+	//main_conf将指向所属的server块下ngx_http_conf_ctx_t结构体main_conf指针数组，
+	//srv_conf将指向所属的server块下ngx_http_conf_ctx_t结构体srv_conf指针数组，
+	//而loc_conf将指向重新分配大小为ngx_http_max_module的指针数组
+
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
     if (ctx == NULL) 
 	{
@@ -3146,6 +3170,8 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         return NGX_CONF_ERROR;
     }
 
+	//循环调用所有HTTP模块的create_loc_conf方法，
+	//将返回的结构体指针按照模块序号ctx_index保存到loc_conf指针数组中
     for (i = 0; ngx_modules[i]; i++) 
 	{
         if (ngx_modules[i]->type != NGX_HTTP_MODULE) 
@@ -3276,10 +3302,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
         if (pclcf->exact_match) 
 		{
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "location \"%V\" cannot be inside "
-                               "the exact location \"%V\"",
-                               &clcf->name, &pclcf->name);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "location \"%V\" cannot be inside the exact location \"%V\"", &clcf->name, &pclcf->name);
             return NGX_CONF_ERROR;
         }
 
@@ -3292,7 +3315,8 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
             return NGX_CONF_ERROR;
         }
 
-        if (clcf->named) {
+        if (clcf->named) 
+		{
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                                "named location \"%V\" can be "
                                "on the server level only",
@@ -3303,8 +3327,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         len = pclcf->name.len;
 
 #if (NGX_PCRE)
-        if (clcf->regex == NULL
-            && ngx_filename_cmp(clcf->name.data, pclcf->name.data, len) != 0)
+        if (clcf->regex == NULL && ngx_filename_cmp(clcf->name.data, pclcf->name.data, len) != 0)
 #else
         if (ngx_filename_cmp(clcf->name.data, pclcf->name.data, len) != 0)
 #endif
@@ -3314,11 +3337,15 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         }
     }
 
+	//ngx_http_core_module模块的create_loc_conf方法生成的ngx_http_core_loc_conf_t配置结构体对应着当前正在解析的location块
+	//这时会生成ngx_http_location_queue_t结构体，因为每一个ngx_http_core_loc_conf_t结构体都对应着1个ngx_http_location_queue_t,
+	//因此，此处将把ngx_http_location_queue_t串联成双向链表
     if (ngx_http_add_location(cf, &pclcf->locations, clcf) != NGX_OK) 
 	{
         return NGX_CONF_ERROR;
     }
 
+	//解析当前location{}配置块内的loc级别配置项
     save = *cf;
     cf->ctx = ctx;
     cf->cmd_type = NGX_HTTP_LOC_CONF;
@@ -3351,7 +3378,8 @@ ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf, ngx
 #endif
 
     clcf->regex = ngx_http_regex_compile(cf, &rc);
-    if (clcf->regex == NULL) {
+    if (clcf->regex == NULL) 
+	{
         return NGX_ERROR;
     }
 
