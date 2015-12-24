@@ -354,7 +354,8 @@ ngx_http_init_connection(ngx_connection_t *c)
         hc->proxy_protocol = 1;
         c->log->action = "reading PROXY protocol";
     }
- 
+
+	//检查是否有可读的TCP流
 	/*对于TCP_DEFER_ACCEPT, rtsig, aio, iocp事件驱动，accept接受这个监听套接字上的客户端链接请求时，请求的具体数据内容已经到达*/
     if (rev->ready)
 	{
@@ -372,7 +373,7 @@ ngx_http_init_connection(ngx_connection_t *c)
 	
 	/*else rev->ready == 0*/
 
-	/* 将当前连接的读事件添加到定时器机制中 */
+	/* 将当前连接的读事件添加到定时器机制中，以监控接收事件是否超时*/
     ngx_add_timer(rev, c->listening->post_accept_timeout);
     ngx_reusable_connection(c, 1);
 
@@ -389,6 +390,8 @@ ngx_http_init_connection(ngx_connection_t *c)
 分配缓存空间以存储请求数据
 分配ngx_http_request_t结构以记录请求信息
 */
+//HTTP框架并不会在连接建立成功后就开始初始化请求，而是在这个连接对应的套接字缓冲区上确实收到了用户发来的
+//请求内容时才进行
 static void
 ngx_http_wait_request_handler(ngx_event_t *rev)
 {
@@ -404,6 +407,7 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http wait request handler");
 
+	//检查读事件是否已经超时
     if (rev->timedout) 
 	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");

@@ -43,6 +43,7 @@ struct ngx_event_s
     unsigned         disabled:1;
 
     /* the ready event; in aio mode 0 means that no operation can be posted */
+	//这个连接对应的套接字缓存上已经有用户发来的数据
     unsigned         ready:1;			/*事件已经发生，可以做对应的处理*/
 
     unsigned         oneshot:1;
@@ -52,8 +53,8 @@ struct ngx_event_s
 
     unsigned         eof:1;
     unsigned         error:1;
-
-    unsigned         timedout:1;			/*表示事件超时*/
+	//表示事件超时
+    unsigned         timedout:1;			
     unsigned         timer_set:1;			/*事件被添加到定时器中*/
 
     unsigned         delayed:1;
