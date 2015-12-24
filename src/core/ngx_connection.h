@@ -35,8 +35,8 @@ struct ngx_listening_s
 
     /* handler of accepted connection */
     ngx_connection_handler_pt   handler;
-
-    void               *servers;  /* array of ngx_http_in_addr_t, for example 该监听套接字关联的server{}配置*/   
+	//HTTP -- ngx_http_port_t(指向监听这一端口的所有监听地址，而每个监听地址也包含了其所属server块的配置项)
+    void               *servers;    
     ngx_log_t           log;
     ngx_log_t          *logp;
 
@@ -154,33 +154,41 @@ struct ngx_connection_s
 
     struct sockaddr    *local_sockaddr;		//本机的监听端口对应的sockaddr结构体，也就是listening监听对象中的sockaddr成员
     socklen_t           local_socklen;
-	
-    ngx_buf_t          *buffer;		//用于接收、缓存客户端发来的字节流，每个事件消费模块可自由决定从连接池中分配多大的空间给该字段。例如，在HTTP模块中，它的大小决定于client_header_buffer_size配置项	
-
-    ngx_queue_t         queue;		//用来将连接以双向链表元素的形式添加到ngx_cycle_t核心结构体的reuseable_connections_queue双向链表中，表示可以重用的连接
+	//用于接收、缓存客户端发来的字节流，每个事件消费模块可自由决定从连接池中分配多大的空间给该字段。
+	//例如，在HTTP模块中，它的大小决定于client_header_buffer_size配置项	
+    ngx_buf_t          *buffer;		
+	//用来将连接以双向链表元素的形式添加到ngx_cycle_t核心结构体的reuseable_connections_queue双向链表中，表示可以重用的连接
+    ngx_queue_t         queue;		
 
     ngx_atomic_uint_t   number;		//连接使用次数。ngx_connection_t结构体每次建立一条来自客户端的连接，或者用于主动向后端服务器发起连接时(ngx_peer_connection_s也使用它)，number都会加 1
-
-    ngx_uint_t          requests;	//处理的请求次数
+	//处理的请求次数
+    ngx_uint_t          requests;	
 
     unsigned            buffered:8;
 
     unsigned            log_error:3;     		/* ngx_connection_log_error_e */
-
-    unsigned            unexpected_eof:1;	//标志位，为 1时表示不期待字符流结束，目前无意义
-    unsigned            timedout:1;			//标志位，为 1时表示连接以超时
-    unsigned            error:1;			//标志位，为 1时表示连接处理过程中出现错误
-    unsigned            destroyed:1;		//标志位，为 1时表示连接已经销毁。这里的连接指的是TCP连接，而不是ngx_connection_t结构体。当destroyed为 1时，结构体仍然存在，但其对应的套接字、内存池等已经不可用
-
-    unsigned            idle:1;				//标志位，为 1时表示连接处于空闲状态，如keepalive请求中两次请求之间的状态
+	//标志位，为 1时表示不期待字符流结束，目前无意义
+    unsigned            unexpected_eof:1;	
+	//标志位，为 1时表示连接以超时
+    unsigned            timedout:1;	
+	//标志位，为 1时表示连接处理过程中出现错误
+    unsigned            error:1;	
+	//标志位，为 1时表示连接已经销毁。这里的连接指的是TCP连接，而不是ngx_connection_t结构体。
+	//当destroyed为 1时，结构体仍然存在，但其对应的套接字、内存池等已经不可用
+    unsigned            destroyed:1;		
+	//标志位，为 1时表示连接处于空闲状态，如keepalive请求中两次请求之间的状态
+    unsigned            idle:1;				
     unsigned            reusable:1;			//标志位，为 1时表示连接可重用，它与上面的queue字段时对应使用的
     unsigned            close:1;			//标志位，为 1时表示连接关闭
 
     unsigned            sendfile:1;			//标志位，为 1时表示正将文件中的数据发往连接的另一端
-    unsigned            sndlowat:1;			//标志位，为 1时表示只有在连接套接字对应的发送缓冲区必须满足最低设置的大小阈值时，事件驱动模块才会分发该事件。与ngx_handle_write_event函数中的lowat参数是对应的
-
-    unsigned            tcp_nodelay:2;   	//标志位，表示如何使用TCP的nodelay特性。取值范围是枚举类型 ngx_connection_tcp_nodelay_e
-    unsigned            tcp_nopush:2;    	//标志位，表示如何使用TCP的nodelay特性。取值范围是枚举类型 ngx_connection_tcp_nopush_e
+    //标志位，为 1时表示只有在连接套接字对应的发送缓冲区必须满足最低设置的大小阈值时，事件驱动模块才会分发该事件。
+    //与ngx_handle_write_event函数中的lowat参数是对应的
+    unsigned            sndlowat:1;
+	//标志位，表示如何使用TCP的nodelay特性。取值范围是枚举类型 ngx_connection_tcp_nodelay_e
+    unsigned            tcp_nodelay:2;   
+	//标志位，表示如何使用TCP的nodelay特性。取值范围是枚举类型 ngx_connection_tcp_nopush_e
+    unsigned            tcp_nopush:2;    	
 
     unsigned            need_last_buf:1;
 

@@ -93,8 +93,7 @@ static char *ngx_http_core_pool_size(ngx_conf_t *cf, void *post, void *data);
 static ngx_conf_post_t  ngx_http_core_lowat_post =
     { ngx_http_core_lowat_check };
 
-static ngx_conf_post_handler_pt  ngx_http_core_pool_size_p =
-    ngx_http_core_pool_size;
+static ngx_conf_post_handler_pt  ngx_http_core_pool_size_p = ngx_http_core_pool_size;
 
 
 static ngx_conf_enum_t  ngx_http_core_request_body_in_file[] = {
@@ -219,12 +218,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_srv_conf_t, connection_pool_size),
       &ngx_http_core_pool_size_p },
 
-    { ngx_string("request_pool_size"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_size_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, request_pool_size),
-      &ngx_http_core_pool_size_p },
+    { 
+		ngx_string("request_pool_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_size_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, request_pool_size),
+		&ngx_http_core_pool_size_p 
+    },
 
     { 
 		ngx_string("client_header_timeout"),
@@ -5504,7 +5505,8 @@ ngx_http_core_pool_size(ngx_conf_t *cf, void *post, void *data)
         return NGX_CONF_ERROR;
     }
 
-    if (*sp % NGX_POOL_ALIGNMENT) {
+    if (*sp % NGX_POOL_ALIGNMENT) 
+	{
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                            "the pool size must be a multiple of %uz",
                            NGX_POOL_ALIGNMENT);

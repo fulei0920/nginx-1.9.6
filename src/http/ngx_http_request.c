@@ -206,8 +206,9 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->data = hc;
 
     /* find the server configuration for the address:port */
+	//遍历ngx_listening_t结构体的servers指向的数组，找到合适的监听地址，
+	//然后找到默认的server虚拟主机对应的ngx_http_core_srv_conf_t配置结构体
     port = c->listening->servers;
-	
     if (port->naddrs > 1) 
 	{
         /*
@@ -404,6 +405,7 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http wait request handler");
 
+	//检查是否读取请求超时
     if (rev->timedout) 
 	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
@@ -422,7 +424,7 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     size = cscf->client_header_buffer_size;
 
-	/* alloc memory for receive buffer (c->buffer) */
+	//创建接收缓冲区(c->buffer)
     b = c->buffer;
     if (b == NULL) 
 	{
@@ -551,6 +553,7 @@ ngx_http_create_request(ngx_connection_t *c)
 
     cscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_core_module);
 
+	//创建ngx_http_request_t结构体的内存池
     pool = ngx_create_pool(cscf->request_pool_size, c->log);
     if (pool == NULL)
 	{
@@ -588,6 +591,7 @@ ngx_http_create_request(ngx_connection_t *c)
         return NULL;
     }
 
+	//创建一个具有ngx_http_max_module(HTTP模块的总数)个成员的指针数组，为每个HTTP模块都提供一个位置存放针对一个请求的上下文结构体指针
     r->ctx = ngx_pcalloc(r->pool, sizeof(void *) * ngx_http_max_module);
     if (r->ctx == NULL) 
 	{
@@ -614,6 +618,7 @@ ngx_http_create_request(ngx_connection_t *c)
     r->main = r;
     r->count = 1;
 
+	//更新ngx_http_request_t结构体的请求开始时间
     tp = ngx_timeofday();
     r->start_sec = tp->sec;
     r->start_msec = tp->msec;
