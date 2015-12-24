@@ -169,7 +169,7 @@ struct ngx_connection_s
     unsigned            log_error:3;     		/* ngx_connection_log_error_e */
 	//标志位，为 1时表示不期待字符流结束，目前无意义
     unsigned            unexpected_eof:1;	
-	//标志位，为 1时表示连接以超时
+	//标志位，为 1时表示连接已超时
     unsigned            timedout:1;	
 	//标志位，为 1时表示连接处理过程中出现错误
     unsigned            error:1;	

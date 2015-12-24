@@ -100,6 +100,11 @@ static uint32_t  usual[] = {
 
 /* gcc, icc, msvc and others compile these switches as an jump table */
 
+
+//返回值
+//	NGX_OK -- 表示成功地解析到完整的HTTP请求行
+//	NGX_AGAIN -- 表示目前接收到的字符流不足以构成完整的请求行，还需要更多的字符流
+//	NGX_HTTP_PARSE_INVALID_METHOD、NGX_HTTP_PARSE_INVALID_09_METHOD等其他值 -- 表示接收到非法的请求行
 ngx_int_t
 ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
 {
@@ -854,10 +859,13 @@ done:
     return NGX_OK;
 }
 
-
+//返回值:
+//	NGX_OK -- 表示解析出一行HTTP头部
+//	NGX_HTTP_PARSE_HEADER_DONE -- 表示已经解析出了完整的HTTP头部
+//	NGX_AGAIN -- 表示还需要接收更多的字符流才能继续解析
+//  其他 -- 表示出现错误
 ngx_int_t
-ngx_http_parse_header_line(ngx_http_request_t *r, ngx_buf_t *b,
-    ngx_uint_t allow_underscores)
+ngx_http_parse_header_line(ngx_http_request_t *r, ngx_buf_t *b, ngx_uint_t allow_underscores)
 {
     u_char      c, ch, *p;
     ngx_uint_t  hash, i;

@@ -82,14 +82,14 @@
 #define NGX_HTTP_NOT_MODIFIED              304
 #define NGX_HTTP_TEMPORARY_REDIRECT        307
 
-#define NGX_HTTP_BAD_REQUEST               400
+#define NGX_HTTP_BAD_REQUEST               400		//(错误请求) 服务器不理解请求的语法
 #define NGX_HTTP_UNAUTHORIZED              401
 #define NGX_HTTP_FORBIDDEN                 403
 #define NGX_HTTP_NOT_FOUND                 404
 #define NGX_HTTP_NOT_ALLOWED               405
 #define NGX_HTTP_REQUEST_TIME_OUT          408
 #define NGX_HTTP_CONFLICT                  409
-#define NGX_HTTP_LENGTH_REQUIRED           411
+#define NGX_HTTP_LENGTH_REQUIRED           411		//(需要有效长度) 服务器不接受不含有效内容长度标头字段的请求
 #define NGX_HTTP_PRECONDITION_FAILED       412
 #define NGX_HTTP_REQUEST_ENTITY_TOO_LARGE  413
 #define NGX_HTTP_REQUEST_URI_TOO_LARGE     414

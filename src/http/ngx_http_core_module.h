@@ -153,7 +153,9 @@ typedef struct ngx_http_phase_handler_s  ngx_http_phase_handler_t;
 
 
 //一个HTTP处理阶段中的checker检查方法，仅可以由HTTP框架实现，以此控制HTTP请求的处理流程
-//返回值 NGX_AGAIN -- 继续运行状态机  NGX_OK --	停止运行状态机
+//返回值 
+//	NGX_OK -- 意味着把控制权交还给Nginx的事件模块，由它根据事件(网络事件、定时器事件、异步I/O事件等)再次调度请求
+//	非NGX_OK -- 意味着向下执行phase_engine中的各处理方法  
 typedef ngx_int_t (*ngx_http_phase_handler_pt)(ngx_http_request_t *r, ngx_http_phase_handler_t *ph);
 
 struct ngx_http_phase_handler_s 

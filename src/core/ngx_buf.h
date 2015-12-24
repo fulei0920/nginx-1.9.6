@@ -34,9 +34,8 @@ struct ngx_buf_s
     它们之间的关系就通过shadow成员来引用。这种设计过于复杂，通常不建议使用*/ 
     ngx_buf_t       *shadow;
 
-
-    
-    unsigned         temporary:1;		//临时内存标志位，为 1时表示数据在内存中且这段内存可以修改
+    //临时内存标志位，为 1时表示数据在内存中且这段内存可以修改
+    unsigned         temporary:1;		
 
     /*the buf's content is in a memory cache or in a read only memory and must not be changed */
     unsigned         memory:1;			//标志位，为 1时表示数据在内存中且这段内存不可以被修改

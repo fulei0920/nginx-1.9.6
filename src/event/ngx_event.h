@@ -52,9 +52,11 @@ struct ngx_event_s
 
     unsigned         eof:1;
     unsigned         error:1;
-
-    unsigned         timedout:1;			/*表示事件超时*/
-    unsigned         timer_set:1;			/*事件被添加到定时器中*/
+	
+	/*表示事件超时*/
+    unsigned         timedout:1;
+	/*事件被添加到定时器中*/
+    unsigned         timer_set:1;			
 
     unsigned         delayed:1;
 

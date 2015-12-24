@@ -30,8 +30,7 @@ static ngx_int_t ngx_http_process_user_agent(ngx_http_request_t *r,
 
 static ngx_int_t ngx_http_validate_host(ngx_str_t *host, ngx_pool_t *pool,
     ngx_uint_t alloc);
-static ngx_int_t ngx_http_set_virtual_server(ngx_http_request_t *r,
-    ngx_str_t *host);
+static ngx_int_t ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host);
 static ngx_int_t ngx_http_find_virtual_server(ngx_connection_t *c, ngx_http_virtual_names_t *virtual_names, 
 	ngx_str_t *host, ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp);
 
@@ -968,6 +967,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http process request line");
 
+	//检查这个读事件是否已经超时
     if (rev->timedout)
 	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
@@ -991,13 +991,13 @@ ngx_http_process_request_line(ngx_event_t *rev)
             }
         }
 
+		//用状态机解析已经接收到的TCP字符流，确认其是否构成完整的HTTP请求行
         rc = ngx_http_parse_request_line(r, r->header_in);
 
         if (rc == NGX_OK) 
 		{
-
-            /* the request line has been parsed successfully */
-
+			//表示成功地解析到完整的HTTP请求行
+			//将请求行中的信息如方法名、URI及其参数、HTTP版本等信息设置到ngx_http_request_t结构体的相应成员中
             r->request_line.len = r->request_end - r->request_start;
             r->request_line.data = r->request_start;
             r->request_length = r->header_in->pos - r->request_start;
@@ -1032,7 +1032,8 @@ ngx_http_process_request_line(ngx_event_t *rev)
                     return;
                 }
 
-                if (rc == NGX_ERROR) {
+                if (rc == NGX_ERROR) 
+				{
                     ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return;
                 }
@@ -1045,9 +1046,10 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 r->headers_in.server = host;
             }
 
+			//用户请求的版本小于1.0，其处理过程将于HTTP1.0和HTTP1.1完全不同，它不会有接收HTTP头部这一步骤
             if (r->http_version < NGX_HTTP_VERSION_10) 
 			{
-
+				//寻找相应的虚拟主机
                 if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r, &r->headers_in.server) == NGX_ERROR)
                 {
                     return;
@@ -1057,7 +1059,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 return;
             }
 
-
+			//初始化结构体中存放HTTP头部的一些容器，为下一步接收HTTP头部做好准备
             if (ngx_list_init(&r->headers_in.headers, r->pool, 20, sizeof(ngx_table_elt_t)) != NGX_OK)
             {
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -1074,14 +1076,17 @@ ngx_http_process_request_line(ngx_event_t *rev)
 
         if (rc != NGX_AGAIN) 
 		{
-            /* there was error while a request line parsing */
+			//分析请求行时遇到错误
             ngx_log_error(NGX_LOG_INFO, c->log, 0, ngx_http_client_errors[rc - NGX_HTTP_CLIENT_ERROR]);
             ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
             return;
         }
 
         /* NGX_AGAIN: a request line parsing is still incomplete */
-
+		//表示目前接收到的字符流不足以构成完整的请求行，还需要更多的字符流
+		//检查header_in缓冲区是否还有空闲的内存，如果还有未使用的内存可以继续接收字符流，则调用
+		//ngx_http_read_request_header方法检查缓冲区是否有未解析的字符流，否则调用
+		//ngx_http_alloc_large_header_buffer方法分配更大的接收缓冲区
         if (r->header_in->pos == r->header_in->end) 
 		{
 
@@ -1245,6 +1250,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http process request header line");
 
+	//检查这个读事件是否已经超时
     if (rev->timedout) 
 	{
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
@@ -1262,7 +1268,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
         if (rc == NGX_AGAIN) 
 		{
-
+			//检查接收HTTP请求头部的header_in缓冲区是否用尽
             if (r->header_in->pos == r->header_in->end) 
 			{
 
@@ -1276,8 +1282,8 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
                 if (rv == NGX_DECLINED) 
 				{
+					//向用户返回错误并且同时退出，错误码由宏NGX_HTTP_REQUEST_HEADER_TOO_LARGE表示
                     p = r->header_name_start;
-
                     r->lingering_close = 1;
 
                     if (p == NULL) 
@@ -1294,10 +1300,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
                         len = NGX_MAX_ERROR_STR - 300;
                     }
 
-                    ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                                "client sent too long header line: \"%*s...\"",
-                                len, r->header_name_start);
-
+                    ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent too long header line: \"%*s...\"", len, r->header_name_start);
                     ngx_http_finalize_request(r, NGX_HTTP_REQUEST_HEADER_TOO_LARGE);
                     return;
                 }
@@ -1318,7 +1321,8 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
         if (rc == NGX_OK) 
 		{
-
+			//将解析出的HTTP头部设置到表示ngx_http_request_t结构体header_in成员的headers链表中
+			
             r->request_length += r->header_in->pos - r->header_name_start;
 
             if (r->invalid_header && cscf->ignore_invalid_headers)
@@ -1387,13 +1391,14 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             r->request_length += r->header_in->pos - r->header_name_start;
 
             r->http_state = NGX_HTTP_PROCESS_REQUEST_STATE;
-			//做一个简单的检查
+
             rc = ngx_http_process_request_header(r);
             if (rc != NGX_OK) 
 			{
                 return;
             }
 
+			//调用方法开始使用各HTTP模块正式的在业务上处理HTTP请求
             ngx_http_process_request(r);
 
             return;
@@ -1401,18 +1406,14 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
         if (rc == NGX_AGAIN)
 		{
-
             /* a header line parsing is still not complete */
-
             continue;
         }
 
         /* rc == NGX_HTTP_PARSE_INVALID_HEADER: "\r" is not followed by "\n" */
-
-        ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                      "client sent invalid header line: \"%*s\\r...\"",
-                      r->header_end - r->header_name_start,
-                      r->header_name_start);
+		//向客户端发送NGX_HTTP_BAD_REQUEST宏对应的400错误码响应
+        ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent invalid header line: \"%*s\\r...\"",
+                      r->header_end - r->header_name_start, r->header_name_start);
         ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
         return;
     }
@@ -1422,6 +1423,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 if there are datas in head_in buffer return directly
 else if we can read, recive the data from connection
 */
+//接收客户端发来的字符流，即把内核套接字缓冲区上的字符流接收到header_in缓冲区中。
 static ssize_t
 ngx_http_read_request_header(ngx_http_request_t *r)
 {
@@ -1433,15 +1435,18 @@ ngx_http_read_request_header(ngx_http_request_t *r)
     c = r->connection;
     rev = c->read;
 
+	//检查header_in接收缓冲区中是否还有未解析的字符流
     n = r->header_in->last - r->header_in->pos;
 
-    if (n > 0)   //buffer中有数据直接返回
+    if (n > 0)  
 	{
         return n;
     }
 
-    if (rev->ready)		//能够读，则从socket中获取数据
+	//能够读，则从socket中获取数据
+    if (rev->ready)		
 	{
+		//调用封装的recv方法把Linux内核套接字缓冲区中的TCP流复制到header_in缓冲区中。
         n = c->recv(c, r->header_in->last, r->header_in->end - r->header_in->last);
     }
 	else
@@ -1449,14 +1454,17 @@ ngx_http_read_request_header(ngx_http_request_t *r)
         n = NGX_AGAIN;
     }
 
-    if (n == NGX_AGAIN)  //将该事件重新加入到io复用模型中
+	//没有接收到TCP流，需要继续检测这个读事件
+    if (n == NGX_AGAIN)  
 	{
+		//检查这个读事件是否在定时器中，如果不在则调用ngx_add_timer方法向定时器添加这个读事件
         if (!rev->timer_set) 
 		{
             cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
             ngx_add_timer(rev, cscf->client_header_timeout);
         }
 
+		/* 将当前读事件添加到epoll事件机制中 */
         if (ngx_handle_read_event(rev, 0) != NGX_OK)
 		{
             ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -1471,6 +1479,7 @@ ngx_http_read_request_header(ngx_http_request_t *r)
         ngx_log_error(NGX_LOG_INFO, c->log, 0, "client prematurely closed connection");
     }
 
+	//客户端已经关闭或连接出现错误
     if (n == 0 || n == NGX_ERROR)
 	{
         c->error = 1;
@@ -1480,12 +1489,18 @@ ngx_http_read_request_header(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
+	//接收到客户端发送的字节流
     r->header_in->last += n;
 
     return n;
 }
 
-
+//参数:
+//	request_line  -- 1 为请求行扩展缓冲区， 0 为请求头扩展缓冲区
+//返回值:
+//	NGX_OK -- 表示成功分配到跟大的缓冲区
+//	NGX_DECLINED -- 表示已经达到缓冲区大小的上限，无法分配更大的缓冲区
+//	NGX_ERROR -- 表示出现错误
 static ngx_int_t
 ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_line)
 {
@@ -1580,10 +1595,12 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
     b->pos = new + (r->header_in->pos - old);
     b->last = new + (r->header_in->pos - old);
 
-    if (request_line) {
+    if (request_line) 
+	{
         r->request_start = new;
 
-        if (r->request_end) {
+        if (r->request_end)
+		{
             r->request_end = new + (r->request_end - old);
         }
 
@@ -1621,7 +1638,9 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
             r->http_protocol.data = new + (r->http_protocol.data - old);
         }
 
-    } else {
+    }
+	else 
+	{
         r->header_name_start = new;
         r->header_name_end = new + (r->header_name_end - old);
         r->header_start = new + (r->header_start - old);
@@ -1836,39 +1855,45 @@ ngx_http_process_multi_header_lines(ngx_http_request_t *r, ngx_table_elt_t *h,
 ngx_int_t
 ngx_http_process_request_header(ngx_http_request_t *r)
 {
+	//根据HTTP头部中的host字段情况，设置对应的虚拟主机配置块，
+	//会导致结构体里的srv_conf、loc_conf成员被重新设置，以指向正确的虚拟主机
     if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r, &r->headers_in.server) == NGX_ERROR)
     {
         return NGX_ERROR;
     }
 
-    if (r->headers_in.host == NULL && r->http_version > NGX_HTTP_VERSION_10) {
-        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                   "client sent HTTP/1.1 request without \"Host\" header");
+	//检查解析出来的HTTP头部是否合法
+
+	//如果HTTP版本为1.1，则host头部不可以为空，否则返回400错误响应给客户端
+    if (r->headers_in.host == NULL && r->http_version > NGX_HTTP_VERSION_10)
+	{
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0, "client sent HTTP/1.1 request without \"Host\" header");
         ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
         return NGX_ERROR;
     }
 
-    if (r->headers_in.content_length) {
-        r->headers_in.content_length_n =
-                            ngx_atoof(r->headers_in.content_length->value.data,
-                                      r->headers_in.content_length->value.len);
+	//如果传递了Content-Length头部，那么它必须是合法的数字，否则会返回400错误响应给客户端
+    if (r->headers_in.content_length) 
+	{
+        r->headers_in.content_length_n = ngx_atoof(r->headers_in.content_length->value.data, r->headers_in.content_length->value.len);
 
-        if (r->headers_in.content_length_n == NGX_ERROR) {
-            ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                          "client sent invalid \"Content-Length\" header");
+        if (r->headers_in.content_length_n == NGX_ERROR) 
+		{
+            ngx_log_error(NGX_LOG_INFO, r->connection->log, 0, "client sent invalid \"Content-Length\" header");
             ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
             return NGX_ERROR;
         }
     }
 
-    if (r->method & NGX_HTTP_TRACE) {
-        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                      "client sent TRACE method");
+    if (r->method & NGX_HTTP_TRACE)
+	{
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0, "client sent TRACE method");
         ngx_http_finalize_request(r, NGX_HTTP_NOT_ALLOWED);
         return NGX_ERROR;
     }
 
-    if (r->headers_in.transfer_encoding) {
+    if (r->headers_in.transfer_encoding) 
+	{
         if (r->headers_in.transfer_encoding->value.len == 7
             && ngx_strncasecmp(r->headers_in.transfer_encoding->value.data,
                                (u_char *) "chunked", 7) == 0)
@@ -1917,8 +1942,7 @@ ngx_http_process_request(ngx_http_request_t *r)
         ngx_http_ssl_srv_conf_t  *sscf;
 
         if (c->ssl == NULL) {
-            ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                          "client sent plain HTTP request to HTTPS port");
+            ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent plain HTTP request to HTTPS port");
             ngx_http_finalize_request(r, NGX_HTTP_TO_HTTPS);
             return;
         }
@@ -1963,6 +1987,8 @@ ngx_http_process_request(ngx_http_request_t *r)
 
 #endif
 
+	//由于现在已经开始准备调用各HTTP模块处理请求了，因此不再存在接收HTTP请求头部超时的问题，
+	//那就需要从定时器中把当前连接的读事件移除了
     if (c->read->timer_set) 
 	{
         ngx_del_timer(c->read);
@@ -1975,12 +2001,15 @@ ngx_http_process_request(ngx_http_request_t *r)
     r->stat_writing = 1;
 #endif
 
+	//重新设置当前连接读/写事件的回调方法为ngx_http_request_handler
     c->read->handler = ngx_http_request_handler;
     c->write->handler = ngx_http_request_handler;
+	//当再次有读事件到来时，将会调用read_event_handler方法处理请求。而这里将它设置为ngx_http_block_reading方法，
+	//这个方法可以认为不做任何事情，它的意义在于，目前已经开始处理HTTP请求，除非某个HTTP模块重新设置了read_event_handler方法，
+	//否则任何读事件都将得不到处理，也可以认为读事件被阻塞了
     r->read_event_handler = ngx_http_block_reading;
 
     ngx_http_handler(r);
-
     ngx_http_run_posted_requests(c);
 }
 
@@ -2114,14 +2143,16 @@ ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host)
 
     rc = ngx_http_find_virtual_server(r->connection, hc->addr_conf->virtual_names, host, r, &cscf);
 
-    if (rc == NGX_ERROR) {
+    if (rc == NGX_ERROR) 
+	{
         ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return NGX_ERROR;
     }
 
 #if (NGX_HTTP_SSL && defined SSL_CTRL_SET_TLSEXT_HOSTNAME)
 
-    if (hc->ssl_servername) {
+    if (hc->ssl_servername)
+	{
         ngx_http_ssl_srv_conf_t  *sscf;
 
         if (rc == NGX_DECLINED) {

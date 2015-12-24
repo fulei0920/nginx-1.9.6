@@ -847,7 +847,7 @@ ngx_http_handler(ngx_http_request_t *r)
     ngx_http_core_run_phases(r);
 }
 
-
+//开始调用各个HTTP模块共同处理请求
 //由于回调函数的返回值会影响到同一阶段的后续回调函数的处理与否，
 //而nginx又采用先进后出的方案，即先注册的模块，其回调函数反而后执行，
 //所以回调函数或者说模块的前后顺序非常重要
@@ -923,6 +923,9 @@ ngx_http_core_generic_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 //NGX_DONE	--	当前的ngx_http_handler_pt处理方法尚未结束，这意味着该处理方法在当前阶段中有机会再次被调用
 //NGX_DECLINED	--	当前的ngx_http_handler_pt处理方法执行完毕，按照顺序执行下一个ngx_http_handler_pt处理方法
 //NGX_OK, NGX_AGAIN, NGX_ERROR, NGX_HTTP_... --需要的调用ngx_http_finalize_request结束请求
+//ngx_http_core_rewrite_phase永远不会导致跨过同一HTTP阶段的其他处理方法，就直接跳到下一个阶段来处理请求。
+//因为，HTTP框架认为这两个阶段(NGX_HTTP_SERVER_REWRITE_PHASE | NGX_HTTP_REWRITE_PHASE)的HTTP模块是完全平等的，
+//序号靠前的HTTP模块优先级并不会更高，它不能决定序号靠后的HTTP模块是否可以再次重写URL。
 ngx_int_t
 ngx_http_core_rewrite_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
@@ -938,6 +941,7 @@ ngx_http_core_rewrite_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
         return NGX_AGAIN;
     }
 
+	//当前的handler方法无法在这一次调度中处理完这一个阶段，它需要多次的调度才能完成。
     if (rc == NGX_DONE) 
 	{
         return NGX_OK;
@@ -1099,7 +1103,7 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
     ngx_int_t                  rc;
     ngx_http_core_loc_conf_t  *clcf;
 
-	/*当前请求不是主请求，无需进行访问权限检测，状态机直接进入下一个处理阶段*/
+	/*当前请求不是主请求，无需进行访问权限检测，直接进入下一个处理阶段*/
     if (r != r->main)		
 	{
         r->phase_handler = ph->next;
@@ -1123,6 +1127,9 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
+	//当satisfy的参数为all时，这些HTTP模块必须同时发生作用，即以该阶段中全部的handler方法共同决定请求的访问权限，
+	//换句话说，这一阶段的所有handler方法必须全部返回NGX_OK才能认为请求具有访问权限
+	//当satisfy的参数为any时，
     if (clcf->satisfy == NGX_HTTP_SATISFY_ALL) 
 	{
 
@@ -1132,8 +1139,11 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
             return NGX_AGAIN;
         }
 
-    } else {
-        if (rc == NGX_OK) {
+    } 
+	else
+	{
+        if (rc == NGX_OK)
+		{
             r->access_code = 0;
 
             if (r->headers_out.www_authenticate) {
@@ -1144,8 +1154,10 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
             return NGX_AGAIN;
         }
 
-        if (rc == NGX_HTTP_FORBIDDEN || rc == NGX_HTTP_UNAUTHORIZED) {
-            if (r->access_code != NGX_HTTP_UNAUTHORIZED) {
+        if (rc == NGX_HTTP_FORBIDDEN || rc == NGX_HTTP_UNAUTHORIZED)
+		{
+            if (r->access_code != NGX_HTTP_UNAUTHORIZED)
+			{
                 r->access_code = rc;
             }
 
