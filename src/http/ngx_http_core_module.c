@@ -1127,9 +1127,15 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
+	//
+	//NGX_HTTP_ACCESS_PHASE阶段可能有很多HTTP模块都对控制请求的访问权限感兴趣，那么以哪一个为准呢?
 	//当satisfy的参数为all时，这些HTTP模块必须同时发生作用，即以该阶段中全部的handler方法共同决定请求的访问权限，
 	//换句话说，这一阶段的所有handler方法必须全部返回NGX_OK才能认为请求具有访问权限
-	//当satisfy的参数为any时，
+	//与all相反，参数为any时意味着在NGX_HTTP_ACCESS_PHASE阶段只要有任意一个HTTP模块认为请求合法，
+	//就不用再调用其它HTTP模块继续检查了，可以认为请求是具有访问权限的。实际上，这时的情况有些复杂:如果其中任何一个handler
+	//方法返回NGX_OK，则认为请求具有访问权限；如果某一个handler方法返回403或者401，则认为请求没有访问权限，还需要检查
+	//NGX_HTTP_ACCESS_PHASE阶段的其他handler方法。也就是说，any配置项下任何一个handler方法一旦认为请求具有访问权限，就
+	//认为这一阶段执行成功，继续向下执行；如果其中一个handler方法认为没有访问权限，则未必一次为准，还需要检测其他的handler方法
     if (clcf->satisfy == NGX_HTTP_SATISFY_ALL) 
 	{
 
@@ -1154,16 +1160,20 @@ ngx_http_core_access_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
             return NGX_AGAIN;
         }
 
+		//如果返回值是NGX_HTTP_FORBIDDEN或者NGX_HTTP_UNAUTHORIZED，则表示这个HTTP模块的handler方法认为请求没有权限访问服务
         if (rc == NGX_HTTP_FORBIDDEN || rc == NGX_HTTP_UNAUTHORIZED)
 		{
             if (r->access_code != NGX_HTTP_UNAUTHORIZED)
 			{
+				//将请求的access_code成员设置为handler方法的返回值，用于传递当前HTTP模块处理的结果
+				//后续的handler方法可能会更改这一结果
                 r->access_code = rc;
             }
 
             r->phase_handler++;
             return NGX_AGAIN;
         }
+		//如果返回值为其它值，可以认为请求绝对无权访问服务
     }
 
     /* rc == NGX_ERROR || rc == NGX_HTTP_...  */
@@ -1411,17 +1421,24 @@ ngx_http_core_try_files_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *p
     /* not reached */
 }
 
-
+//其余10个阶段中各HTTP模块的处理方法都是放在全局的ngx_http_core_main_conf_t结构体中的，也就是说，
+//它们对任何一个HTTP请求都是有效的。但在NGX_HTTP_CONTENT_PHASE阶段却很自然的有另一种需求，有的HTTP
+//模块可能仅希望在这个处理请求内容的阶段，仅仅针对某种请求唯一生效，而不是对所有请求生效。例如，
+//仅当请求的URI匹配了配置文件中的location块时，再根据location块下的配置选择一个HTTP模块执行它的
+//handler处理方法，并以此代替NGX_HTTP_CONTENT_PHASE阶段的其它handler方法(这些handler方法对于该请求将得不到执行)。
 ngx_int_t
-ngx_http_core_content_phase(ngx_http_request_t *r,
-    ngx_http_phase_handler_t *ph)
+ngx_http_core_content_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
     size_t     root;
     ngx_int_t  rc;
     ngx_str_t  path;
 
+	//检测ngx_http_request_t结构体的content_handler成员是否为空，其实就是看在NGX_HTTP_FIND_CONFIG_PHASE阶段匹配了URI请求的location内，
+	//是否有HTTP模块把处理方法设置到了ngx_http_core_loc_conf_t结构体的handler成员中。
     if (r->content_handler) 
 	{
+		//设置结构体的成员为不做任何事情的方法，也就是告诉HTTP框架再有可写事件时就调用
+		//直接把控制权交还给事件模块。为何要这样做呢?因为HTTP框架再这一阶段调用HTTP模块
         r->write_event_handler = ngx_http_request_empty_handler;
         ngx_http_finalize_request(r, r->content_handler(r));
         return NGX_OK;

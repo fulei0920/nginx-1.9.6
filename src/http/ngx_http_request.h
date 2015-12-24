@@ -450,7 +450,8 @@ struct ngx_http_request_s
 	//数组中的回调方法。HTTP框架正是以这种方式把HTTP模块集成起来处理请求的
     ngx_int_t                         phase_handler;
 	//表示NGX_HTTP_CONTENT_PHASE阶段提供给HTTP模块处理请求的一种方式，content_handler指向HTTTP模块实现的请求处理方法
-    ngx_http_handler_pt               content_handler;
+	//在NGX_HTTP_FIND_CONFIG_PHASE阶段就会把它设为匹配了URI的location块中对应的ngx_http_core_loc_conf_t结构体的handler成员
+	ngx_http_handler_pt               content_handler;
 	//在NGX_HTTP_ACCESS_PHASE阶段需要判断请求是否具有访问权限时，通过access_code来传递HTTP模块的handler回调方法的返回值，
 	//如果access_code为0，则表示请求具备访问权限，反之则说明请求不具备访问权限
     ngx_uint_t                        access_code;
