@@ -153,7 +153,9 @@ typedef struct ngx_http_phase_handler_s  ngx_http_phase_handler_t;
 
 
 //一个HTTP处理阶段中的checker检查方法，仅可以由HTTP框架实现，以此控制HTTP请求的处理流程
-//返回值 NGX_AGAIN -- 继续运行状态机  NGX_OK --	停止运行状态机
+//返回值 
+//	NGX_OK -- 意味着把控制权交还给Nginx的事件模块，由它根据事件(网络事件、定时器事件、异步I/O事件等)再次调度请求
+//	非NGX_OK -- 意味着向下执行phase_engine中的各处理方法  
 typedef ngx_int_t (*ngx_http_phase_handler_pt)(ngx_http_request_t *r, ngx_http_phase_handler_t *ph);
 
 struct ngx_http_phase_handler_s 
@@ -226,10 +228,14 @@ typedef struct
 typedef struct 
 {
     ngx_array_t                 server_names;  		/* ngx_http_server_name_t,  "server_name" directive  */
-    ngx_http_conf_ctx_t        *ctx;				//指向当前server块所属的ngx_http_conf_ctx_t结构体
-    ngx_str_t                   server_name;		//当前server块的虚拟主机名，如果存在的话，则会与http请求中的Host头部做匹配，匹配上后再由当前ngx_http_core_srv_conf_t处理请求
-
-    size_t                      connection_pool_size;		//指定每个TCP连接上内存池大小
+	//指向当前server块所属的ngx_http_conf_ctx_t结构体
+    ngx_http_conf_ctx_t        *ctx;	
+	//当前server块的虚拟主机名，如果存在的话，则会与http请求中的Host头部做匹配，
+	//匹配上后再由当前ngx_http_core_srv_conf_t处理请求
+    ngx_str_t                   server_name;		
+	//指定每个TCP连接上内存池大小
+    size_t                      connection_pool_size;	
+	//指定每个HTTP请求的内存池大小
     size_t                      request_pool_size;
     size_t                      client_header_buffer_size;
 
@@ -272,6 +278,7 @@ typedef struct {
 struct ngx_http_addr_conf_s
 {
     /* the default server configuration for this address:port */
+	//这个监听地址对应的server块配置信息
     ngx_http_core_srv_conf_t  *default_server;
 
     ngx_http_virtual_names_t  *virtual_names;
@@ -288,7 +295,8 @@ struct ngx_http_addr_conf_s
 
 typedef struct 
 {
-    in_addr_t                  addr;  /*IP地址，网络字节序*/
+	/*IP地址，网络字节序*/
+    in_addr_t                  addr;  
     ngx_http_addr_conf_t       conf;
 } ngx_http_in_addr_t;
 
@@ -306,9 +314,10 @@ typedef struct
 
 typedef struct 
 {
-    /* ngx_http_in_addr_t or ngx_http_in6_addr_t */
+    //ngx_http_in_addr_t or ngx_http_in6_addr_t 
     void                      *addrs;
-    ngx_uint_t                 naddrs;		/*addrs指向的对象的元素的个数*/
+	//addrs指向的对象的元素的个数
+    ngx_uint_t                 naddrs;		
 } ngx_http_port_t;
 
 
