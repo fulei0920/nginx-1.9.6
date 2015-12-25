@@ -2311,30 +2311,32 @@ ngx_http_run_posted_requests(ngx_connection_t *c)
 
     for ( ;; ) 
 	{
-		/* 连接已经断开，直接返回 */  
+		//连接已经销毁，直接返回  
         if (c->destroyed) 
 		{
             return;
         }
 
         r = c->data;
-		 /* 从posted_requests链表的队头开始遍历 */  
+		//根据ngx_http_request_t结构体中的main成员找到原始请求，这个原始请求的posted_requests成员指向待处理的post请求组成的单链表
         pr = r->main->posted_requests;
 
+		//如果posted_requests指向NULL空指针，则结束ngx_http_run_posted_requests方法
         if (pr == NULL) 
 		{
             return;
         }
 
-		/* 从链表中移除即将要遍历的节点 */
+		//将主请求的posted_requests指针指向链表中的下一个post请求，当然，下一个post请求有可能不存在，这在下一次循环中就会检测到
         r->main->posted_requests = pr->next;
-		 /* 得到该节点中保存的请求 */  
+		//取出链表中首个指向post请求的指针
         r = pr->request;
 
         ngx_http_set_log_request(c->log, r);
 
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http posted request: \"%V?%V\"", &r->uri, &r->args);
-
+		//调用这个post请求ngx_http_request_t结构体中的write_event_handler方法。为什么不是执行read_event_handler方法呢?
+		//子请求不是被网络事件驱动的，因此，执行post请求时就相当于有可写事件，由Nginx主动做出动作
         r->write_event_handler(r);
     }
 }
@@ -2399,7 +2401,9 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         return;
     }
 
-    if (r != r->main && r->post_subrequest) {
+	//如果当前请求是一个子请求，检查它是否有回调handler，有的话执行之
+    if (r != r->main && r->post_subrequest) 
+	{
         rc = r->post_subrequest->handler(r, r->post_subrequest->data, rc);
     }
 
@@ -2446,11 +2450,17 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         return;
     }
 
-    if (r != r->main) {
-
-        if (r->buffered || r->postponed) {
-
-            if (ngx_http_set_write_handler(r) != NGX_OK) {
+	//子请求
+    if (r != r->main)
+	{
+		/* 该子请求还有未处理完的数据或者子请求 */
+        if (r->buffered || r->postponed)
+		{
+			/* 添加一个该子请求的写事件，并设置合适的write event hander，
+               以便下次写事件来的时候继续处理，这里实际上下次执行时会调用ngx_http_output_filter函数，
+               最终还是会进入ngx_http_postpone_filter进行处理 */
+            if (ngx_http_set_write_handler(r) != NGX_OK) 
+			{
                 ngx_http_terminate_request(r, 0);
             }
 
@@ -2459,15 +2469,19 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 
         pr = r->parent;
 
-        if (r == c->data) {
+		/* 该子请求已经处理完毕，如果它拥有发送数据的权利，则将权利移交给父请求， */
+        if (r == c->data) 
+		{
 
             r->main->count--;
 
-            if (!r->logged) {
+            if (!r->logged) 
+			{
 
                 clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-                if (clcf->log_subrequest) {
+                if (clcf->log_subrequest) 
+				{
                     ngx_http_log_request(r);
                 }
 
@@ -2480,15 +2494,22 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
             }
 
             r->done = 1;
-
-            if (pr->postponed && pr->postponed->request == r) {
+			/* 如果该子请求不是提前完成，则从父请求的postponed链表中删除 */
+            if (pr->postponed && pr->postponed->request == r) 
+			{
                 pr->postponed = pr->postponed->next;
             }
-
+			/* 将发送权利移交给父请求，父请求下次执行的时候会发送它的postponed链表中可以
+               发送的数据节点，或者将发送权利移交给它的下一个子请求 */
             c->data = pr;
 
-        } else {
-
+        } 
+		else 
+		{
+			 /* 到这里其实表明该子请求提前执行完成，而且它没有产生任何数据，则它下次再次获得
+               执行机会时，将会执行ngx_http_request_finalzier函数，它实际上是执行
+               ngx_http_finalzie_request（r,0），也就是什么都不干，直到轮到它发送数据时，
+               ngx_http_finalzie_request函数会将它从父请求的postponed链表中删除 */
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                            "http finalize non-active request: \"%V?%V\"",
                            &r->uri, &r->args);
@@ -2499,8 +2520,9 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
                 r->done = 1;
             }
         }
-
-        if (ngx_http_post_request(pr, NULL) != NGX_OK) {
+		 /* 将父请求加入posted_request队尾，获得一次运行机会 */
+        if (ngx_http_post_request(pr, NULL) != NGX_OK)
+		{
             r->main->count++;
             ngx_http_terminate_request(r, 0);
             return;
@@ -2513,7 +2535,11 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         return;
     }
 
-    if (r->buffered || c->buffered || r->postponed || r->blocked) {
+/* 这里是处理主请求结束的逻辑，如果主请求有未发送的数据或者未处理的子请求，
+       则给主请求添加写事件，并设置合适的write event hander，
+       以便下次写事件来的时候继续处理 */
+    if (r->buffered || c->buffered || r->postponed || r->blocked)
+	{
 
         if (ngx_http_set_write_handler(r) != NGX_OK) {
             ngx_http_terminate_request(r, 0);
@@ -2820,6 +2846,8 @@ ngx_http_block_reading(ngx_http_request_t *r)
 
     /* aio does not call this handler */
 
+	//这个函数实际上什么都不做
+	//在事件模型设置为水平触发时，唯一做的事情就是将事件从事件模型监听列表中删除，防止该事件一直被触发
     if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && r->connection->read->active)
     {
         if (ngx_del_event(r->connection->read, NGX_READ_EVENT, 0) != NGX_OK) 
@@ -3524,21 +3552,23 @@ ngx_http_close_request(ngx_http_request_t *r, ngx_int_t rc)
     r = r->main;
     c = r->connection;
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http request count:%d blk:%d", r->count, r->blocked);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http request count:%d blk:%d", r->count, r->blocked);
 
-    if (r->count == 0) {
+    if (r->count == 0) 
+	{
         ngx_log_error(NGX_LOG_ALERT, c->log, 0, "http request count is zero");
     }
 
     r->count--;
 
-    if (r->count || r->blocked) {
+    if (r->count || r->blocked)
+	{
         return;
     }
 
 #if (NGX_HTTP_V2)
-    if (r->stream) {
+    if (r->stream) 
+	{
         ngx_http_v2_close_stream(r->stream, rc);
         return;
     }

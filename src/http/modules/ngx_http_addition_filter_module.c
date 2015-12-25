@@ -72,7 +72,8 @@ static ngx_http_module_t  ngx_http_addition_filter_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_addition_filter_module = {
+ngx_module_t  ngx_http_addition_filter_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_addition_filter_module_ctx,  /* module context */
     ngx_http_addition_commands,            /* module directives */
@@ -149,19 +150,21 @@ ngx_http_addition_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_addition_filter_module);
 
-    if (!ctx->before_body_sent) {
+    if (!ctx->before_body_sent) 
+	{
         ctx->before_body_sent = 1;
 
-        if (conf->before_body.len) {
-            if (ngx_http_subrequest(r, &conf->before_body, NULL, &sr, NULL, 0)
-                != NGX_OK)
+        if (conf->before_body.len) 
+		{
+            if (ngx_http_subrequest(r, &conf->before_body, NULL, &sr, NULL, 0) != NGX_OK)
             {
                 return NGX_ERROR;
             }
         }
     }
 
-    if (conf->after_body.len == 0) {
+    if (conf->after_body.len == 0) 
+	{
         ngx_http_set_ctx(r, NULL, ngx_http_addition_filter_module);
         return ngx_http_next_body_filter(r, in);
     }
@@ -182,8 +185,7 @@ ngx_http_addition_body_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return rc;
     }
 
-    if (ngx_http_subrequest(r, &conf->after_body, NULL, &sr, NULL, 0)
-        != NGX_OK)
+    if (ngx_http_subrequest(r, &conf->after_body, NULL, &sr, NULL, 0) != NGX_OK)
     {
         return NGX_ERROR;
     }

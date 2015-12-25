@@ -106,7 +106,8 @@ typedef struct
 } ngx_http_proxy_loc_conf_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_status_t              status;
     ngx_http_chunked_t             chunked;
     ngx_http_proxy_vars_t          vars;
@@ -837,7 +838,8 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     }
 
     ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_proxy_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -855,8 +857,11 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
         u->ssl = (plcf->upstream.ssl != NULL);
 #endif
 
-    } else {
-        if (ngx_http_proxy_eval(r, ctx, plcf) != NGX_OK) {
+    } 
+	else 
+	{
+        if (ngx_http_proxy_eval(r, ctx, plcf) != NGX_OK) 
+		{
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
     }

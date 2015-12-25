@@ -354,7 +354,6 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-
     /* optimize the lists of ports, addresses and server names */
     if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK)
 	{
@@ -498,7 +497,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 	//PREACCESS阶段的节点的next域指向ACCESS阶段的第1个节点
 	//ACCESS阶段的节点的next域指向CONTENT阶段的第1个节点, 当然如果TRY_FILES阶段存在的话，则是指向TRY_FILES阶段的第1个节点
 	//POST_ACCESS阶段的节点的next域指向CONTENT阶段的第1个节点, 当然如果TRY_FILES阶段存在的话，则是指向TRY_FILES阶段的第1个节点
-	//CONTENT阶段的节点的next域指向LOG阶段的第1个节点
+	//CONTENT阶段的节点的next域指向LOG阶段的第1个节点  /*??没有设置  for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) NGX_HTTP_LOG_PHASE阶段*/
 
 
     n = 0;
@@ -562,7 +561,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
             continue;
 
         case NGX_HTTP_TRY_FILES_PHASE:
-            if (cmcf->try_files)	//TRY_FILES阶段只有在配置了try_files指令的时候才存在
+			//TRY_FILES阶段只有在配置了try_files指令的时候才存在
+            if (cmcf->try_files)	
 			{
                 ph->checker = ngx_http_core_try_files_phase;
                 n++;
@@ -571,7 +571,8 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
             continue;
 		
-        case NGX_HTTP_CONTENT_PHASE:		//CONTENT阶段的next域指向LOG阶段
+        case NGX_HTTP_CONTENT_PHASE:
+			//CONTENT阶段的next域指向LOG阶段
             checker = ngx_http_core_content_phase;
             break;
 		//PREACCESS阶段的next域指向ACCESS域

@@ -39,7 +39,8 @@ ngx_http_read_client_request_body(ngx_http_request_t *r, ngx_http_client_body_ha
     r->main->count++;
 
 #if (NGX_HTTP_V2)
-    if (r->stream && r == r->main) {
+    if (r->stream && r == r->main) 
+	{
         r->request_body_no_buffering = 0;
         rc = ngx_http_v2_read_request_body(r, post_handler);
         goto done;

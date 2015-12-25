@@ -173,8 +173,11 @@ typedef struct {
 
 typedef struct 
 {
-    ngx_list_t                        headers;   /*array fo ngx_table_elt_t; 存储请求头，例如Host: 127.0.0.1*/
+	//所有解析过的HTTP头部都在headers链表中
+    ngx_list_t                        headers;   /*list of ngx_table_elt_t; 存储请求头，例如Host: 127.0.0.1*/
 
+	//以下每个ngx_table_elt_t成员都是RFC1616规范中定义的HTTP头部，它们实际都指向headers链表中的响应项。
+	//注意，当它们为NULL空指针时，表示没有解析到相应的HTTP头部
     ngx_table_elt_t                  *host;
     ngx_table_elt_t                  *connection;
     ngx_table_elt_t                  *if_modified_since;
@@ -222,17 +225,24 @@ typedef struct
     ngx_table_elt_t                  *date;
 #endif
 
+	//user和passwd是只有ngx_http_auth_basic_module才会用到的成员
     ngx_str_t                         user;
     ngx_str_t                         passwd;
 
     ngx_array_t                       cookies;
 
+	//server名称
     ngx_str_t                         server;
+	//根据ngx_table_elt_t * content_length计算出HTTP包体大小
     off_t                             content_length_n;
     time_t                            keep_alive_n;
 
+	//HTTP连接类型，它的取值范围是0， NGX_HTTP_CONNECTION_CLOSE 或者 NGX_HTTP_CONNECTION_KEEP_ALIVE
     unsigned                          connection_type:2;
     unsigned                          chunked:1;
+
+	//以下7个标志位是HTTP框架根据浏览器传来的"useragent"头部，它们可用来判断浏览器的类型，
+	//值为1时表示是相应的浏览器发来的请求，值为0时则相反
     unsigned                          msie:1;
     unsigned                          msie6:1;
     unsigned                          opera:1;
@@ -332,11 +342,17 @@ struct ngx_http_cleanup_s
 };
 
 
+//返回值
+//rc -- 子请求在结束时的状态，它到的取值则是执行ngx_http_finalize_request销毁请求时传递的rc参数
 typedef ngx_int_t (*ngx_http_post_subrequest_pt)(ngx_http_request_t *r, void *data, ngx_int_t rc);
 
 typedef struct 
 {
+	//Nginx在子请求正常或者异常结束时，都会调用ngx_http_post_subrequest_pt回调方法
+	//在回调方法内必须设置父请求激活后的处理方法，设置方法很简单，首先找出父请求，例如ngx_http_request_t *pr = r->parent;
+	//然后将实现好的ngx_http_event_handler_pt回调方法赋给父请求的write_event_handler指针
     ngx_http_post_subrequest_pt       handler;
+	//handler指向的ngx_http_post_subrequest_pt回调方法执行执行时的data参数
     void                             *data;
 } ngx_http_post_subrequest_t;
 
@@ -345,8 +361,10 @@ typedef struct ngx_http_postponed_request_s  ngx_http_postponed_request_t;
 
 struct ngx_http_postponed_request_s 
 {
+	//当前请求的子请求
     ngx_http_request_t               *request;
-    ngx_chain_t                      *out;		//临时保存当前请求处理后的结果数据，也就是为了组织最终的响应数据而设计
+	//临时保存当前请求处理后的结果数据(该请求自己产生的数据)，也就是为了组织最终的响应数据而设计
+    ngx_chain_t                      *out;		
     ngx_http_postponed_request_t     *next;
 };
 
@@ -355,7 +373,9 @@ typedef struct ngx_http_posted_request_s  ngx_http_posted_request_t;
 
 struct ngx_http_posted_request_s 
 {
+	//指向当前待处理的子请求的ngx_http_request_t结构体
     ngx_http_request_t               *request;
+	//指向下一个子请求，如果没有，则为NULL空指针
     ngx_http_posted_request_t        *next;
 };
 
@@ -440,10 +460,13 @@ struct ngx_http_request_s
 	//我们一般可通过main和当前请求的地址是否相等来判断当前请求是否为用户发来的原始请求
     ngx_http_request_t               *main;		
 	//当前请求的父请求。注意，父请求未必是原始请求
-    ngx_http_request_t               *parent;			
-    ngx_http_postponed_request_t     *postponed;		//当前请求的子请求链表	
-    ngx_http_post_subrequest_t       *post_subrequest;	//回调函数以及可传递给该回调函数的数据，回调函数在当前子请求结束时被调用，因此可以做进一步自定义处理
-    ngx_http_posted_request_t        *posted_requests;	//记录当前所有需要被执行的子请求的链表，该字段仅主请求有效
+    ngx_http_request_t               *parent;
+	//当前请求的子请求链表	
+    ngx_http_postponed_request_t     *postponed;
+	//回调函数以及可传递给该回调函数的数据，回调函数在当前子请求结束时被调用，因此可以做进一步自定义处理
+    ngx_http_post_subrequest_t       *post_subrequest;	
+    //记录当前所有需要被执行的子请求的链表，该字段仅主请求有效
+    ngx_http_posted_request_t        *posted_requests;	
 
 	//全局的ngx_http_phase_engine_t结构体中定义了一个ngx_http_phase_handler_t回调方法组成的数组，
 	//而phase_handler成员则与该数组配合使用，表示请求下次应当执行以phase_handler作为序号指定的
@@ -488,6 +511,19 @@ struct ngx_http_request_s
 	//每增加一个子请求，count数就要加1.其中任何一个子请求派生出新的子请求时，对应的原始请求(main指针指向的请求)
 	//的count值都要加1。又如，当我们接收HTTP包体时，由于这也是一个异步调用，所以count上也需要加1，这样在结束请求时，
 	//就不会在count引用计数未清零时销毁请求。
+
+	//每当派生出子请求时，原始请求的count成员都会加1，在正真销毁请求前，可以通过检查count成员是否为0以确认是否销毁
+	//原始请求，这样可以做到唯有所有的子请求都结束时，原始请求才会销毁，内存池、TCP连接等资源才会释放。
+
+	//在HTTP模块中每进行一类新的操作，包括为一个请求添加新的事件，或者把一些已经由定时器、epoll中移除的事件重新加入其中，
+	//都需要把这个请求的引用计数加1。这是因为需要让HTTP框架知道HTTP模块对于该请求有独立的异步处理机制，将由该HTTP模块决
+	//定这个操作什么时候结束，防止在这个操作还未结束时HTTP框架却把这个请求销毁了(如其他HTTP模块通过调用ngx_http_finalize_request
+	//方法要求HTTP框架结束请求)，导致请求出现不可知的严重错误。这就要求每个操作在"认为"自身的动作结束时，都得最终调用到
+	//ngx_http_close_request方法，该方法会自动检查引用计数，当引用计数为0时才真正的销毁请求。实际上，很多结束请求的方法
+	//最后一定会调用到ngx_http_close_request方法。
+
+	//引用计数一般都作用于这个请求的主请求上，因此，在结束请求时同一检查主请求的引用计数就可以了。当然，目前的HTTP框架也
+	//要求我们必须这么做，因为ngx_http_close_request方法只是把主请求上单 引用计数减1.
     unsigned                          count:16;
     unsigned                          subrequests:8;
 	//阻塞标志位，目前仅由aio使用
@@ -568,8 +604,9 @@ struct ngx_http_request_s
 	//标志位，为1时表示正在丢弃HTTP请求中的包体
     unsigned                          discard_body:1;
     unsigned                          reading_body:1;
+	//该请求属于内部请求对象(例如内部跳转、命名location跳转、子请求等)
 	//标志位，为1时表示请求的当前状态是在做内部跳转
-    unsigned                          internal:1;			//该请求属于内部请求对象(例如内部跳转、命名location跳转、子请求等)
+    unsigned                          internal:1;			
     unsigned                          error_page:1;
     unsigned                          filter_finalize:1;
     unsigned                          post_action:1;

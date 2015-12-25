@@ -1421,11 +1421,7 @@ ngx_http_core_try_files_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *p
     /* not reached */
 }
 
-//其余10个阶段中各HTTP模块的处理方法都是放在全局的ngx_http_core_main_conf_t结构体中的，也就是说，
-//它们对任何一个HTTP请求都是有效的。但在NGX_HTTP_CONTENT_PHASE阶段却很自然的有另一种需求，有的HTTP
-//模块可能仅希望在这个处理请求内容的阶段，仅仅针对某种请求唯一生效，而不是对所有请求生效。例如，
-//仅当请求的URI匹配了配置文件中的location块时，再根据location块下的配置选择一个HTTP模块执行它的
-//handler处理方法，并以此代替NGX_HTTP_CONTENT_PHASE阶段的其它handler方法(这些handler方法对于该请求将得不到执行)。
+
 ngx_int_t
 ngx_http_core_content_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 {
@@ -1433,12 +1429,20 @@ ngx_http_core_content_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
     ngx_int_t  rc;
     ngx_str_t  path;
 
+	//其余10个阶段中各HTTP模块的处理方法都是放在全局的ngx_http_core_main_conf_t结构体中的，也就是说，
+	//它们对任何一个HTTP请求都是有效的。但在NGX_HTTP_CONTENT_PHASE阶段却很自然的有另一种需求，有的HTTP
+	//模块可能仅希望在这个处理请求内容的阶段，仅仅针对某种请求唯一生效，而不是对所有请求生效。例如，
+	//仅当请求的URI匹配了配置文件中的location块时，再根据location块下的配置选择一个HTTP模块执行它的
+	//handler处理方法，并以此代替NGX_HTTP_CONTENT_PHASE阶段的其它handler方法(这些handler方法对于该请求将得不到执行)。
+
 	//检测ngx_http_request_t结构体的content_handler成员是否为空，其实就是看在NGX_HTTP_FIND_CONFIG_PHASE阶段匹配了URI请求的location内，
 	//是否有HTTP模块把处理方法设置到了ngx_http_core_loc_conf_t结构体的handler成员中。
     if (r->content_handler) 
 	{
-		//设置结构体的成员为不做任何事情的方法，也就是告诉HTTP框架再有可写事件时就调用
-		//直接把控制权交还给事件模块。为何要这样做呢?因为HTTP框架再这一阶段调用HTTP模块
+		//设置ngx_http_request_t结构体的write_event_handler成员为不做任何事情的ngx_http_request_empty_handler方法，也就是告诉HTTP框架
+		//再有可写事件时就调用ngx_http_request_empty_handler直接把控制权交还给事件模块。为何要这样做呢?因为HTTP框架在这一阶段调用HTTP
+		//模块处理请求就意味着接下来只希望该模块处理请求，先把write_event_handler强制转化为ngx_http_request_empty_handler，可以防止该
+		//HTTP模块异步地处理请求时却有其它HTTP模块还在同时处理可写事件、向客户端发送响应、
         r->write_event_handler = ngx_http_request_empty_handler;
         ngx_http_finalize_request(r, r->content_handler(r));
         return NGX_OK;
@@ -1456,8 +1460,11 @@ ngx_http_core_content_phase(ngx_http_request_t *r, ngx_http_phase_handler_t *ph)
 
     /* rc == NGX_DECLINED */
 
+	//请求在第10个阶段NGX_HTTP_CONTENT_PHASE后，并没有去掉用第11个阶段NGX_HTTP_LOG_PHASE的处理方法，事实上，记录访问日志
+	//是必须在请求将要结束时才能进行的，因此，NGX_HTTP_LOG_PHASE阶段的回调方法在ngx_http_free_request方法中才会调用到
+	
+	//通过转到数组中的下一个handler方法，检测其checker方法是否存在，来判断当前的handler方法是否已经是最后一个handler方法
     ph++;
-
     if (ph->checker)
 	{
         r->phase_handler++;
@@ -2493,12 +2500,16 @@ ngx_http_gzip_quantity(u_char *p, u_char *last)
 #endif
 
 //创建子请求
-//r -- 当前创建子请求的请求对象，也就是父请求
-//uri -- 子请求的uri地址
-//args -- 子请求的get参数
-//psr -- 一个传出参数，用于获取新创建的子请求
-//ps -- 指定子请求的回调处理函数
-//flags -- 标志值, NGX_HTTP_SUBREQUEST_WAITED | NGX_HTTP_SUBREQUEST_IN_MEMORY
+//参数:
+//	r -- 当前创建子请求的请求对象，也就是父请求
+//	uri -- 子请求的uri地址，它对究竟选用nginx.conf配置文件中的那个模块来处理子请求起决定性作用
+//	args -- 子请求的URI参数，如果没有参数，可以传送NULL空指针
+//	psr -- 一个传出参数，用于获取新创建的子请求。一般，我们先建立一个子请求的空指针ngx_http_request_t *psr，
+//			再把它的地址&psr传入到ngx_http_subrequest方法中，如果返回成功，psr就指向建立好的子请求
+//	ps -- 指定子请求结束时必须回调的处理方法
+//	flags -- 标志值, NGX_HTTP_SUBREQUEST_WAITED | NGX_HTTP_SUBREQUEST_IN_MEMORY
+//返回值:
+//	NGX_OK -- 表示成功建立子请求 	NGX_ERROR -- 表示建立子请求失败
 ngx_int_t
 ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_http_request_t **psr,
     ngx_http_post_subrequest_t *ps, ngx_uint_t flags)
@@ -2525,7 +2536,8 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     }
 
     sr = ngx_pcalloc(r->pool, sizeof(ngx_http_request_t));
-    if (sr == NULL) {
+    if (sr == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -2535,7 +2547,8 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     sr->connection = c;
 
     sr->ctx = ngx_pcalloc(r->pool, sizeof(void *) * ngx_http_max_module);
-    if (sr->ctx == NULL) {
+    if (sr->ctx == NULL)
+	{
         return NGX_ERROR;
     }
 
@@ -2584,13 +2597,17 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     sr->http_protocol = r->http_protocol;
 
     ngx_http_set_exten(sr);
-
+	//主请求保存在main字段中
     sr->main = r->main;
+	//父请求为当前请求
     sr->parent = r;
+	//保存回调handler及数据，在子请求执行完，将会调用
     sr->post_subrequest = ps;
+	//读事件handler赋值为不做任何事的函数，因为子请求不用再读数据或者检查连接状态；
+    //写事件handler为ngx_http_handler，它会重走phase
     sr->read_event_handler = ngx_http_request_empty_handler;
     sr->write_event_handler = ngx_http_handler;
-
+	//ngx_connection_s的data字段比较关键，它保存了当前可以向out chain输出数据的请求
 	//如果当前排在最前面的请求是父请求并且子请求是该父请求的第一个，那么就做切换
     if (c->data == r && r->postponed == NULL) 
 	{
@@ -2602,7 +2619,8 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     sr->log_handler = r->log_handler;
 
     pr = ngx_palloc(r->pool, sizeof(ngx_http_postponed_request_t));
-    if (pr == NULL) {
+    if (pr == NULL)
+	{
         return NGX_ERROR;
     }
 
@@ -2610,19 +2628,21 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     pr->out = NULL;
     pr->next = NULL;
 
+	//把该子请求挂载在其父请求的postponed链表的队尾
     if (r->postponed) 
 	{
         for (p = r->postponed; p->next; p = p->next) { /* void */ }
         p->next = pr;
-
     }
 	else 
 	{
         r->postponed = pr;
     }
 
+	//子请求为内部请求，它可以访问internal类型的location
     sr->internal = 1;
 
+	//继承父请求的一些状态
     sr->discard_body = r->discard_body;
     sr->expect_tested = 1;
     sr->main_filter_need_in_memory = r->main_filter_need_in_memory;
@@ -2634,10 +2654,12 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     sr->start_sec = tp->sec;
     sr->start_msec = tp->msec;
 
+	//增加主请求的引用数，这个字段主要是在ngx_http_finalize_request调用的一些结束请求和连接的函数中使用
     r->main->count++;
 
     *psr = sr;
 
+	//将该子请求挂载在主请求的posted_requests链表队尾
     return ngx_http_post_request(sr, NULL);
 }
 
