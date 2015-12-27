@@ -166,7 +166,8 @@ ngx_chain_get_free_buf(ngx_pool_t *p, ngx_chain_t **free)
 {
     ngx_chain_t  *cl;
 
-    if (*free) {
+    if (*free) 
+	{
         cl = *free;
         *free = cl->next;
         cl->next = NULL;
@@ -174,12 +175,14 @@ ngx_chain_get_free_buf(ngx_pool_t *p, ngx_chain_t **free)
     }
 
     cl = ngx_alloc_chain_link(p);
-    if (cl == NULL) {
+    if (cl == NULL) 
+	{
         return NULL;
     }
 
     cl->buf = ngx_calloc_buf(p);
-    if (cl->buf == NULL) {
+    if (cl->buf == NULL) 
+	{
         return NULL;
     }
 
@@ -190,15 +193,19 @@ ngx_chain_get_free_buf(ngx_pool_t *p, ngx_chain_t **free)
 
 
 void
-ngx_chain_update_chains(ngx_pool_t *p, ngx_chain_t **free, ngx_chain_t **busy,
-    ngx_chain_t **out, ngx_buf_tag_t tag)
+ngx_chain_update_chains(ngx_pool_t *p, ngx_chain_t **free, ngx_chain_t **busy, ngx_chain_t **out, ngx_buf_tag_t tag)
 {
     ngx_chain_t  *cl;
 
-    if (*busy == NULL) {
+
+	//将out chain链表挂接到busy chain链表的最后
+    if (*busy == NULL)
+	{
         *busy = *out;
 
-    } else {
+    } 
+	else 
+	{
         for (cl = *busy; cl->next; cl = cl->next) { /* void */ }
 
         cl->next = *out;
@@ -206,14 +213,17 @@ ngx_chain_update_chains(ngx_pool_t *p, ngx_chain_t **free, ngx_chain_t **busy,
 
     *out = NULL;
 
-    while (*busy) {
+    while (*busy) 
+	{
         cl = *busy;
 
-        if (ngx_buf_size(cl->buf) != 0) {
+        if (ngx_buf_size(cl->buf) != 0) 
+		{
             break;
         }
 
-        if (cl->buf->tag != tag) {
+        if (cl->buf->tag != tag)
+		{
             *busy = cl->next;
             ngx_free_chain(p, cl);
             continue;

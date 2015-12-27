@@ -58,13 +58,20 @@ typedef struct
 /*内存池的管理分配模块*/
 struct ngx_pool_s 
 {
-    ngx_pool_data_t       d;			/*内存池的数据块*/
-    size_t                max;			/*小块内存分配的最大值*/
-    ngx_pool_t           *current;		/*指向内存池链表中当前可供分配的内存池*/
-    ngx_chain_t          *chain;		/*指向一个ngx_chain_t结构*/
-    ngx_pool_large_t     *large;		/*指向大块内存分配，nginx中，大块内存分配直接采用标准系统接口malloc*/
-    ngx_pool_cleanup_t   *cleanup;		/*析构函数，挂载内存释放时需要清理资源的一些必要操作*/
-    ngx_log_t            *log;			/*内存分配相关的日志记录*/
+	//内存池的数据块
+    ngx_pool_data_t       d;			
+	//小块内存分配的最大值
+    size_t                max;			
+	//指向内存池链表中当前可供分配的内存池
+    ngx_pool_t           *current;		
+	//指向一个空闲的ngx_chain_t链表
+    ngx_chain_t          *chain;
+	//指向大块内存分配，nginx中，大块内存分配直接采用标准系统接口malloc
+    ngx_pool_large_t     *large;		
+	//析构函数，挂载内存释放时需要清理资源的一些必要操作
+    ngx_pool_cleanup_t   *cleanup;		
+	//内存分配相关的日志记录
+    ngx_log_t            *log;			
 };
 
 

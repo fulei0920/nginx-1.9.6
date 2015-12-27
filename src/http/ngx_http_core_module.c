@@ -360,12 +360,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_loc_conf_t, client_max_body_size),
       NULL },
 
-    { ngx_string("client_body_buffer_size"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_size_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, client_body_buffer_size),
-      NULL },
+    { 
+   		ngx_string("client_body_buffer_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_size_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, client_body_buffer_size),
+		NULL 
+    },
 
     { ngx_string("client_body_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
