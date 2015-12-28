@@ -5286,12 +5286,8 @@ ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     u.no_resolve = 1;
     u.no_port = 1;
 
-    uscf = ngx_http_upstream_add(cf, &u, NGX_HTTP_UPSTREAM_CREATE
-                                         |NGX_HTTP_UPSTREAM_WEIGHT
-                                         |NGX_HTTP_UPSTREAM_MAX_FAILS
-                                         |NGX_HTTP_UPSTREAM_FAIL_TIMEOUT
-                                         |NGX_HTTP_UPSTREAM_DOWN
-                                         |NGX_HTTP_UPSTREAM_BACKUP);
+    uscf = ngx_http_upstream_add(cf, &u, NGX_HTTP_UPSTREAM_CREATE |NGX_HTTP_UPSTREAM_WEIGHT |NGX_HTTP_UPSTREAM_MAX_FAILS
+				|NGX_HTTP_UPSTREAM_FAIL_TIMEOUT |NGX_HTTP_UPSTREAM_DOWN |NGX_HTTP_UPSTREAM_BACKUP);
     if (uscf == NULL) 
 	{
         return NGX_CONF_ERROR;
@@ -5971,12 +5967,13 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 
     uscfp = umcf->upstreams.elts;
 
-    for (i = 0; i < umcf->upstreams.nelts; i++) {
+    for (i = 0; i < umcf->upstreams.nelts; i++) 
+	{
 
-        init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream:
-                                            ngx_http_upstream_init_round_robin;
+        init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream: ngx_http_upstream_init_round_robin;
 
-        if (init(cf, uscfp[i]) != NGX_OK) {
+        if (init(cf, uscfp[i]) != NGX_OK)
+		{
             return NGX_CONF_ERROR;
         }
     }
