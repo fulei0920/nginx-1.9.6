@@ -468,12 +468,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_loc_conf_t, send_lowat),
       &ngx_http_core_lowat_post },
 
-    { ngx_string("postpone_output"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_size_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, postpone_output),
-      NULL },
+    { 
+		ngx_string("postpone_output"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_size_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, postpone_output),
+		NULL 
+    },
 
     { ngx_string("limit_rate"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
@@ -2017,7 +2019,14 @@ ngx_http_send_response(ngx_http_request_t *r, ngx_uint_t status, ngx_str_t *ct, 
     return ngx_http_output_filter(r, &out);
 }
 
+//负责构造HTTP响应行，头部，同时会把它们发送给客户端
+//发送响应头部使用了流水线式的过滤模块思想，即通过提供统一的接口，让各个感兴趣的HTTP模块加入到ngx_http_send_header
+//方法中，然后通过每个过滤模块C源文件中独有的ngx_http_next_header_filter指针将各个过滤头部的方法连接起来，这样在调用
+//ngx_http_send_header方法时，实际就是依次调用了所有头部过滤模块的方法，其中，链表里的最后一个头部过滤方法ngx_http_header_filter
+//将负责发送头部。因此，这些过滤模块组成的链表顺序是非常重要的。
 
+//如果不需要发送包体，那么这时需要调用ngx_http_finalize_request方法来结束请求，其中第二个参数务必要传递NGX_AGAIN,这样HTTP框架
+//才会继续将可写事件注册到epoll，并持续地把请求的out成员中缓冲区里的HTTP响应发送完毕才会结束请求。
 ngx_int_t
 ngx_http_send_header(ngx_http_request_t *r)
 {
@@ -2041,7 +2050,16 @@ ngx_http_send_header(ngx_http_request_t *r)
     return ngx_http_top_header_filter(r);
 }
 
+//发送HTTP响应包体
+//使用ngx_http_output_filter发送响应时，必须与结束请求的ngx_http_finalize_request方法配合使用
+//(ngx_http_finalize_request方法会把请求的write_event_handler设置为ngx_http_writer方法，并将写事件
+//添加到epoll和定时器中)，这样就使得正真负责在后台异步的发送响应的ngx_http_writer方法对HTTP模块而言也是透明的
 
+//用于过滤包体的HTTP模块将以ngx_http_output_filter方法在发送包体时会一次调用各个过滤包体方法，其中最后一个过滤
+//包体的方法就是ngx_http_write_filter方法，它属于ngx_http_write_filter_module模块
+
+//参数:
+//	in -- 用于存放响应包体的缓冲区
 ngx_int_t
 ngx_http_output_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
@@ -2797,6 +2815,7 @@ ngx_http_named_location(ngx_http_request_t *r, ngx_str_t *name)
 }
 
 
+//用于向请求中添加ngx_http_cleanup_t结构体
 ngx_http_cleanup_t *
 ngx_http_cleanup_add(ngx_http_request_t *r, size_t size)
 {
@@ -2805,17 +2824,22 @@ ngx_http_cleanup_add(ngx_http_request_t *r, size_t size)
     r = r->main;
 
     cln = ngx_palloc(r->pool, sizeof(ngx_http_cleanup_t));
-    if (cln == NULL) {
+    if (cln == NULL)
+	{
         return NULL;
     }
 
-    if (size) {
+    if (size)
+	{
         cln->data = ngx_palloc(r->pool, size);
-        if (cln->data == NULL) {
+        if (cln->data == NULL)
+		{
             return NULL;
         }
 
-    } else {
+    } 
+	else
+	{
         cln->data = NULL;
     }
 
@@ -2824,8 +2848,7 @@ ngx_http_cleanup_add(ngx_http_request_t *r, size_t size)
 
     r->cleanup = cln;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http cleanup add: %p", cln);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http cleanup add: %p", cln);
 
     return cln;
 }

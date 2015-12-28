@@ -345,8 +345,11 @@ typedef struct ngx_http_cleanup_s  ngx_http_cleanup_t;
 
 struct ngx_http_cleanup_s 
 {
+	//由HTTP模块提供的清理资源的回调方法
     ngx_http_cleanup_pt               handler;
+	//希望给上面handler方法传递的参数
     void                             *data;
+	//一个请求可能有多个ngx_http_cleanup_t清理方法，这些清理方法之间是通过next指针连接成单链表
     ngx_http_cleanup_t               *next;
 };
 
@@ -495,8 +498,9 @@ struct ngx_http_request_s
     int                              *captures;
     u_char                           *captures_data;
 #endif
-
+	//发送响应的最大限速速率(byte/sec)， 0表示不限制
     size_t                            limit_rate;
+	//限速这个动作是在发送了limit_rate_after字节的响应后才能生效(对于小响应包的优化)
     size_t                            limit_rate_after;
 
     /* used to learn the Apache compatible response length without a header */

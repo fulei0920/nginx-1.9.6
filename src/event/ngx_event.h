@@ -58,7 +58,7 @@ struct ngx_event_s
     unsigned         timedout:1;
 	/*事件被添加到定时器中*/
     unsigned         timer_set:1;			
-
+	/*标志位，为1表明响应需要延迟发送*/
     unsigned         delayed:1;
 
     unsigned         deferred_accept:1;
@@ -66,8 +66,8 @@ struct ngx_event_s
     /* the pending eof reported by kqueue, epoll or in aio chain operation */
     unsigned         pending_eof:1;
 
-    unsigned         posted:1;			/*表明事件是否在posted queue中*/	
-
+	/*表明事件是否在posted queue中*/	
+    unsigned         posted:1;			
     unsigned         closed:1;
 
     /* to test on worker exit */

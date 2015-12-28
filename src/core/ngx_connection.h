@@ -137,7 +137,8 @@ struct ngx_connection_s
 
     ngx_listening_t    *listening;		//连接对应的ngx_listening_t监听对象，此连接由listening监听对口的事件建立
 
-    off_t               sent;			//连接上已经发送出去的字节数
+	//连接上已经发送出去的字节数
+    off_t               sent;			
 
     ngx_log_t          *log;			//可以记录日志的ngx_log_t对象
 

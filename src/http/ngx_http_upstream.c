@@ -621,7 +621,8 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     }
 
     cln = ngx_http_cleanup_add(r, 0);
-    if (cln == NULL) {
+    if (cln == NULL) 
+	{
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
     }
@@ -630,11 +631,14 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     cln->data = r;
     u->cleanup = &cln->handler;
 
-    if (u->resolved == NULL) {
+    if (u->resolved == NULL)
+	{
 
         uscf = u->conf->upstream;
 
-    } else {
+    } 
+	else 
+	{
 
 #if (NGX_HTTP_SSL)
         u->ssl_name = u->resolved->host;

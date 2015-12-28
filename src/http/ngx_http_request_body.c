@@ -49,7 +49,7 @@ ngx_http_read_client_request_body(ngx_http_request_t *r, ngx_http_client_body_ha
         goto done;
     }
 #endif
-
+	//检查当前请求是主请求还是子请求，对于子请求而言，它不是来自客户端的请求，所以不存在处理HTTP请求包体的概念
 	//检查请求ngx_http_request_t结构体中的request_body成员，如果它已经被分配过了，证明已经读取过HTTP包体了，不需要再次读取一遍;
 	//检查请求ngx_http_request_t结构体中的discard_body成员，如果discard_body为1，则证明曾经执行过丢弃包体的方法，现在包体正在被丢弃中
     if (r != r->main || r->request_body || r->discard_body)
@@ -308,6 +308,7 @@ ngx_http_read_client_request_body_handler(ngx_http_request_t *r)
 {
     ngx_int_t  rc;
 
+	//检查是否接收HTTP包体超时
     if (r->connection->read->timedout) 
 	{
         r->connection->timedout = 1;
@@ -552,6 +553,7 @@ ngx_http_do_read_client_request_body(ngx_http_request_t *r)
 	{
 		//已经接收到完整的包体了，就会把read_event_handler设为ngx_http_block_reading方法，表示连接上再有读事件将不做任何处理
         r->read_event_handler = ngx_http_block_reading;
+		//执行HTTP模块提供的post_handler回调方法
         rb->post_handler(r);
     }
 
@@ -644,6 +646,11 @@ ngx_http_write_request_body(ngx_http_request_t *r)
     return NGX_OK;
 }
 
+//对于HTTP模块而言，放弃接收包体就是简单地不处理包体了，可是对于HTTP框架而言，并不是不接收包体就可以的。
+//因为对于客户端而言，通常会调用一些阻塞的发送方法来发送包体，如果HTTP框架一直不接收包体，会导致实现上
+//不够健壮的客户端认为服务器超时无响应，因而简单的关闭连接，可这时Nginx可能还在处理这个连接。因此，HTTP
+//模块中的放弃接收包体，对HTTP框架而言就是接收包体，但是接收后不做保存，直接丢弃。
+
 //因为有些客户端可能会一直试图发送包体，而如果HTTP模块不接收发来的TCP流，有可能造成客户端发送超时。
 //所以如果不想处理请求中的包体，那么可以调用ngx_http_discard_request_body方法将接收自客户端的HTTP包体丢弃掉
 ngx_int_t
@@ -654,17 +661,22 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
     ngx_event_t  *rev;
 
 #if (NGX_HTTP_V2)
-    if (r->stream && r == r->main) {
+    if (r->stream && r == r->main) 
+	{
         r->stream->skip_data = NGX_HTTP_V2_DATA_DISCARD;
         return NGX_OK;
     }
 #endif
-
-    if (r != r->main || r->discard_body || r->request_body) {
+	//检查当前请求是主请求还是子请求，对于子请求而言，它不是来自客户端的请求，所以不存在处理HTTP请求包体的概念
+	//检查请求ngx_http_request_t结构体中的request_body成员，如果它已经被分配过了，证明已经读取过HTTP包体了，不需要再次读取一遍;
+	//检查请求ngx_http_request_t结构体中的discard_body成员，如果discard_body为1，则证明曾经执行过丢弃包体的方法，现在包体正在被丢弃中
+    if (r != r->main || r->discard_body || r->request_body) 
+	{
         return NGX_OK;
     }
 
-    if (ngx_http_test_expect(r) != NGX_OK) {
+    if (ngx_http_test_expect(r) != NGX_OK) 
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -672,48 +684,63 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http set discard body");
 
-    if (rev->timer_set) {
+	//检查请求连接上的读事件是否在定时器中，这是因为丢弃包体不用考虑超时问题(linger_timer例外)
+    if (rev->timer_set) 
+	{
         ngx_del_timer(rev);
     }
 
-    if (r->headers_in.content_length_n <= 0 && !r->headers_in.chunked) {
+    if (r->headers_in.content_length_n <= 0 && !r->headers_in.chunked)
+	{
         return NGX_OK;
     }
 
+	
     size = r->header_in->last - r->header_in->pos;
-
-    if (size || r->headers_in.chunked) {
+	//检查接收HTTP头部时，是否已经接收到完整的HTTP包体
+    if (size || r->headers_in.chunked)
+	{
         rc = ngx_http_discard_request_body_filter(r, r->header_in);
 
-        if (rc != NGX_OK) {
+        if (rc != NGX_OK) 
+		{
             return rc;
         }
 
-        if (r->headers_in.content_length_n == 0) {
+        if (r->headers_in.content_length_n == 0)
+		{
+			//接收HTTP头部时，已经接收到完整的HTTP包体
             return NGX_OK;
         }
     }
 
     rc = ngx_http_read_discarded_request_body(r);
 
-    if (rc == NGX_OK) {
+	//rc == NGX_OK表示已经接收到完整的包体
+    if (rc == NGX_OK)
+	{
+		//将请求的lingering_close延时关闭标志位设为0，表示不需要为了包体的接收而延时关闭了
         r->lingering_close = 0;
         return NGX_OK;
     }
 
-    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) 
+	{
         return rc;
     }
 
-    /* rc == NGX_AGAIN */
-
+    //rc == NGX_AGAIN，表示需要Nginx事件框架多次调度才能完成丢弃包体这一动作
+	
     r->read_event_handler = ngx_http_discarded_request_body_handler;
 
-    if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+    if (ngx_handle_read_event(rev, 0) != NGX_OK) 
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
+	//把引用计数加1，防止这边还在丢弃包体，而其他事件却已让请求意外销毁，引发严重错误
     r->count++;
+	//将ngx_http_request_t结构体的discard_body标志位置1，表示正在丢弃包体
     r->discard_body = 1;
 
     return NGX_OK;
@@ -732,37 +759,45 @@ ngx_http_discarded_request_body_handler(ngx_http_request_t *r)
     c = r->connection;
     rev = c->read;
 
-    if (rev->timedout) {
+    if (rev->timedout)
+	{
         c->timedout = 1;
         c->error = 1;
         ngx_http_finalize_request(r, NGX_ERROR);
         return;
     }
 
-    if (r->lingering_time) {
+    if (r->lingering_time)
+	{
         timer = (ngx_msec_t) r->lingering_time - (ngx_msec_t) ngx_time();
 
-        if ((ngx_msec_int_t) timer <= 0) {
+        if ((ngx_msec_int_t) timer <= 0)
+		{
             r->discard_body = 0;
             r->lingering_close = 0;
             ngx_http_finalize_request(r, NGX_ERROR);
             return;
         }
 
-    } else {
+    } 
+	else
+	{
         timer = 0;
     }
 
     rc = ngx_http_read_discarded_request_body(r);
 
-    if (rc == NGX_OK) {
+	//rc == NGX_OK，表示已经成功丢弃完所有包体
+    if (rc == NGX_OK) 
+	{
         r->discard_body = 0;
         r->lingering_close = 0;
         ngx_http_finalize_request(r, NGX_DONE);
         return;
     }
 
-    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE)
+	{
         c->error = 1;
         ngx_http_finalize_request(r, NGX_ERROR);
         return;
@@ -770,19 +805,22 @@ ngx_http_discarded_request_body_handler(ngx_http_request_t *r)
 
     /* rc == NGX_AGAIN */
 
-    if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+    if (ngx_handle_read_event(rev, 0) != NGX_OK) 
+	{
         c->error = 1;
         ngx_http_finalize_request(r, NGX_ERROR);
         return;
     }
 
-    if (timer) {
+    if (timer) 
+	{
 
         clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
         timer *= 1000;
 
-        if (timer > clcf->lingering_timeout) {
+        if (timer > clcf->lingering_timeout) 
+		{
             timer = clcf->lingering_timeout;
         }
 
@@ -791,6 +829,10 @@ ngx_http_discarded_request_body_handler(ngx_http_request_t *r)
 }
 
 
+
+//返回值:
+//	NGX_OK -- 已经丢弃了所有包体
+//	NGX_AGAIN -- 需要等待读事件的触发，等待Nginx框架的再次调度
 static ngx_int_t
 ngx_http_read_discarded_request_body(ngx_http_request_t *r)
 {
@@ -800,38 +842,51 @@ ngx_http_read_discarded_request_body(ngx_http_request_t *r)
     ngx_buf_t  b;
     u_char     buffer[NGX_HTTP_DISCARD_BUFFER_SIZE];
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http read discarded body");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http read discarded body");
 
     ngx_memzero(&b, sizeof(ngx_buf_t));
 
     b.temporary = 1;
 
-    for ( ;; ) {
-        if (r->headers_in.content_length_n == 0) {
+	//丢弃包体时请求的request_body成员实际上是NULL空指针，这时使用了请求ngx_http_request_t的结构headers_in成员里面的content_length_n
+	//来表示已经丢弃的包体有多大，最初它等于content_length头部，而每丢弃一部分包体，就会在content_length_n变量中减去
+	//相应的大小。因此content_length_n表示还需要丢弃的包体长度
+    for ( ;; ) 
+	{
+		//content_length_n为0，表示已经接收到完整的包体
+        if (r->headers_in.content_length_n == 0) 
+		{
+			//将read_event_handler重置为ngx_http_block_reading，表示如果再有可读事件触发，不做任何处理
             r->read_event_handler = ngx_http_block_reading;
+			//
             return NGX_OK;
         }
 
-        if (!r->connection->read->ready) {
+		//套接字缓冲区上没有内容可读，则直接返回NGX_ANGIN，告诉上层方法需要等待读事件的出发，等待Nginx框架的再次调度
+        if (!r->connection->read->ready) 
+		{
             return NGX_AGAIN;
         }
 
-        size = (size_t) ngx_min(r->headers_in.content_length_n,
-                                NGX_HTTP_DISCARD_BUFFER_SIZE);
+        size = (size_t) ngx_min(r->headers_in.content_length_n, NGX_HTTP_DISCARD_BUFFER_SIZE);
 
         n = r->connection->recv(r->connection, buffer, size);
 
-        if (n == NGX_ERROR) {
+        if (n == NGX_ERROR) 
+		{
             r->connection->error = 1;
             return NGX_OK;
         }
-
-        if (n == NGX_AGAIN) {
+		
+		//套接字缓冲区上没有内容可读，则直接返回NGX_ANGIN，告诉上层方法需要等待读事件的出发，等待Nginx框架的再次调度
+        if (n == NGX_AGAIN) 
+		{
             return NGX_AGAIN;
         }
 
-        if (n == 0) {
+		//客户端主动关闭了连接，直接返回NGX_OK告诉上层方法结束丢弃包体动作即可
+        if (n == 0) 
+		{
             return NGX_OK;
         }
 
@@ -840,7 +895,8 @@ ngx_http_read_discarded_request_body(ngx_http_request_t *r)
 
         rc = ngx_http_discard_request_body_filter(r, &b);
 
-        if (rc != NGX_OK) {
+        if (rc != NGX_OK)
+		{
             return rc;
         }
     }
@@ -854,26 +910,31 @@ ngx_http_discard_request_body_filter(ngx_http_request_t *r, ngx_buf_t *b)
     ngx_int_t                 rc;
     ngx_http_request_body_t  *rb;
 
-    if (r->headers_in.chunked) {
+    if (r->headers_in.chunked) 
+	{
 
         rb = r->request_body;
 
-        if (rb == NULL) {
+        if (rb == NULL)
+		{
 
             rb = ngx_pcalloc(r->pool, sizeof(ngx_http_request_body_t));
-            if (rb == NULL) {
+            if (rb == NULL)
+			{
                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
             }
 
             rb->chunked = ngx_pcalloc(r->pool, sizeof(ngx_http_chunked_t));
-            if (rb->chunked == NULL) {
+            if (rb->chunked == NULL) 
+			{
                 return NGX_HTTP_INTERNAL_SERVER_ERROR;
             }
 
             r->request_body = rb;
         }
 
-        for ( ;; ) {
+        for ( ;; ) 
+		{
 
             rc = ngx_http_parse_chunked(r, b, rb->chunked);
 
@@ -919,14 +980,19 @@ ngx_http_discard_request_body_filter(ngx_http_request_t *r, ngx_buf_t *b)
             return NGX_HTTP_BAD_REQUEST;
         }
 
-    } else {
+    } 
+	else 
+	{
         size = b->last - b->pos;
 
-        if ((off_t) size > r->headers_in.content_length_n) {
+        if ((off_t) size > r->headers_in.content_length_n) 
+		{
             b->pos += (size_t) r->headers_in.content_length_n;
             r->headers_in.content_length_n = 0;
 
-        } else {
+        } 
+		else 
+		{
             b->pos = b->last;
             r->headers_in.content_length_n -= size;
         }
@@ -944,9 +1010,7 @@ ngx_http_test_expect(ngx_http_request_t *r)
     ngx_int_t   n;
     ngx_str_t  *expect;
 
-    if (r->expect_tested
-        || r->headers_in.expect == NULL
-        || r->http_version < NGX_HTTP_VERSION_11)
+    if (r->expect_tested || r->headers_in.expect == NULL || r->http_version < NGX_HTTP_VERSION_11)
     {
         return NGX_OK;
     }

@@ -44,12 +44,19 @@ struct ngx_buf_s
     unsigned         temporary:1;		
 
     /*the buf's content is in a memory cache or in a read only memory and must not be changed */
-    unsigned         memory:1;			//标志位，为 1时表示数据在内存中且这段内存不可以被修改
-    unsigned         mmap:1;			//标志位，为 1时表示这段内存使用mmap系统调用映射过来的，不可以被修改
-    unsigned         recycled:1;		//标志位，为 1时表示可回收
-    unsigned         in_file:1;			//标志位，为 1时表示这段缓冲区处理的是文件而不是内存
-    unsigned         flush:1;			//标志位，为 1时表示需要执行flush操作
-    unsigned         sync:1;			//标志位，对于操作这块缓存区时是否使用同步方式，需谨慎考虑，这可能会阻塞Nginx进程，Nginx中所有操作几乎都是异步的，这是它支持高并发的关键。有些框架代码在sync为 1时可能会有阻塞的方式进行I/O操作，它的意义视使用它的Nginx模块而定
+	//标志位，为 1时表示数据在内存中且这段内存不可以被修改
+    unsigned         memory:1;			
+    //标志位，为 1时表示这段内存使用mmap系统调用映射过来的，不可以被修改
+    unsigned         mmap:1;			
+    //标志位，为 1时表示可回收
+    unsigned         recycled:1;		
+    //标志位，为 1时表示这段缓冲区处理的是文件而不是内存
+    unsigned         in_file:1;			
+    //标志位，为 1时表示需要执行flush操作
+    unsigned         flush:1;			
+    //标志位，对于操作这块缓存区时是否使用同步方式，需谨慎考虑，这可能会阻塞Nginx进程，Nginx中所有操作几乎都是异步的，这是它支持高并发的关键。
+    //有些框架代码在sync为 1时可能会有阻塞的方式进行I/O操作，它的意义视使用它的Nginx模块而定
+    unsigned         sync:1;			
 	//标志位，表示是否是最后一块缓冲区，因为ngx_buf_t可以由ngx_chain_t链表串联起来，因此，当last_buf为 1时，表示当前是最后一块待处理的缓冲区
 	unsigned         last_buf:1;		
     unsigned         last_in_chain:1;	//标志位，表示是否是ngx_chain_t中最后一块缓冲区

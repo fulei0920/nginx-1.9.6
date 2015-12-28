@@ -148,6 +148,8 @@ ngx_http_header_out_t  ngx_http_headers_out[] = {
     { ngx_null_string, 0 }
 };
 
+//根据HTTP规则把headers_out中的成员变量序列化为字符流，并发送出去
+
 //完成响应头字符串数据的组织工作。
 //该函数申请一个buf缓存块，然后进过最初设置以及经过过滤链的修改后的相关响应头字段值，
 //组织响应头数据，以字符串的形式存储在该缓存块内。
@@ -171,25 +173,33 @@ ngx_http_header_filter(ngx_http_request_t *r)
 #endif
     u_char                     addr[NGX_SOCKADDR_STRLEN];
 
-    if (r->header_sent) {
+	//header_sent为1，表示这个请求的响应头部已经发送过了
+    if (r->header_sent) 
+	{
         return NGX_OK;
     }
 
     r->header_sent = 1;
 
-    if (r != r->main) {
+	//检查当前请求是否是客户端发来的主请求，如果当前请求只是一个子请求，它是不存在发送HTTP响应头部这个概念的
+    if (r != r->main) 
+	{
         return NGX_OK;
     }
 
-    if (r->http_version < NGX_HTTP_VERSION_10) {
+	//如果HTTP版本小于1.0，同样不需要发送响应头部
+    if (r->http_version < NGX_HTTP_VERSION_10)
+	{
         return NGX_OK;
     }
 
-    if (r->method == NGX_HTTP_HEAD) {
+    if (r->method == NGX_HTTP_HEAD)
+	{
         r->header_only = 1;
     }
 
-    if (r->headers_out.last_modified_time != -1) {
+    if (r->headers_out.last_modified_time != -1) 
+	{
         if (r->headers_out.status != NGX_HTTP_OK
             && r->headers_out.status != NGX_HTTP_PARTIAL_CONTENT
             && r->headers_out.status != NGX_HTTP_NOT_MODIFIED)
@@ -199,13 +209,16 @@ ngx_http_header_filter(ngx_http_request_t *r)
         }
     }
 
+	//根据请求headers_out结构体中的错误码、HTTP头部字符串，计算出如果把响应头部序列化为一个字符串共需要多少字节
+
     len = sizeof("HTTP/1.x ") - 1 + sizeof(CRLF) - 1
           /* the end of the header */
           + sizeof(CRLF) - 1;
 
     /* status line */
 
-    if (r->headers_out.status_line.len) {
+    if (r->headers_out.status_line.len) 
+	{
         len += r->headers_out.status_line.len;
         status_line = &r->headers_out.status_line;
 #if (NGX_SUPPRESS_WARN)
@@ -442,11 +455,15 @@ ngx_http_header_filter(ngx_http_request_t *r)
                + sizeof(CRLF) - 1;
     }
 
+	//根据计算出来的字节数分配缓冲区
     b = ngx_create_temp_buf(r->pool, len);
-    if (b == NULL) {
+    if (b == NULL) 
+	{
         return NGX_ERROR;
     }
 
+	//将响应行、头部按照HTTP的规范序列化的复制到缓冲区中
+	
     /* "HTTP/1.x " */
     b->last = ngx_cpymem(b->last, "HTTP/1.1 ", sizeof("HTTP/1.x ") - 1);
 
@@ -624,6 +641,9 @@ ngx_http_header_filter(ngx_http_request_t *r)
     out.buf = b;
     out.next = NULL;
 
+	//将缓冲区作为参数调用ngx_http_write_filter，将响应头部发送出去
+	//事实上，这个方法是包体过滤模块链表中的最后一个模块ngx_http_write_filter_module的处理方法，
+	//当HTTP模块调用ngx_http_output_filter方法发送包体时，最终也是通过该方法发送响应的。
     return ngx_http_write_filter(r, &out);
 }
 
