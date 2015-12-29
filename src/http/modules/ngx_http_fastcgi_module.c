@@ -24,7 +24,8 @@ typedef struct {
 } ngx_http_fastcgi_params_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_upstream_conf_t       upstream;
 
     ngx_str_t                      index;

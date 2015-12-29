@@ -36,7 +36,8 @@
 #define NGX_RESOLVER_MAX_RECURSION    50
 
 
-typedef struct {
+typedef struct 
+{
     ngx_connection_t         *connection;
     struct sockaddr          *sockaddr;
     socklen_t                 socklen;
@@ -101,7 +102,8 @@ typedef struct {
 } ngx_resolver_node_t;
 
 
-typedef struct {
+typedef struct 
+{
     /* has to be pointer because of "incomplete type" */
     ngx_event_t              *event;
     void                     *dummy;
@@ -111,9 +113,10 @@ typedef struct {
     ngx_int_t                 ident;
 
     /* simple round robin DNS peers balancer */
+	/*ngx_udp_connection_t类型的动态数组，用于连接dns服务器*/
     ngx_array_t               udp_connections;
     ngx_uint_t                last_connection;
-
+	/*保存了本地缓存的DNS数据*/
     ngx_rbtree_t              name_rbtree;
     ngx_rbtree_node_t         name_sentinel;
 

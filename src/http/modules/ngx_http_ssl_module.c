@@ -72,20 +72,23 @@ static ngx_conf_enum_t  ngx_http_ssl_verify[] = {
 static ngx_command_t  ngx_http_ssl_commands[] = 
 {
 
-    { ngx_string("ssl"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
-      ngx_http_ssl_enable,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, enable),
-      NULL 
+    { 
+		ngx_string("ssl"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
+		ngx_http_ssl_enable,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, enable),
+		NULL 
     },
 
-    { ngx_string("ssl_certificate"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, certificate),
-      NULL },
+    { 
+    	ngx_string("ssl_certificate"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, certificate),
+		NULL 
+    },
 
     { ngx_string("ssl_certificate_key"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -273,12 +276,15 @@ ngx_module_t  ngx_http_ssl_module =
 
 static ngx_http_variable_t  ngx_http_ssl_vars[] = 
 {
+    { 
+		ngx_string("ssl_protocol"), NULL, ngx_http_ssl_static_variable,
+		(uintptr_t) ngx_ssl_get_protocol, NGX_HTTP_VAR_CHANGEABLE, 0 
+    },
 
-    { ngx_string("ssl_protocol"), NULL, ngx_http_ssl_static_variable,
-      (uintptr_t) ngx_ssl_get_protocol, NGX_HTTP_VAR_CHANGEABLE, 0 },
-
-    { ngx_string("ssl_cipher"), NULL, ngx_http_ssl_static_variable,
-      (uintptr_t) ngx_ssl_get_cipher_name, NGX_HTTP_VAR_CHANGEABLE, 0 },
+    {
+		ngx_string("ssl_cipher"), NULL, ngx_http_ssl_static_variable,
+		(uintptr_t) ngx_ssl_get_cipher_name, NGX_HTTP_VAR_CHANGEABLE, 0 
+    },
 
     { ngx_string("ssl_session_id"), NULL, ngx_http_ssl_variable,
       (uintptr_t) ngx_ssl_get_session_id, NGX_HTTP_VAR_CHANGEABLE, 0 },
@@ -505,7 +511,8 @@ ngx_http_ssl_create_srv_conf(ngx_conf_t *cf)
     ngx_http_ssl_srv_conf_t  *sscf;
 
     sscf = ngx_pcalloc(cf->pool, sizeof(ngx_http_ssl_srv_conf_t));
-    if (sscf == NULL) {
+    if (sscf == NULL) 
+	{
         return NULL;
     }
 
@@ -566,8 +573,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         }
     }
 
-    ngx_conf_merge_value(conf->session_timeout,
-                         prev->session_timeout, 300);
+    ngx_conf_merge_value(conf->session_timeout, prev->session_timeout, 300);
 
     ngx_conf_merge_value(conf->prefer_server_ciphers,
                          prev->prefer_server_ciphers, 0);

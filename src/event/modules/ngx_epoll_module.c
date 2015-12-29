@@ -370,11 +370,14 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     ngx_event_actions = ngx_epoll_module_ctx.actions;
 
 #if (NGX_HAVE_CLEAR_EVENT)
-    ngx_event_flags = NGX_USE_CLEAR_EVENT
+    ngx_event_flags = NGX_USE_CLEAR_EVENT	//epoll添加这个标志，主要为了实现边缘触发
 #else
-    ngx_event_flags = NGX_USE_LEVEL_EVENT
+    ngx_event_flags = NGX_USE_LEVEL_EVENT	//水平触发
 #endif
-                      |NGX_USE_GREEDY_EVENT |NGX_USE_EPOLL_EVENT;
+					  //io的时候，直到EAGAIN为止
+                      |NGX_USE_GREEDY_EVENT 
+                      //epoll标志
+                      |NGX_USE_EPOLL_EVENT; 
 
     return NGX_OK;
 }

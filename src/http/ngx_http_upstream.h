@@ -139,18 +139,26 @@ typedef struct {
 
 typedef struct 
 {
+	//当在ngx_http_upstream_t结构体中没有实现resolved成员时，upstream这个结构体才会生效，
+	//它会定义上游服务器的配置
     ngx_http_upstream_srv_conf_t    *upstream;
-
+	//建立TCP连接的超时时间，实际上就是写事件添加到定时器中时设置的超时时间
     ngx_msec_t                       connect_timeout;
+	//发送请求的超时时间。通常就是写事件添加到定时器中时设置的超时时间
     ngx_msec_t                       send_timeout;
+	//接收响应的超时时间。通常就是读事件添加到定时器中时设置的超时时间
     ngx_msec_t                       read_timeout;
+	//目前无意义
     ngx_msec_t                       timeout;
     ngx_msec_t                       next_upstream_timeout;
-
+	//TCP的SO_SNOLOWAT选项，表示发送缓冲区的下限
     size_t                           send_lowat;
+	//定义了接收头部的缓冲区分配的内存大小(ngx_http_upstream_t中的buffer缓冲区)，当不转发响应
+	//给下游或者在buffering标志位为0的情况下转发响应时，它同样表示接收包体的缓冲区大小
     size_t                           buffer_size;
     size_t                           limit_rate;
-
+	//仅当buffering标志位为1，并且向下游转发响应时生效。它会设置到ngx_event_pipe_t结构体的
+	//busy_size成员中
     size_t                           busy_buffers_size;
     size_t                           max_temp_file_size;
     size_t                           temp_file_write_size;
@@ -296,7 +304,8 @@ typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
 
 
-struct ngx_http_upstream_s {
+struct ngx_http_upstream_s 
+{
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
 
@@ -308,6 +317,7 @@ struct ngx_http_upstream_s {
 
     ngx_output_chain_ctx_t           output;
     ngx_chain_writer_ctx_t           writer;
+
 
     ngx_http_upstream_conf_t        *conf;
 #if (NGX_HTTP_CACHE)

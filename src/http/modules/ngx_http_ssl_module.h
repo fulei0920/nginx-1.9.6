@@ -25,15 +25,16 @@ typedef struct
     ngx_uint_t                      protocols;
 
     ngx_uint_t                      verify;
-    ngx_uint_t                      verify_depth;		/*证书验证深度*/
+	/*证书验证深度*/
+    ngx_uint_t                      verify_depth;		
 
     size_t                          buffer_size;
 
     ssize_t                         builtin_session_cache;
 
     time_t                          session_timeout;
-
-    ngx_str_t                       certificate;			/*证书文件路径*/
+	/*证书文件路径*/
+    ngx_str_t                       certificate;			
     ngx_str_t                       certificate_key;
     ngx_str_t                       dhparam;
     ngx_str_t                       ecdh_curve;
