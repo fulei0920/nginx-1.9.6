@@ -350,10 +350,8 @@ static ngx_http_variable_t  ngx_http_core_variables[] =
 };
 
 
-ngx_http_variable_value_t  ngx_http_variable_null_value =
-    ngx_http_variable("");
-ngx_http_variable_value_t  ngx_http_variable_true_value =
-    ngx_http_variable("1");
+ngx_http_variable_value_t  ngx_http_variable_null_value = ngx_http_variable("");
+ngx_http_variable_value_t  ngx_http_variable_true_value = ngx_http_variable("1");
 
 
 ngx_http_variable_t *

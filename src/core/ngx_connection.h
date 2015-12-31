@@ -127,26 +127,35 @@ struct ngx_connection_s
 	//连接未使用时，data成员用于充当连接池中空闲连接链表中的next指针。
 	//当连接被使用时，data的意义由使用它的nginx模块而定，如在HTTP框架中，data指向ngx_http_request_t请求
     void               *data;
-    ngx_event_t        *read;			//连接对应的读事件
-    ngx_event_t        *write;			//连接对应的写事件
-    ngx_socket_t        fd;    			//连接对应的套接字句柄
-    ngx_recv_pt         recv;			//直接接受网络字符流的方法，根据系统环境的不同指向不同的函数
-    ngx_send_pt         send;			//直接发送网络字符流的方法，根据系统环境的不同指向不同的函数
-    ngx_recv_chain_pt   recv_chain;		//以ngx_chain_t链表为参数来接收网络字节流的方法
-    ngx_send_chain_pt   send_chain;		//以ngx_chain_t链表为参数来发送网络字节流的方法
-
-    ngx_listening_t    *listening;		//连接对应的ngx_listening_t监听对象，此连接由listening监听对口的事件建立
+	//连接对应的读事件
+    ngx_event_t        *read;	
+	//连接对应的写事件
+    ngx_event_t        *write;		
+	//连接对应的套接字句柄
+    ngx_socket_t        fd;    
+	//直接接受网络字符流的方法，根据系统环境的不同指向不同的函数
+    ngx_recv_pt         recv;	
+	//直接发送网络字符流的方法，根据系统环境的不同指向不同的函数
+    ngx_send_pt         send;			
+	//以ngx_chain_t链表为参数来接收网络字节流的方法
+    ngx_recv_chain_pt   recv_chain;		
+	//以ngx_chain_t链表为参数来发送网络字节流的方法
+    ngx_send_chain_pt   send_chain;	
+	//连接对应的ngx_listening_t监听对象，此连接由listening监听对口的事件建立
+    ngx_listening_t    *listening;		
 
 	//连接上已经发送出去的字节数
     off_t               sent;			
-
-    ngx_log_t          *log;			//可以记录日志的ngx_log_t对象
+	//可以记录日志的ngx_log_t对象
+    ngx_log_t          *log;			
 
     ngx_pool_t         *pool;
-
-    struct sockaddr    *sockaddr;		//连接客户端的sockaddr结构体		
-    socklen_t           socklen;		//sockaddr结构体的长度		
-    ngx_str_t           addr_text;		//连接客户端字符串形式的ip地址		
+	//连接客户端的sockaddr结构体		
+    struct sockaddr    *sockaddr;	
+	//sockaddr结构体的长度		
+    socklen_t           socklen;	
+	//连接客户端字符串形式的ip地址		
+    ngx_str_t           addr_text;		
     ngx_str_t           proxy_protocol_addr;	//
 
 #if (NGX_SSL)

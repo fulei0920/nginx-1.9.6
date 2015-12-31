@@ -445,13 +445,15 @@ ngx_http_upstream_create(ngx_http_request_t *r)
 
     u = r->upstream;
 
-    if (u && u->cleanup) {
+    if (u && u->cleanup) 
+	{
         r->main->count++;
         ngx_http_upstream_cleanup(r);
     }
 
     u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));
-    if (u == NULL) {
+    if (u == NULL)
+	{
         return NGX_ERROR;
     }
 
@@ -478,25 +480,26 @@ ngx_http_upstream_init(ngx_http_request_t *r)
 
     c = r->connection;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http init upstream, client timer: %d", c->read->timer_set);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0, "http init upstream, client timer: %d", c->read->timer_set);
 
 #if (NGX_HTTP_V2)
-    if (r->stream) {
+    if (r->stream) 
+	{
         ngx_http_upstream_init_request(r);
         return;
     }
 #endif
 
-    if (c->read->timer_set) {
+    if (c->read->timer_set) 
+	{
         ngx_del_timer(c->read);
     }
 
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) {
-
-        if (!c->write->active) {
-            if (ngx_add_event(c->write, NGX_WRITE_EVENT, NGX_CLEAR_EVENT)
-                == NGX_ERROR)
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) 
+	{
+        if (!c->write->active) 
+		{
+            if (ngx_add_event(c->write, NGX_WRITE_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR)
             {
                 ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
@@ -520,7 +523,8 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     ngx_http_upstream_srv_conf_t   *uscf, **uscfp;
     ngx_http_upstream_main_conf_t  *umcf;
 
-    if (r->aio) {
+    if (r->aio)
+	{
         return;
     }
 
@@ -568,12 +572,14 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 
     u->store = u->conf->store;
 
-    if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
+    if (!u->store && !r->post_action && !u->conf->ignore_client_abort)
+	{
         r->read_event_handler = ngx_http_upstream_rd_check_broken_connection;
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
 
-    if (r->request_body) {
+    if (r->request_body) 
+	{
         u->request_bufs = r->request_body->bufs;
     }
 
@@ -3928,23 +3934,21 @@ ngx_http_upstream_cleanup(void *data)
 {
     ngx_http_request_t *r = data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "cleanup http upstream request: \"%V\"", &r->uri);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "cleanup http upstream request: \"%V\"", &r->uri);
 
     ngx_http_upstream_finalize_request(r, r->upstream, NGX_DONE);
 }
 
 
 static void
-ngx_http_upstream_finalize_request(ngx_http_request_t *r,
-    ngx_http_upstream_t *u, ngx_int_t rc)
+ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_int_t rc)
 {
     ngx_uint_t  flush;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "finalize http upstream request: %i", rc);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "finalize http upstream request: %i", rc);
 
-    if (u->cleanup == NULL) {
+    if (u->cleanup == NULL) 
+	{
         /* the request was already finalized */
         ngx_http_finalize_request(r, NGX_DONE);
         return;
@@ -3953,7 +3957,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r,
     *u->cleanup = NULL;
     u->cleanup = NULL;
 
-    if (u->resolved && u->resolved->ctx) {
+    if (u->resolved && u->resolved->ctx) 
+	{
         ngx_resolve_name_done(u->resolved->ctx);
         u->resolved->ctx = NULL;
     }
@@ -4047,8 +4052,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r,
 
 #endif
 
-    if (r->subrequest_in_memory
-        && u->headers_in.status_n >= NGX_HTTP_SPECIAL_RESPONSE)
+    if (r->subrequest_in_memory && u->headers_in.status_n >= NGX_HTTP_SPECIAL_RESPONSE)
     {
         u->buffer.last = u->buffer.pos;
     }

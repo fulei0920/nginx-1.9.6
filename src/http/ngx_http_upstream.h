@@ -235,7 +235,8 @@ typedef struct {
 } ngx_http_upstream_header_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_list_t                       headers;
 
     ngx_uint_t                       status_n;
@@ -296,7 +297,8 @@ typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
 
 
-struct ngx_http_upstream_s {
+struct ngx_http_upstream_s 
+{
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
 

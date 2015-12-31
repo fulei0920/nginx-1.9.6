@@ -177,15 +177,20 @@ ngx_module_t  ngx_core_module =
 };
 
 
+//Nginx模块的总个数
 ngx_uint_t          ngx_max_module;
 
 static ngx_uint_t   ngx_show_help;
 static ngx_uint_t   ngx_show_version;
 static ngx_uint_t   ngx_show_configure;
-static u_char      *ngx_prefix;			//-p 启动参数设置
-static u_char      *ngx_conf_file;		//-c 启动参数设置
-static u_char      *ngx_conf_params;   	//-g 启动参数设置
-static char        *ngx_signal;			//-s 启动参数设置
+//-p 启动参数设置
+static u_char      *ngx_prefix;	
+//-c 启动参数设置
+static u_char      *ngx_conf_file;	
+//-g 启动参数设置
+static u_char      *ngx_conf_params; 
+//-s 启动参数设置
+static char        *ngx_signal;			
 
 
 static char **ngx_os_environ;

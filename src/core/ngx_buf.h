@@ -90,7 +90,8 @@ typedef void (*ngx_output_chain_aio_pt)(ngx_output_chain_ctx_t *ctx,
     ngx_file_t *file);
 #endif
 
-struct ngx_output_chain_ctx_s {
+struct ngx_output_chain_ctx_s 
+{
     ngx_buf_t                   *buf;
     ngx_chain_t                 *in;
     ngx_chain_t                 *free;

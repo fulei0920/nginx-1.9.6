@@ -98,21 +98,27 @@ struct ngx_open_file_s
 #define NGX_MODULE_V1          0, 0, 0, 0, 0, 0, 1
 #define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0
 
+
+//Nginx模块基本接口
 struct ngx_module_s 
 {
-    ngx_uint_t            ctx_index;	/*当前模块再同类模块中的序号*/
-    ngx_uint_t            index;       	/*当前模块在所有模块中的序号*/
-
+	//当前模块再同类模块中的序号
+    ngx_uint_t            ctx_index;	
+	//当前模块在所有模块(ngx_modules数组)中的序号
+    ngx_uint_t            index;       
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
     ngx_uint_t            spare2;
     ngx_uint_t            spare3;
-
-    ngx_uint_t            version;		/*当前模块版本号*/
-
+	//当前模块版本号
+    ngx_uint_t            version;		
+	//某一类模块的特定通用接口，
+	//例如核心模块的通用接口是ngx_core_module_t结构体，而事件模块的通用接口是ngx_event_module_t结构体
     void                 *ctx;			/*模块上下文*/
-    ngx_command_t        *commands;		/*模块指令*/
-    ngx_uint_t            type;			/*模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE | NGX_EVENT_MODULE | NGX_HTTP_MODULE | NGX_MAIL_MODULE | NGX_STREAM_MODULE*/
+	//模块指令
+    ngx_command_t        *commands;
+	//模块类型:NGX_CONF_MODULE | NGX_CORE_MODULE | NGX_EVENT_MODULE | NGX_HTTP_MODULE | NGX_MAIL_MODULE | NGX_STREAM_MODULE
+    ngx_uint_t            type;			
 	
 
     ngx_int_t           (*init_master)(ngx_log_t *log);
