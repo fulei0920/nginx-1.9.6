@@ -118,29 +118,30 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
     ngx_udp_connection_t  *uc;
 
     cln = ngx_pool_cleanup_add(cf->pool, 0);
-    if (cln == NULL) {
+    if (cln == NULL) 
+	{
         return NULL;
     }
 
     cln->handler = ngx_resolver_cleanup;
 
     r = ngx_calloc(sizeof(ngx_resolver_t), cf->log);
-    if (r == NULL) {
+    if (r == NULL) 
+	{
         return NULL;
     }
 
     cln->data = r;
 
     r->event = ngx_calloc(sizeof(ngx_event_t), cf->log);
-    if (r->event == NULL) {
+    if (r->event == NULL) 
+	{
         return NULL;
     }
 
-    ngx_rbtree_init(&r->name_rbtree, &r->name_sentinel,
-                    ngx_resolver_rbtree_insert_value);
+    ngx_rbtree_init(&r->name_rbtree, &r->name_sentinel, ngx_resolver_rbtree_insert_value);
 
-    ngx_rbtree_init(&r->addr_rbtree, &r->addr_sentinel,
-                    ngx_rbtree_insert_value);
+    ngx_rbtree_init(&r->addr_rbtree, &r->addr_sentinel, ngx_rbtree_insert_value);
 
     ngx_queue_init(&r->name_resend_queue);
     ngx_queue_init(&r->addr_resend_queue);
@@ -151,8 +152,7 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
 #if (NGX_HAVE_INET6)
     r->ipv6 = 1;
 
-    ngx_rbtree_init(&r->addr6_rbtree, &r->addr6_sentinel,
-                    ngx_resolver_rbtree_insert_addr6_value);
+    ngx_rbtree_init(&r->addr6_rbtree, &r->addr6_sentinel, ngx_resolver_rbtree_insert_addr6_value);
 
     ngx_queue_init(&r->addr6_resend_queue);
 
@@ -171,25 +171,26 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
     r->log = &cf->cycle->new_log;
     r->log_level = NGX_LOG_ERR;
 
-    if (n) {
-        if (ngx_array_init(&r->udp_connections, cf->pool, n,
-                           sizeof(ngx_udp_connection_t))
-            != NGX_OK)
+    if (n) 
+	{
+        if (ngx_array_init(&r->udp_connections, cf->pool, n, sizeof(ngx_udp_connection_t)) != NGX_OK)
         {
             return NULL;
         }
     }
 
-    for (i = 0; i < n; i++) {
-        if (ngx_strncmp(names[i].data, "valid=", 6) == 0) {
+    for (i = 0; i < n; i++) 
+	{
+        if (ngx_strncmp(names[i].data, "valid=", 6) == 0) 
+		{
             s.len = names[i].len - 6;
             s.data = names[i].data + 6;
 
             r->valid = ngx_parse_time(&s, 1);
 
-            if (r->valid == (time_t) NGX_ERROR) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid parameter: %V", &names[i]);
+            if (r->valid == (time_t) NGX_ERROR)
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter: %V", &names[i]);
                 return NULL;
             }
 
@@ -197,9 +198,11 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
         }
 
 #if (NGX_HAVE_INET6)
-        if (ngx_strncmp(names[i].data, "ipv6=", 5) == 0) {
+        if (ngx_strncmp(names[i].data, "ipv6=", 5) == 0) 
+		{
 
-            if (ngx_strcmp(&names[i].data[5], "on") == 0) {
+            if (ngx_strcmp(&names[i].data[5], "on") == 0)
+			{
                 r->ipv6 = 1;
 
             } else if (ngx_strcmp(&names[i].data[5], "off") == 0) {
@@ -220,11 +223,11 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
         u.url = names[i];
         u.default_port = 53;
 
-        if (ngx_parse_url(cf->pool, &u) != NGX_OK) {
-            if (u.err) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "%s in resolver \"%V\"",
-                                   u.err, &u.url);
+        if (ngx_parse_url(cf->pool, &u) != NGX_OK) 
+		{
+            if (u.err) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "%s in resolver \"%V\"", u.err, &u.url);
             }
 
             return NULL;

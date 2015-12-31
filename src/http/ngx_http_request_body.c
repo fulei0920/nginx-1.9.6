@@ -351,7 +351,7 @@ ngx_http_do_read_client_request_body(ngx_http_request_t *r)
             if (rb->buf->last == rb->buf->end) 
 			{
 				//request_body成员中的buf缓冲区没有空闲的空间
-				//检查request_body成员中的buf缓冲区中是否有数据
+				//检查request_body 成员中的buf缓冲区中是否有数据
                 if (rb->buf->pos != rb->buf->last) 
 				{
 					

@@ -707,12 +707,14 @@ static ngx_command_t  ngx_http_core_commands[] = {
       offsetof(ngx_http_core_loc_conf_t, open_file_cache_events),
       NULL },
 
-    { ngx_string("resolver"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
-      ngx_http_core_resolver,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("resolver"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
+		ngx_http_core_resolver,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("resolver_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -1794,7 +1796,8 @@ ngx_http_set_content_type(ngx_http_request_t *r)
     ngx_uint_t                 i, hash;
     ngx_http_core_loc_conf_t  *clcf;
 
-    if (r->headers_out.content_type.len) {
+    if (r->headers_out.content_type.len) 
+	{
         return NGX_OK;
     }
 
@@ -5329,14 +5332,16 @@ ngx_http_core_resolver(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (clcf->resolver) {
+    if (clcf->resolver) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
     clcf->resolver = ngx_resolver_create(cf, &value[1], cf->args->nelts - 1);
-    if (clcf->resolver == NULL) {
+    if (clcf->resolver == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 

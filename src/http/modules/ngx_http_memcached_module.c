@@ -10,14 +10,16 @@
 #include <ngx_http.h>
 
 
-typedef struct {
+typedef struct
+{
     ngx_http_upstream_conf_t   upstream;
     ngx_int_t                  index;
     ngx_uint_t                 gzip_flag;
 } ngx_http_memcached_loc_conf_t;
 
 
-typedef struct {
+typedef struct 
+{
     size_t                     rest;
     ngx_http_request_t        *request;
     ngx_str_t                  key;
@@ -53,12 +55,14 @@ static ngx_conf_bitmask_t  ngx_http_memcached_next_upstream_masks[] = {
 
 static ngx_command_t  ngx_http_memcached_commands[] = {
 
-    { ngx_string("memcached_pass"),
-      NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
-      ngx_http_memcached_pass,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+    { 
+		ngx_string("memcached_pass"),
+		NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
+		ngx_http_memcached_pass,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+   	},
 
     { ngx_string("memcached_bind"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -127,7 +131,8 @@ static ngx_command_t  ngx_http_memcached_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_memcached_module_ctx = {
+static ngx_http_module_t  ngx_http_memcached_module_ctx = 
+{
     NULL,                                  /* preconfiguration */
     NULL,                                  /* postconfiguration */
 
@@ -142,7 +147,8 @@ static ngx_http_module_t  ngx_http_memcached_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_memcached_module = {
+ngx_module_t  ngx_http_memcached_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_memcached_module_ctx,        /* module context */
     ngx_http_memcached_commands,           /* module directives */
@@ -173,48 +179,54 @@ ngx_http_memcached_handler(ngx_http_request_t *r)
     ngx_http_memcached_ctx_t       *ctx;
     ngx_http_memcached_loc_conf_t  *mlcf;
 
-    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {
+    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD)))
+	{
         return NGX_HTTP_NOT_ALLOWED;
     }
-
+	
     rc = ngx_http_discard_request_body(r);
 
-    if (rc != NGX_OK) {
+    if (rc != NGX_OK) 
+	{
         return rc;
     }
-
-    if (ngx_http_set_content_type(r) != NGX_OK) {
+	//设置content type
+    if (ngx_http_set_content_type(r) != NGX_OK) 
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
-
-    if (ngx_http_upstream_create(r) != NGX_OK) {
+	//创建一个upstream
+    if (ngx_http_upstream_create(r) != NGX_OK) 
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
     u = r->upstream;
-
+	//设置schema
     ngx_str_set(&u->schema, "memcached://");
     u->output.tag = (ngx_buf_tag_t) &ngx_http_memcached_module;
 
     mlcf = ngx_http_get_module_loc_conf(r, ngx_http_memcached_module);
-
+	//设置config，可以看到它就是在memcached_pass中add的upstream
     u->conf = &mlcf->upstream;
-
+	//开始设置回调，
     u->create_request = ngx_http_memcached_create_request;
     u->reinit_request = ngx_http_memcached_reinit_request;
     u->process_header = ngx_http_memcached_process_header;
     u->abort_request = ngx_http_memcached_abort_request;
     u->finalize_request = ngx_http_memcached_finalize_request;
-
+	//创建上下文
     ctx = ngx_palloc(r->pool, sizeof(ngx_http_memcached_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL)
+	{
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
     ctx->request = r;
 
     ngx_http_set_ctx(r, ctx, ngx_http_memcached_module);
-
+	
+	//设置另外的回调，这几个回调主要是针对非buffering的情况
     u->input_filter_init = ngx_http_memcached_filter_init;
     u->input_filter = ngx_http_memcached_filter;
     u->input_filter_ctx = ctx;
@@ -582,7 +594,8 @@ ngx_http_memcached_create_loc_conf(ngx_conf_t *cf)
     ngx_http_memcached_loc_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_memcached_loc_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 
@@ -689,7 +702,8 @@ ngx_http_memcached_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_url_t                  u;
     ngx_http_core_loc_conf_t  *clcf;
 
-    if (mlcf->upstream.upstream) {
+    if (mlcf->upstream.upstream)
+	{
         return "is duplicate";
     }
 
@@ -699,23 +713,26 @@ ngx_http_memcached_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     u.url = value[1];
     u.no_resolve = 1;
-
+	//根据url，取得对应的upstream
     mlcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
-    if (mlcf->upstream.upstream == NULL) {
+    if (mlcf->upstream.upstream == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
-
+	
     clcf->handler = ngx_http_memcached_handler;
 
-    if (clcf->name.data[clcf->name.len - 1] == '/') {
+    if (clcf->name.data[clcf->name.len - 1] == '/') 
+	{
         clcf->auto_redirect = 1;
     }
 
     mlcf->index = ngx_http_get_variable_index(cf, &ngx_http_memcached_key);
 
-    if (mlcf->index == NGX_ERROR) {
+    if (mlcf->index == NGX_ERROR) 
+	{
         return NGX_CONF_ERROR;
     }
 

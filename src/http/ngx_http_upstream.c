@@ -437,7 +437,7 @@ ngx_conf_bitmask_t  ngx_http_upstream_ignore_headers_masks[] = {
     { ngx_null_string, 0 }
 };
 
-
+//创建ngx_http_upstream_t结构体，其中的成员还需要各个HTTP模块自行设置
 ngx_int_t
 ngx_http_upstream_create(ngx_http_request_t *r)
 {
@@ -452,7 +452,7 @@ ngx_http_upstream_create(ngx_http_request_t *r)
     }
 
     u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));
-    if (u == NULL)
+    if (u == NULL) 
 	{
         return NGX_ERROR;
     }
@@ -489,14 +489,17 @@ ngx_http_upstream_init(ngx_http_request_t *r)
         return;
     }
 #endif
-
-    if (c->read->timer_set) 
+	//如果请求对应的客户端的连接上的读事件在定时器中，那么把这个读事件从定时器中移除
+	//因为一旦启动upstream机制，就不应该对客户端的读操作带有超时时间的处理，请求的主要
+	//触发事件将以与上游服务器的连接为主
+    if (c->read->timer_set)
 	{
         ngx_del_timer(c->read);
     }
 
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) 
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT)
 	{
+
         if (!c->write->active) 
 		{
             if (ngx_add_event(c->write, NGX_WRITE_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR)
@@ -1132,8 +1135,7 @@ ngx_http_upstream_wr_check_broken_connection(ngx_http_request_t *r)
 
 
 static void
-ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
-    ngx_event_t *ev)
+ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev)
 {
     int                  n;
     char                 buf[1];
@@ -1149,7 +1151,8 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
     c = r->connection;
     u = r->upstream;
 
-    if (c->error) {
+    if (c->error) 
+	{
         if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && ev->active) {
 
             event = ev->write ? NGX_WRITE_EVENT : NGX_READ_EVENT;
@@ -1170,14 +1173,16 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
     }
 
 #if (NGX_HTTP_V2)
-    if (r->stream) {
+    if (r->stream) 
+	{
         return;
     }
 #endif
 
 #if (NGX_HAVE_KQUEUE)
 
-    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
+    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) 
+	{
 
         if (!ev->pending_eof) {
             return;
@@ -1266,8 +1271,7 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
 
     err = ngx_socket_errno;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ev->log, err,
-                   "http upstream recv(): %d", n);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ev->log, err, "http upstream recv(): %d", n);
 
     if (ev->write && (n >= 0 || err == NGX_EAGAIN)) {
         return;
@@ -3947,7 +3951,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "finalize http upstream request: %i", rc);
 
-    if (u->cleanup == NULL) 
+    if (u->cleanup == NULL)
 	{
         /* the request was already finalized */
         ngx_http_finalize_request(r, NGX_DONE);

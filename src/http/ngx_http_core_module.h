@@ -373,15 +373,17 @@ typedef struct
 
 struct ngx_http_core_loc_conf_s 
 {
-    ngx_str_t     name;        	//location名称，即location指令后的表达式
+	//location名称，即location指令后的表达式
+    ngx_str_t     name;        
 #if (NGX_PCRE)
     ngx_http_regex_t  *regex;
 #endif
     unsigned      noname:1;   			/* "if () {}" block or limit_except */
     unsigned      lmt_excpt:1;
-    unsigned      named:1;				//命名location，仅用于server内部跳转
-
-    unsigned      exact_match:1;		//绝对匹配
+	//命名location，仅用于server内部跳转
+    unsigned      named:1;				
+	//绝对匹配
+    unsigned      exact_match:1;		
     unsigned      noregex:1;
 
     unsigned      auto_redirect:1;
