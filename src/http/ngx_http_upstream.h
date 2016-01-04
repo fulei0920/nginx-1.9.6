@@ -131,7 +131,8 @@ struct ngx_http_upstream_srv_conf_s
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_addr_t                      *addr;
     ngx_http_complex_value_t        *value;
 } ngx_http_upstream_local_t;
@@ -165,26 +166,34 @@ typedef struct
 
     size_t                           busy_buffers_size_conf;
     size_t                           max_temp_file_size_conf;
+	//一次写入临时文件的字符流最大长度
     size_t                           temp_file_write_size_conf;
-
+	//以缓存响应的方式转发上游服务器的包体时所用的内存大小
     ngx_bufs_t                       bufs;
-
+	//针对ngx_http_upstream_t中的header_in成员，ignore_headers可根据位操作跳过一些头部
     ngx_uint_t                       ignore_headers;
     ngx_uint_t                       next_upstream;
+	//表示创建的目录、文件的权限
     ngx_uint_t                       store_access;
     ngx_uint_t                       next_upstream_tries;
+	/* 决定转发响应方式的标志位
+    1：认为上游快于下游，会尽量地在内存或者磁盘中缓存来自上游的响应；
+    0：仅开辟一块固定大小的内存块作为缓存来转发响应 */
     ngx_flag_t                       buffering;
     ngx_flag_t                       request_buffering;
     ngx_flag_t                       pass_request_headers;
     ngx_flag_t                       pass_request_body;
 
+	// 1：上游服务器交互时不检查是否与下游客户端断开连接，继续执行交互内容
     ngx_flag_t                       ignore_client_abort;
+	//截取错误码，查看是否有对应可以返回的语义
     ngx_flag_t                       intercept_errors;
+	// 1：试图复用临时文件中已经使用过的空间
     ngx_flag_t                       cyclic_temp_file;
     ngx_flag_t                       force_ranges;
-
+	//存放临时文件的路径
     ngx_path_t                      *temp_path;
-
+	//根据ngx_http_upstream_hide_headers_hash函数构造出的需要隐藏的HTTP头部散列表
     ngx_hash_t                       hide_headers_hash;
     ngx_array_t                     *hide_headers;
     ngx_array_t                     *pass_headers;
@@ -337,23 +346,33 @@ struct ngx_http_upstream_s
     ngx_chain_t                     *busy_bufs;
     ngx_chain_t                     *free_bufs;
 
+	//初始化input filter的上下文。nginx默认的input_filter_init 直接返回。
     ngx_int_t                      (*input_filter_init)(void *data);
+	//处理后端服务器返回的响应正文。nginx默认的input_filter会 将收到的内容封装成为缓冲区链ngx_chain。
+	//该链由upstream的 out_bufs指针域定位，所以开发人员可以在模块以外通过该指针 得到后端服务器返回的正文数据。
+	//memcached模块实现了自己的 input_filter，在后面会具体分析这个模块。
     ngx_int_t                      (*input_filter)(void *data, ssize_t bytes);
     void                            *input_filter_ctx;
 
 #if (NGX_HTTP_CACHE)
     ngx_int_t                      (*create_key)(ngx_http_request_t *r);
 #endif
+	//生成发送到后端服务器的请求缓冲（缓冲链），在初始化upstream 时使用。
     ngx_int_t                      (*create_request)(ngx_http_request_t *r);
+	//在某台后端服务器出错的情况，nginx会尝试另一台后端服务器。 nginx选定新的服务器以后，
+	//会先调用此函数，以重新初始化 upstream模块的工作状态，然后再次进行upstream连接。
     ngx_int_t                      (*reinit_request)(ngx_http_request_t *r);
+	//处理后端服务器返回的信息头部。所谓头部是与upstream server 通信的协议规定的，
+	//比如HTTP协议的header部分，或者memcached 协议的响应状态部分。
     ngx_int_t                      (*process_header)(ngx_http_request_t *r);
+	//在客户端放弃请求时被调用。不需要在函数中实现关闭后端服务 器连接的功能，
+	//系统会自动完成关闭连接的步骤，所以一般此函 数不会进行任何具体工作。
     void                           (*abort_request)(ngx_http_request_t *r);
-    void                           (*finalize_request)(ngx_http_request_t *r,
-                                         ngx_int_t rc);
-    ngx_int_t                      (*rewrite_redirect)(ngx_http_request_t *r,
-                                         ngx_table_elt_t *h, size_t prefix);
-    ngx_int_t                      (*rewrite_cookie)(ngx_http_request_t *r,
-                                         ngx_table_elt_t *h);
+	//正常完成与后端服务器的请求后调用该函数，与abort_request 相同，一般也不会进行任何具体工作。
+    void                           (*finalize_request)(ngx_http_request_t *r, ngx_int_t rc);
+
+    ngx_int_t                      (*rewrite_redirect)(ngx_http_request_t *r, ngx_table_elt_t *h, size_t prefix);
+    ngx_int_t                      (*rewrite_cookie)(ngx_http_request_t *r, ngx_table_elt_t *h);
 
     ngx_msec_t                       timeout;
 

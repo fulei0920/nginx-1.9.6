@@ -23,20 +23,29 @@ typedef struct ngx_http_variable_s  ngx_http_variable_t;
 typedef void (*ngx_http_set_variable_pt) (ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
 typedef ngx_int_t (*ngx_http_get_variable_pt) (ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
 
-
+//变量被添加时如果已有同名变量，则返回该变量，否则会报错认为变量名冲突
 #define NGX_HTTP_VAR_CHANGEABLE   1
+//变量的值不应该被缓存。变量被取值后，变量值的no_cacheable被置为1
 #define NGX_HTTP_VAR_NOCACHEABLE  2
+//表示变量被索引，存储在cmcf->variables数组，这样的变量可以通过索引值直接找到
 #define NGX_HTTP_VAR_INDEXED      4
+//不会将该变量存储在cmcf->variables_hash哈希表
 #define NGX_HTTP_VAR_NOHASH       8
 
-
+//表示变量本身
 struct ngx_http_variable_s 
 {
+	//变量名称
     ngx_str_t                     name;   		/* must be first to build the hash */
-    ngx_http_set_variable_pt      set_handler;
+	//赋值函数，主要用于"set"指令，处理请求时执行set指令时调用
+	ngx_http_set_variable_pt      set_handler;
+	//取值函数，当读取该变量时调动该函数得到变量值
     ngx_http_get_variable_pt      get_handler;
+	//传递给set_handler和get_handler的参数
     uintptr_t                     data;
+	//变量属性标志
     ngx_uint_t                    flags;
+	//变量在cmcf->variables中的索引
     ngx_uint_t                    index;
 };
 

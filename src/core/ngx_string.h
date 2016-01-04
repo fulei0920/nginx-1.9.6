@@ -20,21 +20,26 @@ typedef struct
 } ngx_str_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t   key;
     ngx_str_t   value;
 } ngx_keyval_t;
 
-
+//表示变量值
 typedef struct 
 {
+	//变量值数据长度
     unsigned    len:28;
-
+	//该变量值是否可用
     unsigned    valid:1;
+	//该变量值是否不能缓存
     unsigned    no_cacheable:1;
+	//对应变量不存在
     unsigned    not_found:1;
+	//变量值内容中的特殊字符是否进行了转义
     unsigned    escape:1;
-
+	//变量值的数据
     u_char     *data;
 } ngx_variable_value_t;
 

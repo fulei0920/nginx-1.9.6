@@ -67,7 +67,8 @@ ngx_http_output_body_filter_pt    ngx_http_top_body_filter;
 ngx_http_request_body_filter_pt   ngx_http_top_request_body_filter;
 
 
-ngx_str_t  ngx_http_html_default_types[] = {
+ngx_str_t  ngx_http_html_default_types[] = 
+{
     ngx_string("text/html"),
     ngx_null_string
 };

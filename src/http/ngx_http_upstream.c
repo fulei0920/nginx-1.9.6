@@ -359,7 +359,8 @@ ngx_module_t  ngx_http_upstream_module =
 };
 
 
-static ngx_http_variable_t  ngx_http_upstream_vars[] = {
+static ngx_http_variable_t  ngx_http_upstream_vars[] = 
+{
 
     { ngx_string("upstream_addr"), NULL,
       ngx_http_upstream_addr_variable, 0,
@@ -581,7 +582,8 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
 
-    if (r->request_body) {
+    if (r->request_body)
+	{
         u->request_bufs = r->request_body->bufs;
     }
 
@@ -4856,9 +4858,11 @@ ngx_http_upstream_add_variables(ngx_conf_t *cf)
 {
     ngx_http_variable_t  *var, *v;
 
-    for (v = ngx_http_upstream_vars; v->name.len; v++) {
+    for (v = ngx_http_upstream_vars; v->name.len; v++) 
+	{
         var = ngx_http_add_variable(cf, &v->name, v->flags);
-        if (var == NULL) {
+        if (var == NULL)
+		{
             return NGX_ERROR;
         }
 

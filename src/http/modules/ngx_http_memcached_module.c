@@ -53,8 +53,8 @@ static ngx_conf_bitmask_t  ngx_http_memcached_next_upstream_masks[] = {
 };
 
 
-static ngx_command_t  ngx_http_memcached_commands[] = {
-
+static ngx_command_t  ngx_http_memcached_commands[] = 
+{
     { 
 		ngx_string("memcached_pass"),
 		NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
@@ -254,9 +254,9 @@ ngx_http_memcached_create_request(ngx_http_request_t *r)
 
     vv = ngx_http_get_indexed_variable(r, mlcf->index);
 
-    if (vv == NULL || vv->not_found || vv->len == 0) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "the \"$memcached_key\" variable is not set");
+    if (vv == NULL || vv->not_found || vv->len == 0) 
+	{
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "the \"$memcached_key\" variable is not set");
         return NGX_ERROR;
     }
 
@@ -265,12 +265,14 @@ ngx_http_memcached_create_request(ngx_http_request_t *r)
     len = sizeof("get ") - 1 + vv->len + escape + sizeof(CRLF) - 1;
 
     b = ngx_create_temp_buf(r->pool, len);
-    if (b == NULL) {
+    if (b == NULL) 
+	{
         return NGX_ERROR;
     }
 
     cl = ngx_alloc_chain_link(r->pool);
-    if (cl == NULL) {
+    if (cl == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -295,8 +297,7 @@ ngx_http_memcached_create_request(ngx_http_request_t *r)
 
     ctx->key.len = b->last - ctx->key.data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http memcached request: \"%V\"", &ctx->key);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http memcached request: \"%V\"", &ctx->key);
 
     *b->last++ = CR; *b->last++ = LF;
 
@@ -646,40 +647,30 @@ ngx_http_memcached_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_http_memcached_loc_conf_t *prev = parent;
     ngx_http_memcached_loc_conf_t *conf = child;
 
-    ngx_conf_merge_ptr_value(conf->upstream.local,
-                              prev->upstream.local, NULL);
+    ngx_conf_merge_ptr_value(conf->upstream.local, prev->upstream.local, NULL);
 
-    ngx_conf_merge_uint_value(conf->upstream.next_upstream_tries,
-                              prev->upstream.next_upstream_tries, 0);
+    ngx_conf_merge_uint_value(conf->upstream.next_upstream_tries, prev->upstream.next_upstream_tries, 0);
 
-    ngx_conf_merge_msec_value(conf->upstream.connect_timeout,
-                              prev->upstream.connect_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->upstream.connect_timeout, prev->upstream.connect_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->upstream.send_timeout,
-                              prev->upstream.send_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->upstream.send_timeout, prev->upstream.send_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->upstream.read_timeout,
-                              prev->upstream.read_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->upstream.read_timeout, prev->upstream.read_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->upstream.next_upstream_timeout,
-                              prev->upstream.next_upstream_timeout, 0);
+    ngx_conf_merge_msec_value(conf->upstream.next_upstream_timeout, prev->upstream.next_upstream_timeout, 0);
 
-    ngx_conf_merge_size_value(conf->upstream.buffer_size,
-                              prev->upstream.buffer_size,
-                              (size_t) ngx_pagesize);
+    ngx_conf_merge_size_value(conf->upstream.buffer_size, prev->upstream.buffer_size, (size_t) ngx_pagesize);
 
-    ngx_conf_merge_bitmask_value(conf->upstream.next_upstream,
-                              prev->upstream.next_upstream,
-                              (NGX_CONF_BITMASK_SET
-                               |NGX_HTTP_UPSTREAM_FT_ERROR
-                               |NGX_HTTP_UPSTREAM_FT_TIMEOUT));
+    ngx_conf_merge_bitmask_value(conf->upstream.next_upstream, prev->upstream.next_upstream,
+                              (NGX_CONF_BITMASK_SET |NGX_HTTP_UPSTREAM_FT_ERROR |NGX_HTTP_UPSTREAM_FT_TIMEOUT));
 
-    if (conf->upstream.next_upstream & NGX_HTTP_UPSTREAM_FT_OFF) {
-        conf->upstream.next_upstream = NGX_CONF_BITMASK_SET
-                                       |NGX_HTTP_UPSTREAM_FT_OFF;
+    if (conf->upstream.next_upstream & NGX_HTTP_UPSTREAM_FT_OFF) 
+	{
+        conf->upstream.next_upstream = NGX_CONF_BITMASK_SET |NGX_HTTP_UPSTREAM_FT_OFF;
     }
 
-    if (conf->upstream.upstream == NULL) {
+    if (conf->upstream.upstream == NULL) 
+	{
         conf->upstream.upstream = prev->upstream.upstream;
     }
 

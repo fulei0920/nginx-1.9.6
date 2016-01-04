@@ -350,10 +350,8 @@ static ngx_http_variable_t  ngx_http_core_variables[] =
 };
 
 
-ngx_http_variable_value_t  ngx_http_variable_null_value =
-    ngx_http_variable("");
-ngx_http_variable_value_t  ngx_http_variable_true_value =
-    ngx_http_variable("1");
+ngx_http_variable_value_t  ngx_http_variable_null_value = ngx_http_variable("");
+ngx_http_variable_value_t  ngx_http_variable_true_value = ngx_http_variable("1");
 
 
 ngx_http_variable_t *
@@ -429,7 +427,10 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
     return v;
 }
 
-
+//如果某一指令需要用到一个变量，则一般在解析该指令配置时会调用，并将该索引值保存，
+//当处理请求时直接通过索引找到变量。
+//从cmcf->variables数组中查找变量，查找到则返回该变量的索引，否则在cmcf->variables
+//添加该变量并返回数组索引
 ngx_int_t
 ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
 {
@@ -437,9 +438,9 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
     ngx_http_variable_t        *v;
     ngx_http_core_main_conf_t  *cmcf;
 
-    if (name->len == 0) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid variable name \"$\"");
+    if (name->len == 0) 
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid variable name \"$\"");
         return NGX_ERROR;
     }
 
@@ -447,18 +448,19 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
 
     v = cmcf->variables.elts;
 
-    if (v == NULL) {
-        if (ngx_array_init(&cmcf->variables, cf->pool, 4,
-                           sizeof(ngx_http_variable_t))
-            != NGX_OK)
+    if (v == NULL) 
+	{
+        if (ngx_array_init(&cmcf->variables, cf->pool, 4, sizeof(ngx_http_variable_t)) != NGX_OK)
         {
             return NGX_ERROR;
         }
 
-    } else {
-        for (i = 0; i < cmcf->variables.nelts; i++) {
-            if (name->len != v[i].name.len
-                || ngx_strncasecmp(name->data, v[i].name.data, name->len) != 0)
+    } 
+	else 
+	{
+        for (i = 0; i < cmcf->variables.nelts; i++) 
+		{
+            if (name->len != v[i].name.len || ngx_strncasecmp(name->data, v[i].name.data, name->len) != 0)
             {
                 continue;
             }
@@ -468,13 +470,15 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
     }
 
     v = ngx_array_push(&cmcf->variables);
-    if (v == NULL) {
+    if (v == NULL) 
+	{
         return NGX_ERROR;
     }
 
     v->name.len = name->len;
     v->name.data = ngx_pnalloc(cf->pool, name->len);
-    if (v->name.data == NULL) {
+    if (v->name.data == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -489,7 +493,7 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
     return v->index;
 }
 
-
+//首先检查r->variables[index]变量缓存是否可用。可用则直接返回，否则调用v->get_handler对变量求值，并将结果存储在r->variables[index]中。
 ngx_http_variable_value_t *
 ngx_http_get_indexed_variable(ngx_http_request_t *r, ngx_uint_t index)
 {
@@ -546,7 +550,8 @@ ngx_http_get_flushed_variable(ngx_http_request_t *r, ngx_uint_t index)
     return ngx_http_get_indexed_variable(r, index);
 }
 
-
+//没有索引的变量，可以调用ngx_http_get_variable()完成取值。它会查找cmcf->variables_hash哈希表，
+//找到变量，从相应变量缓存中取值或调用变量的get_handler。
 ngx_http_variable_value_t *
 ngx_http_get_variable(ngx_http_request_t *r, ngx_str_t *name, ngx_uint_t key)
 {
@@ -2498,7 +2503,10 @@ ngx_http_variables_add_core_vars(ngx_conf_t *cf)
     return NGX_OK;
 }
 
-
+//将cmcf->variables_keys中的变量组织到cmcf->variables_hash这个HASH表中。
+//如果变量指令了NGX_HTTP_VAR_NOHASH标志，则该变量不会被添加到cmcf->variables_hash中。
+//如果一个变量既没有添加到cmcf->variables中，也没有添加到cmcf->variables_hash中，
+//那么这个变量就不能被找到，因而会被认为不存在。
 ngx_int_t
 ngx_http_variables_init_vars(ngx_conf_t *cf)
 {
@@ -2515,15 +2523,14 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
     v = cmcf->variables.elts;
     key = cmcf->variables_keys->keys.elts;
 
-    for (i = 0; i < cmcf->variables.nelts; i++) {
-
-        for (n = 0; n < cmcf->variables_keys->keys.nelts; n++) {
+    for (i = 0; i < cmcf->variables.nelts; i++) 
+	{
+        for (n = 0; n < cmcf->variables_keys->keys.nelts; n++)
+		{
 
             av = key[n].value;
 
-            if (v[i].name.len == key[n].key.len
-                && ngx_strncmp(v[i].name.data, key[n].key.data, v[i].name.len)
-                   == 0)
+            if (v[i].name.len == key[n].key.len && ngx_strncmp(v[i].name.data, key[n].key.data, v[i].name.len) == 0)
             {
                 v[i].get_handler = av->get_handler;
                 v[i].data = av->data;
