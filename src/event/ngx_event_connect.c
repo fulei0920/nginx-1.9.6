@@ -65,10 +65,11 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         goto failed;
     }
 
-    if (pc->local) {
-        if (bind(s, pc->local->sockaddr, pc->local->socklen) == -1) {
-            ngx_log_error(NGX_LOG_CRIT, pc->log, ngx_socket_errno,
-                          "bind(%V) failed", &pc->local->name);
+    if (pc->local)
+	{
+        if (bind(s, pc->local->sockaddr, pc->local->socklen) == -1) 
+		{
+            ngx_log_error(NGX_LOG_CRIT, pc->log, ngx_socket_errno, "bind(%V) failed", &pc->local->name);
 
             goto failed;
         }
@@ -83,7 +84,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     c->log_error = pc->log_error;
 
-    if (pc->sockaddr->sa_family == AF_UNIX) {
+    if (pc->sockaddr->sa_family == AF_UNIX) 
+	{
         c->tcp_nopush = NGX_TCP_NOPUSH_DISABLED;
         c->tcp_nodelay = NGX_TCP_NODELAY_DISABLED;
 
@@ -103,18 +105,20 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
 
-    if (ngx_add_conn) {
-        if (ngx_add_conn(c) == NGX_ERROR) {
+    if (ngx_add_conn)
+	{
+        if (ngx_add_conn(c) == NGX_ERROR) 
+		{
             goto failed;
         }
     }
 
-    ngx_log_debug3(NGX_LOG_DEBUG_EVENT, pc->log, 0,
-                   "connect to %V, fd:%d #%uA", pc->name, s, c->number);
+    ngx_log_debug3(NGX_LOG_DEBUG_EVENT, pc->log, 0, "connect to %V, fd:%d #%uA", pc->name, s, c->number);
 
     rc = connect(s, pc->sockaddr, pc->socklen);
 
-    if (rc == -1) {
+    if (rc == -1) 
+	{
         err = ngx_socket_errno;
 
 
@@ -141,12 +145,13 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
             {
                 level = NGX_LOG_ERR;
 
-            } else {
+            } 
+			else 
+			{
                 level = NGX_LOG_CRIT;
             }
 
-            ngx_log_error(level, c->log, err, "connect() to %V failed",
-                          pc->name);
+            ngx_log_error(level, c->log, err, "connect() to %V failed", pc->name);
 
             ngx_close_connection(c);
             pc->connection = NULL;
@@ -155,8 +160,10 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         }
     }
 
-    if (ngx_add_conn) {
-        if (rc == -1) {
+    if (ngx_add_conn) 
+	{
+        if (rc == -1) 
+		{
 
             /* NGX_EINPROGRESS */
 
@@ -170,14 +177,14 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         return NGX_OK;
     }
 
-    if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
+    if (ngx_event_flags & NGX_USE_IOCP_EVENT) 
+	{
 
-        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, ngx_socket_errno,
-                       "connect(): %d", rc);
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, ngx_socket_errno, "connect(): %d", rc);
 
-        if (ngx_blocking(s) == -1) {
-            ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno,
-                          ngx_blocking_n " failed");
+        if (ngx_blocking(s) == -1) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_blocking_n " failed");
             goto failed;
         }
 
@@ -194,28 +201,30 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         return NGX_OK;
     }
 
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) {
-
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) 
+	{
         /* kqueue */
-
         event = NGX_CLEAR_EVENT;
 
-    } else {
-
+    } 
+	else 
+	{
         /* select, poll, /dev/poll */
-
         event = NGX_LEVEL_EVENT;
     }
 
-    if (ngx_add_event(rev, NGX_READ_EVENT, event) != NGX_OK) {
+    if (ngx_add_event(rev, NGX_READ_EVENT, event) != NGX_OK) 
+	{
         goto failed;
     }
 
-    if (rc == -1) {
+    if (rc == -1) 
+	{
 
         /* NGX_EINPROGRESS */
 
-        if (ngx_add_event(wev, NGX_WRITE_EVENT, event) != NGX_OK) {
+        if (ngx_add_event(wev, NGX_WRITE_EVENT, event) != NGX_OK) 
+		{
             goto failed;
         }
 

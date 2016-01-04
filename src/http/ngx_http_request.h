@@ -424,8 +424,8 @@ struct ngx_http_request_s
 
 	//upstream机制用到的结构体
     ngx_http_upstream_t              *upstream;
-    ngx_array_t                      *upstream_states;
-                                         /* of ngx_http_upstream_state_t */
+    ngx_array_t                      *upstream_states;	  /* array of ngx_http_upstream_state_t */
+                                       
 
 	//表示这个请求的内存池，在ngx_http_free_request方法中销毁。它与ngx_connection_t中的内存池意义不同，
 	//当请求释放时，TCP连接可能并没有关闭，这时请求的内存池会销毁，但ngx_connection_t的内存池并不会销毁

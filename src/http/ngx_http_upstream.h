@@ -53,7 +53,8 @@
 #define NGX_HTTP_UPSTREAM_IGN_VARY           0x00000200
 
 
-typedef struct {
+typedef struct 
+{
     ngx_msec_t                       bl_time;
     ngx_uint_t                       bl_state;
 
@@ -70,7 +71,7 @@ typedef struct {
 typedef struct 
 {
     ngx_hash_t                       headers_in_hash;
-    ngx_array_t                      upstreams;		 	/* array of ngx_http_upstream_srv_conf_t* */
+    ngx_array_t                      upstreams;		 	/* array of ngx_http_upstream_srv_conf_t* 存储所有的上游服务器配置*/
                                             
 } ngx_http_upstream_main_conf_t;
 
@@ -115,7 +116,7 @@ struct ngx_http_upstream_srv_conf_s
     ngx_http_upstream_peer_t         peer;
     void                           **srv_conf;
 
-    ngx_array_t                     *servers;  /* ngx_http_upstream_server_t */
+    ngx_array_t                     *servers;  /* array of ngx_http_upstream_server_t */
 
     ngx_uint_t                       flags;
     ngx_str_t                        host;
@@ -161,6 +162,7 @@ typedef struct
 	//仅当buffering标志位为1，并且向下游转发响应时生效。它会设置到ngx_event_pipe_t结构体的
 	//busy_size成员中
     size_t                           busy_buffers_size;
+	//临时缓存文件的最大长度
     size_t                           max_temp_file_size;
     size_t                           temp_file_write_size;
 
@@ -295,7 +297,8 @@ typedef struct
 } ngx_http_upstream_headers_in_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                        host;
     in_port_t                        port;
     ngx_uint_t                       no_port; /* unsigned no_port:1 */
@@ -316,7 +319,9 @@ typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
 
 struct ngx_http_upstream_s 
 {
+	//处理读事件的回调方法，每一个阶段都有不同的read_event_handler
     ngx_http_upstream_handler_pt     read_event_handler;
+	//处理写事件的回调方法，每一个阶段都有不同的write_event_handler
     ngx_http_upstream_handler_pt     write_event_handler;
 
     ngx_peer_connection_t            peer;
@@ -328,7 +333,8 @@ struct ngx_http_upstream_s
     ngx_output_chain_ctx_t           output;
     ngx_chain_writer_ctx_t           writer;
 
-
+	//使用upstream机制时的各种配置
+	//proxy module 指向对应location中的plcf->upstream
     ngx_http_upstream_conf_t        *conf;
 #if (NGX_HTTP_CACHE)
     ngx_array_t                     *caches;

@@ -658,13 +658,14 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
-    { ngx_string("post_action"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                        |NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, post_action),
-      NULL },
+    { 
+    	ngx_string("post_action"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, post_action),
+		NULL 
+    },
 
     { ngx_string("error_log"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
@@ -2819,7 +2820,7 @@ ngx_http_named_location(ngx_http_request_t *r, ngx_str_t *name)
 }
 
 
-//用于向请求中添加ngx_http_cleanup_t结构体
+//用于向请求ngx_http_request_t中添加ngx_http_cleanup_t结构体
 ngx_http_cleanup_t *
 ngx_http_cleanup_add(ngx_http_request_t *r, size_t size)
 {

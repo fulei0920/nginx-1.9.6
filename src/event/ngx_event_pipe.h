@@ -22,7 +22,8 @@ typedef ngx_int_t (*ngx_event_pipe_output_filter_pt)(void *data,
                                                      ngx_chain_t *chain);
 
 
-struct ngx_event_pipe_s {
+struct ngx_event_pipe_s 
+{
     ngx_connection_t  *upstream;
     ngx_connection_t  *downstream;
 

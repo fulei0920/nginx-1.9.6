@@ -540,11 +540,14 @@ struct ngx_http_location_tree_node_s
     ngx_http_location_tree_node_t   *tree;		//无法完全匹配的location组成的树
 
     ngx_http_core_loc_conf_t        *exact;		//如果location对应的URI匹配字符串属于能够完全匹配的类型，则exact指向其对应的ngx_http_core_loc_conf_t结构体，否则为NULL
-    ngx_http_core_loc_conf_t        *inclusive;	//如果location对应的URI匹配字符串属于无法完全匹配的类型，则inclusive指向其对应的ngx_http_core_loc_conf_t结构体，否则为NULL
-
-    u_char                           auto_redirect;	//自动重定向标志
-    u_char                           len;		//name字符串实际长度
-    u_char                           name[1];	//name指向location对应的URI匹配表达式
+    //如果location对应的URI匹配字符串属于无法完全匹配的类型，则inclusive指向其对应的ngx_http_core_loc_conf_t结构体，否则为NULL
+    ngx_http_core_loc_conf_t        *inclusive;	
+	//自动重定向标志
+    u_char                           auto_redirect;	
+	//name字符串实际长度
+    u_char                           len;		
+	//name指向location对应的URI匹配表达式
+    u_char                           name[1];	
 };
 
 
