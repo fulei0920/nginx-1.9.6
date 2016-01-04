@@ -170,8 +170,7 @@ static ngx_int_t ngx_http_proxy_rewrite(ngx_http_request_t *r,
 static ngx_int_t ngx_http_proxy_add_variables(ngx_conf_t *cf);
 static void *ngx_http_proxy_create_main_conf(ngx_conf_t *cf);
 static void *ngx_http_proxy_create_loc_conf(ngx_conf_t *cf);
-static char *ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf,
-    void *parent, void *child);
+static char *ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static ngx_int_t ngx_http_proxy_init_headers(ngx_conf_t *cf,
     ngx_http_proxy_loc_conf_t *conf, ngx_http_proxy_headers_t *headers,
     ngx_keyval_t *default_headers);
@@ -704,7 +703,8 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 };
 
 
-static ngx_http_module_t  ngx_http_proxy_module_ctx = {
+static ngx_http_module_t  ngx_http_proxy_module_ctx = 
+{
     ngx_http_proxy_add_variables,          /* preconfiguration */
     NULL,                                  /* postconfiguration */
 
@@ -2738,7 +2738,8 @@ ngx_http_proxy_add_variables(ngx_conf_t *cf)
 {
     ngx_http_variable_t  *var, *v;
 
-    for (v = ngx_http_proxy_vars; v->name.len; v++) {
+    for (v = ngx_http_proxy_vars; v->name.len; v++) 
+	{
         var = ngx_http_add_variable(cf, &v->name, v->flags);
         if (var == NULL) {
             return NGX_ERROR;
@@ -3294,8 +3295,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
 
-    if (clcf->noname
-        && conf->upstream.upstream == NULL && conf->proxy_lengths == NULL)
+    if (clcf->noname && conf->upstream.upstream == NULL && conf->proxy_lengths == NULL)
     {
         conf->upstream.upstream = prev->upstream.upstream;
         conf->location = prev->location;
@@ -3309,8 +3309,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 #endif
     }
 
-    if (clcf->lmt_excpt && clcf->handler == NULL
-        && (conf->upstream.upstream || conf->proxy_lengths))
+    if (clcf->lmt_excpt && clcf->handler == NULL && (conf->upstream.upstream || conf->proxy_lengths))
     {
         clcf->handler = ngx_http_proxy_handler;
     }

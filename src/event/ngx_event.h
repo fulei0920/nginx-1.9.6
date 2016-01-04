@@ -26,9 +26,11 @@ typedef struct {
 
 #endif
 
-
+//表示一个事件
 struct ngx_event_s 
-{
+{	
+	//事件相关的对象。
+	//通常data都是指向ngx_connection_t连接对象。开启文件异步I/O时，它可能会指向ngx_event_aio_t结构体
     void            *data;					/*指向该event所属的connection*/
     unsigned         write:1;				/*指明是写事件还是读事件*/
     unsigned         accept:1;				/*指明该事件属于监听套接字*/
@@ -43,21 +45,23 @@ struct ngx_event_s
     unsigned         disabled:1;
 
     /* the ready event; in aio mode 0 means that no operation can be posted */
-	//这个连接对应的套接字缓存上已经有用户发来的数据
-    unsigned         ready:1;			/*事件已经发生，可以做对应的处理*/
+	//标志位，为1时表示当前事件已经准备就绪，也就是说，允许这个事件的消费模块处理这个事件。
+	//在HTTP框架中，经常会检查事件的ready标志位以确定是否可以接收请求或发生响应
+    unsigned         ready:1;		
 
     unsigned         oneshot:1;
 
     /* aio operation is complete */
     unsigned         complete:1;
-
+	//标志位，为1时表示当前处理的字符流已经结束
     unsigned         eof:1;
+	//标志位，为1时表示事件在处理的过程中出现错误
     unsigned         error:1;
-	
-	/*表示事件超时*/
+	//标志位，为1时表示这个事件已经超时，用以提示事件的消费模块做超时处理
     unsigned         timedout:1;
-	/*事件被添加到定时器中*/
-    unsigned         timer_set:1;			
+	//标志位，为1时表示这个事件存在于定时器中
+    unsigned         timer_set:1;	
+	//标志位，为1时表示需要延迟处理这个事件，它仅用于限速功能
 	/*标志位，为1表明响应需要延迟发送*/
     unsigned         delayed:1;
 
@@ -107,8 +111,8 @@ struct ngx_event_s
 #else
     unsigned         available:1;
 #endif
-
-    ngx_event_handler_pt  handler;  	/*事件处理函数*/
+	//这个事件发生时的处理方法(每一个事件最核心的部分)，每个事件消费模块都会重新实现它
+    ngx_event_handler_pt  handler;  	
 
 
 #if (NGX_HAVE_IOCP)
@@ -177,20 +181,30 @@ struct ngx_event_aio_s {
 
 typedef struct 
 {
+	//添加事件方法，它将负责把一个感兴趣的事件添加到操作系统提供的事件驱动机制(如epoll、kqueue等)中，
+	//这样，在事件发生后，将可以在调用下面的process_events时获取这个事件
     ngx_int_t  (*add)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+	//删除事件方法，它将把一个已经存在于事件驱动机制中的事件移除，这样以后即使这个事件发生，调用
+	//process_events方法时也无法再获取这个事件
     ngx_int_t  (*del)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-
+	//启用一个事件，目前事件框架不会调用这个方法，大部分事件驱动模块对于该方法的实现都是与上面的add
+	//方法完全一致的
     ngx_int_t  (*enable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+	//禁用一个事件，目前事件框架不会调用这个方法，大部分事件驱动模块对于该方法的实现都是与上面的del
+	//方法完全一致的
     ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
-
+	//向事件驱动机制中添加一个新的连接，这意味着连接上的读写事件都添加到事件驱动机制中了
     ngx_int_t  (*add_conn)(ngx_connection_t *c);
+	//从事件驱动机制中移除一个连接的读写事件
     ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
 
     ngx_int_t  (*notify)(ngx_event_handler_pt handler);
-
+	//在正常的工作循环中，将通过调用process_events方法来处理事件。 
+	//这个方法仅在ngx_process_events_and_timers方法中调用，它是处理、分发事件的核心。
     ngx_int_t  (*process_events)(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags);
-
+	//初始化事件驱动模块的方法
     ngx_int_t  (*init)(ngx_cycle_t *cycle, ngx_msec_t timer);
+	//退出事件驱动模块前调用的方法
     void       (*done)(ngx_cycle_t *cycle);
 } ngx_event_actions_t;
 
@@ -425,27 +439,39 @@ extern ngx_os_io_t  ngx_io;
 /*事件模块配置*/
 typedef struct 
 {
+	//连接池大小
     ngx_uint_t    connections;
-    ngx_uint_t    use;					/*实际使用的io复用机制模块索引(ctx_index)*/
-	/* tries to accept() as many connections as possible after nginx gets notification about a new connection.*/
+	//选用的事件模块在所有事件模块中的序号(ctx_index)
+    ngx_uint_t    use;					
+	//标志位，为1时表示在接收到一个新连接事件时，一次性建立(accpet)尽可能多的连接
     ngx_flag_t    multi_accept;	
 	/* uses accept mutex to serialize accept() syscalls*/
+	//标志位，为1时表示启用负载均衡锁
     ngx_flag_t    accept_mutex;
 	/* if a worker process does not have accept mutex it will try to acquire it at least after this delay. By default delay is 500ms.*/
+	//负载均衡锁会使有些worker进程在拿不到锁时至少延迟accept_mutex_delay毫秒再重新获取负载均衡锁
     ngx_msec_t    accept_mutex_delay;
-    u_char       *name;					/*实际使用的io复用机制名称*/
+	//所选用的事件模块的名字，它与use成员是匹配的
+    u_char       *name;					
 	
 #if (NGX_DEBUG)
-    ngx_array_t   debug_connection;		//ngx_cidr_t类型的数组
+	//ngx_cidr_t类型的数组
+	//在--with-debug编译模式下，可以仅这对某些客户端建立的连接输出调试级别的日志，
+	//而debug_connection数组用于保存这些客户端的地址信息
+    ngx_array_t   debug_connection;		
 #endif
 } ngx_event_conf_t;
 
 /*事件模块上下文*/
 typedef struct 
 {
+	//事件模块的名称
     ngx_str_t              *name;
+	//在解析配置项前，这个回调方法用于创建存储配置项参数的结构体
     void                 *(*create_conf)(ngx_cycle_t *cycle);
+	//在解析配置项完成后，用以综合处理当前事件模块感兴趣的全部配置项
     char                 *(*init_conf)(ngx_cycle_t *cycle, void *conf);
+	//对于事件驱动机制，每个事件模块需要实现的10个抽象方法
     ngx_event_actions_t     actions;
 } ngx_event_module_t;
 

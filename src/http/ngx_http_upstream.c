@@ -582,7 +582,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
 
-    if (r->request_body)
+    if (r->request_body) 
 	{
         u->request_bufs = r->request_body->bufs;
     }
@@ -3962,7 +3962,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
     *u->cleanup = NULL;
     u->cleanup = NULL;
 
-    if (u->resolved && u->resolved->ctx) {
+    if (u->resolved && u->resolved->ctx) 
+	{
         ngx_resolve_name_done(u->resolved->ctx);
         u->resolved->ctx = NULL;
     }
@@ -4056,8 +4057,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
 #endif
 
-    if (r->subrequest_in_memory
-        && u->headers_in.status_n >= NGX_HTTP_SPECIAL_RESPONSE)
+    if (r->subrequest_in_memory && u->headers_in.status_n >= NGX_HTTP_SPECIAL_RESPONSE)
     {
         u->buffer.last = u->buffer.pos;
     }

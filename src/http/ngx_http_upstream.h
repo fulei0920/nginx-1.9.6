@@ -252,7 +252,8 @@ typedef struct {
 } ngx_http_upstream_header_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_list_t                       headers;
 
     ngx_uint_t                       status_n;

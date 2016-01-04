@@ -61,7 +61,8 @@ typedef struct {
 } ngx_http_file_cache_node_t;
 
 
-struct ngx_http_cache_s {
+struct ngx_http_cache_s 
+{
     ngx_file_t                       file;
     ngx_array_t                      keys;
     uint32_t                         crc32;
