@@ -39,6 +39,7 @@
                                              |NGX_HTTP_UPSTREAM_FT_HTTP_403  \
                                              |NGX_HTTP_UPSTREAM_FT_HTTP_404)
 
+//表示包头不合法
 #define NGX_HTTP_UPSTREAM_INVALID_HEADER     40
 
 
@@ -178,9 +179,9 @@ typedef struct
 	//表示创建的目录、文件的权限
     ngx_uint_t                       store_access;
     ngx_uint_t                       next_upstream_tries;
-	/* 决定转发响应方式的标志位
-    1：认为上游快于下游，会尽量地在内存或者磁盘中缓存来自上游的响应；
-    0：仅开辟一块固定大小的内存块作为缓存来转发响应 */
+	//决定转发响应方式的标志位
+    //1：认为上游快于下游，会尽量地在内存或者磁盘中缓存来自上游的响应；
+    //0：认为下游快于上游，仅开辟一块固定大小的内存块作为缓存来转发响应 
     ngx_flag_t                       buffering;
     ngx_flag_t                       request_buffering;
     ngx_flag_t                       pass_request_headers;
@@ -239,7 +240,7 @@ typedef struct
     ngx_flag_t                       ssl_server_name;
     ngx_flag_t                       ssl_verify;
 #endif
-
+	//使用upstream的模块名称，仅用于记录日志
     ngx_str_t                        module;				/* "proxy" */
 } ngx_http_upstream_conf_t;
 
@@ -256,7 +257,7 @@ typedef struct {
 
 typedef struct 
 {
-    ngx_list_t                       headers;
+    ngx_list_t                       headers;		/*array of ngx_table_elt_t*/
 
     ngx_uint_t                       status_n;
     ngx_str_t                        status_line;
@@ -330,7 +331,7 @@ struct ngx_http_upstream_s
 	//来转发响应。在使用这种方式转发响应时，必须由HTTP模块在使用upstream机制前构造pipe
 	//结构体，否则会出现严重的coredump错误
     ngx_event_pipe_t                *pipe;
-
+	//存储发往上游服务器的请求的缓冲区
     ngx_chain_t                     *request_bufs;
 
 	//定义了向下游发送响应的方式
@@ -353,7 +354,8 @@ struct ngx_http_upstream_s
 
     ngx_buf_t                        from_client;
 
-    ngx_buf_t                        buffer;
+    ngx_buf_t                        buffer;		//接收上游服务器发来的响应的头部的缓冲区
+    //还需要接收上游包体的长度
     off_t                            length;
 
     ngx_chain_t                     *out_bufs;
@@ -362,10 +364,11 @@ struct ngx_http_upstream_s
 
 	//初始化input filter的上下文。nginx默认的input_filter_init 直接返回。
     ngx_int_t                      (*input_filter_init)(void *data);
-	//处理后端服务器返回的响应正文。nginx默认的input_filter会 将收到的内容封装成为缓冲区链ngx_chain。
-	//该链由upstream的 out_bufs指针域定位，所以开发人员可以在模块以外通过该指针 得到后端服务器返回的正文数据。
+	//处理后端服务器返回的响应正文。nginx默认的input_filter会将收到的内容封装成为缓冲区链ngx_chain。
+	//该链由upstream的out_bufs指针域定位，所以开发人员可以在模块以外通过该指针得到后端服务器返回的正文数据。
 	//memcached模块实现了自己的 input_filter，在后面会具体分析这个模块。
     ngx_int_t                      (*input_filter)(void *data, ssize_t bytes);
+	//
     void                            *input_filter_ctx;
 
 #if (NGX_HTTP_CACHE)
@@ -419,8 +422,9 @@ struct ngx_http_upstream_s
     unsigned                         buffering:1;
     unsigned                         keepalive:1;
     unsigned                         upgrade:1;
-
+	//表示是否已经传递了request_bufs缓冲区。在第一次以request_bufs作为参数调用ngx_output_chain方法后，request_sent会置为1
     unsigned                         request_sent:1;
+	//标志位，为1时表明上游服务器的响应需要直接转发给客户端，而且此时Nginx已经把响应包头转发给客户端了
     unsigned                         header_sent:1;
 };
 

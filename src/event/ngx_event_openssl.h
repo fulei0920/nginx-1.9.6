@@ -54,7 +54,7 @@ typedef struct
     ngx_buf_t                  *buf;
     size_t                      buffer_size;
 
-    ngx_connection_handler_pt   handler;
+    ngx_connection_handler_pt   handler;		//SSL初始化成功后调用的回调函数
 
     ngx_event_handler_pt        saved_read_handler;
     ngx_event_handler_pt        saved_write_handler;

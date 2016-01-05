@@ -41,7 +41,10 @@ static ngx_int_t ngx_output_chain_get_buf(ngx_output_chain_ctx_t *ctx,
     off_t bsize);
 static ngx_int_t ngx_output_chain_copy_buf(ngx_output_chain_ctx_t *ctx);
 
-
+//这个方法对于发送缓冲区构成的ngx_chain_t链表非常有用，它会把未发送完成的链表缓冲区保存下来，
+//这样就不用每次调用时都携带上in链表。当第一次调用方法时需要传递链表缓冲区(ngx_output_chain(ctx, in))，
+//如果一次无法发送完成所有的in请求内容，ngx_output_chain_ctx_t会把未发送完的请求保存在自己的成员中，
+//同时返回NGX_AGAIN。当可写事件再次触发，发送请求时就不需要再传递参数了(ngx_output_chain(ctx, NULL))
 ngx_int_t
 ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
 {

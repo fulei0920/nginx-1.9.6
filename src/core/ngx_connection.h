@@ -189,9 +189,10 @@ struct ngx_connection_s
 	//标志位，为 1时表示连接处于空闲状态，如keepalive请求中两次请求之间的状态
     unsigned            idle:1;				
     unsigned            reusable:1;			//标志位，为 1时表示连接可重用，它与上面的queue字段时对应使用的
-    unsigned            close:1;			//标志位，为 1时表示连接关闭
-
-    unsigned            sendfile:1;			//标志位，为 1时表示正将文件中的数据发往连接的另一端
+    //标志位，为 1时表示连接关闭
+    unsigned            close:1;			
+	//标志位，为 1时表示正将文件中的数据发往连接的另一端
+    unsigned            sendfile:1;			
     //标志位，为 1时表示只有在连接套接字对应的发送缓冲区必须满足最低设置的大小阈值时，事件驱动模块才会分发该事件。
     //与ngx_handle_write_event函数中的lowat参数是对应的
     unsigned            sndlowat:1;

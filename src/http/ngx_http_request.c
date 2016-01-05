@@ -768,14 +768,14 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
             if (rc == NGX_AGAIN) 
 			{
-
+				//将读事件添加到定时器
                 if (!rev->timer_set) 
 				{
                     ngx_add_timer(rev, c->listening->post_accept_timeout);
                 }
 
                 ngx_reusable_connection(c, 0);
-
+				//设置握手成功后的回调函数
                 c->ssl->handler = ngx_http_ssl_handshake_handler;
                 return;
             }
@@ -827,7 +827,8 @@ ngx_http_ssl_handshake_handler(ngx_connection_t *c)
         SSL_get0_alpn_selected(c->ssl->connection, &data, &len);
 
 #ifdef TLSEXT_TYPE_next_proto_neg
-        if (len == 0) {
+        if (len == 0) 
+		{
             SSL_get0_next_proto_negotiated(c->ssl->connection, &data, &len);
         }
 #endif
@@ -836,7 +837,8 @@ ngx_http_ssl_handshake_handler(ngx_connection_t *c)
         SSL_get0_next_proto_negotiated(c->ssl->connection, &data, &len);
 #endif
 
-        if (len == 2 && data[0] == 'h' && data[1] == '2') {
+        if (len == 2 && data[0] == 'h' && data[1] == '2') 
+		{
             ngx_http_v2_init(c->read);
             return;
         }
@@ -879,38 +881,39 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
     servername = SSL_get_servername(ssl_conn, TLSEXT_NAMETYPE_host_name);
 
-    if (servername == NULL) {
+    if (servername == NULL) 
+	{
         return SSL_TLSEXT_ERR_NOACK;
     }
 
     c = ngx_ssl_get_connection(ssl_conn);
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "SSL server name: \"%s\"", servername);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0, "SSL server name: \"%s\"", servername);
 
     host.len = ngx_strlen(servername);
 
-    if (host.len == 0) {
+    if (host.len == 0) 
+	{
         return SSL_TLSEXT_ERR_NOACK;
     }
 
     host.data = (u_char *) servername;
 
-    if (ngx_http_validate_host(&host, c->pool, 1) != NGX_OK) {
+    if (ngx_http_validate_host(&host, c->pool, 1) != NGX_OK)
+	{
         return SSL_TLSEXT_ERR_NOACK;
     }
 
     hc = c->data;
 
-    if (ngx_http_find_virtual_server(c, hc->addr_conf->virtual_names, &host,
-                                     NULL, &cscf)
-        != NGX_OK)
+    if (ngx_http_find_virtual_server(c, hc->addr_conf->virtual_names, &host, NULL, &cscf) != NGX_OK)
     {
         return SSL_TLSEXT_ERR_NOACK;
     }
 
     hc->ssl_servername = ngx_palloc(c->pool, sizeof(ngx_str_t));
-    if (hc->ssl_servername == NULL) {
+    if (hc->ssl_servername == NULL) 
+	{
         return SSL_TLSEXT_ERR_NOACK;
     }
 
@@ -924,7 +927,8 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
     sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
 
-    if (sscf->ssl.ctx) {
+    if (sscf->ssl.ctx) 
+	{
         SSL_set_SSL_CTX(ssl_conn, sscf->ssl.ctx);
 
         /*
@@ -932,8 +936,7 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
          * adjust other things we care about
          */
 
-        SSL_set_verify(ssl_conn, SSL_CTX_get_verify_mode(sscf->ssl.ctx),
-                       SSL_CTX_get_verify_callback(sscf->ssl.ctx));
+        SSL_set_verify(ssl_conn, SSL_CTX_get_verify_mode(sscf->ssl.ctx), SSL_CTX_get_verify_callback(sscf->ssl.ctx));
 
         SSL_set_verify_depth(ssl_conn, SSL_CTX_get_verify_depth(sscf->ssl.ctx));
 

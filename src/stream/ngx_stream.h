@@ -147,7 +147,8 @@ typedef struct
 } ngx_stream_core_srv_conf_t;
 
 
-struct ngx_stream_session_s {
+struct ngx_stream_session_s 
+{
     uint32_t                signature;         /* "STRM" */
 
     ngx_connection_t       *connection;

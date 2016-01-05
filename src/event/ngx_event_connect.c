@@ -38,7 +38,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         return NGX_ERROR;
     }
 
-
+	//由于Nginx的事件框架要求每个连接都由一个ngx_connection_t结构体来承载，因此这一步调用ngx_get_connection
+	//方法获取到一个结构体，作为承载Nginx与上游服务器间的TCP连接
     c = ngx_get_connection(s, pc->log);
     if (c == NULL)
 	{
@@ -105,6 +106,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
 
+	//把套接字以期待EPOLLIN|EPOLLOUT事件的方式加入epoll中，表示如果这个套接字上出现了预期的网络事件，
+	//则希望epoll能够回调它的handler方法
     if (ngx_add_conn)
 	{
         if (ngx_add_conn(c) == NGX_ERROR) 
@@ -115,6 +118,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     ngx_log_debug3(NGX_LOG_DEBUG_EVENT, pc->log, 0, "connect to %V, fd:%d #%uA", pc->name, s, c->number);
 
+	//调用connect方法向上游服务器发起TCP连接，作为非阻塞套接字，connect方法可能立即返回连接建立成功，
+	//也可能告诉用户继续等待上游服务器的响应
     rc = connect(s, pc->sockaddr, pc->socklen);
 
     if (rc == -1) 
@@ -124,27 +129,21 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
         if (err != NGX_EINPROGRESS
 #if (NGX_WIN32)
-            /* Winsock returns WSAEWOULDBLOCK (NGX_EAGAIN) */
-            && err != NGX_EAGAIN
+            && err != NGX_EAGAIN	/* Winsock returns WSAEWOULDBLOCK (NGX_EAGAIN) */
 #endif
             )
         {
             if (err == NGX_ECONNREFUSED
 #if (NGX_LINUX)
-                /*
-                 * Linux returns EAGAIN instead of ECONNREFUSED
-                 * for unix sockets if listen queue is full
-                 */
+                /*Linux returns EAGAIN instead of ECONNREFUSED for unix sockets if listen queue is full */
                 || err == NGX_EAGAIN
 #endif
-                || err == NGX_ECONNRESET
-                || err == NGX_ENETDOWN
+                || err == NGX_ECONNRESET || err == NGX_ENETDOWN
                 || err == NGX_ENETUNREACH
                 || err == NGX_EHOSTDOWN
                 || err == NGX_EHOSTUNREACH)
             {
                 level = NGX_LOG_ERR;
-
             } 
 			else 
 			{
@@ -164,9 +163,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 	{
         if (rc == -1) 
 		{
-
             /* NGX_EINPROGRESS */
-
             return NGX_AGAIN;
         }
 

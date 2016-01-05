@@ -571,12 +571,14 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream),
       &ngx_http_proxy_next_upstream_masks },
 
-    { ngx_string("proxy_next_upstream_tries"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream_tries),
-      NULL },
+    { 
+    	ngx_string("proxy_next_upstream_tries"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream_tries),
+		NULL 
+    },
 
     { ngx_string("proxy_next_upstream_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
