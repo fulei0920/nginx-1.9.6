@@ -323,13 +323,17 @@ struct ngx_http_upstream_s
     ngx_http_upstream_handler_pt     read_event_handler;
 	//处理写事件的回调方法，每一个阶段都有不同的write_event_handler
     ngx_http_upstream_handler_pt     write_event_handler;
-
+	//表示主动向上游服务器发起的连接
     ngx_peer_connection_t            peer;
-
+	//当向下游客户端转发响应时(ngx_http_request_t结构体中subrequest_in_memory标志位为0)，
+	//如果打开了缓存且认为上游网速更快(conf配置中buffering标志位为1)，这时会使用pipe成员
+	//来转发响应。在使用这种方式转发响应时，必须由HTTP模块在使用upstream机制前构造pipe
+	//结构体，否则会出现严重的coredump错误
     ngx_event_pipe_t                *pipe;
 
     ngx_chain_t                     *request_bufs;
 
+	//定义了向下游发送响应的方式
     ngx_output_chain_ctx_t           output;
     ngx_chain_writer_ctx_t           writer;
 
@@ -340,8 +344,11 @@ struct ngx_http_upstream_s
     ngx_array_t                     *caches;
 #endif
 
+	//HTTP模块在实现process_header方法时，如果希望upstream直接转发响应，就需要把解析出的
+	//响应头部适配为HTTP的响应头部，同时需要把包头中的信息设置到headers_in结构体中
     ngx_http_upstream_headers_in_t   headers_in;
 
+	//用于解析主机域名
     ngx_http_upstream_resolved_t    *resolved;
 
     ngx_buf_t                        from_client;
@@ -364,6 +371,7 @@ struct ngx_http_upstream_s
 #if (NGX_HTTP_CACHE)
     ngx_int_t                      (*create_key)(ngx_http_request_t *r);
 #endif
+	//HTTP模块实现的create_request方法用于构造发往上游服务器的请求
 	//生成发送到后端服务器的请求缓冲（缓冲链），在初始化upstream 时使用。
     ngx_int_t                      (*create_request)(ngx_http_request_t *r);
 	//在某台后端服务器出错的情况，nginx会尝试另一台后端服务器。 nginx选定新的服务器以后，
@@ -382,10 +390,11 @@ struct ngx_http_upstream_s
     ngx_int_t                      (*rewrite_cookie)(ngx_http_request_t *r, ngx_table_elt_t *h);
 
     ngx_msec_t                       timeout;
-
+	//用于表示上游响应的错误码、包体长度等信息
     ngx_http_upstream_state_t       *state;
-
+	//不使用文件缓存时没有意义
     ngx_str_t                        method;
+	//schema和uri成员仅在记录日志会用到，除此以外没有意义
     ngx_str_t                        schema;
     ngx_str_t                        uri;
 
@@ -395,9 +404,13 @@ struct ngx_http_upstream_s
 
     ngx_http_cleanup_pt             *cleanup;
 
+	//是否指定文件缓存路劲的标志位
     unsigned                         store:1;
+	//是否启用文件缓存
     unsigned                         cacheable:1;
+	//暂无意义
     unsigned                         accel:1;
+	//是否基于SSL协议访问上游服务器
     unsigned                         ssl:1;
 #if (NGX_HTTP_CACHE)
     unsigned                         cache_status:3;
