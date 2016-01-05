@@ -238,17 +238,18 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
 
 
 ngx_int_t
-ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r,
-    ngx_http_upstream_srv_conf_t *us)
+ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream_srv_conf_t *us)
 {
     ngx_uint_t                         n;
     ngx_http_upstream_rr_peer_data_t  *rrp;
 
     rrp = r->upstream->peer.data;
 
-    if (rrp == NULL) {
+    if (rrp == NULL) 
+	{
         rrp = ngx_palloc(r->pool, sizeof(ngx_http_upstream_rr_peer_data_t));
-        if (rrp == NULL) {
+        if (rrp == NULL)
+		{
             return NGX_ERROR;
         }
 
@@ -425,8 +426,7 @@ ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data)
     ngx_http_upstream_rr_peer_t   *peer;
     ngx_http_upstream_rr_peers_t  *peers;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                   "get rr peer, try: %ui", pc->tries);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "get rr peer, try: %ui", pc->tries);
 
     pc->cached = 0;
     pc->connection = NULL;
@@ -434,10 +434,12 @@ ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data)
     peers = rrp->peers;
     ngx_http_upstream_rr_peers_wlock(peers);
 
-    if (peers->single) {
+    if (peers->single) 
+	{
         peer = peers->peer;
 
-        if (peer->down) {
+        if (peer->down) 
+		{
             goto failed;
         }
 

@@ -61,8 +61,7 @@ static ngx_int_t ngx_stream_proxy_process(ngx_stream_session_t *s,
     ngx_uint_t from_upstream, ngx_uint_t do_write);
 static void ngx_stream_proxy_next_upstream(ngx_stream_session_t *s);
 static void ngx_stream_proxy_finalize(ngx_stream_session_t *s, ngx_int_t rc);
-static u_char *ngx_stream_proxy_log_error(ngx_log_t *log, u_char *buf,
-    size_t len);
+static u_char *ngx_stream_proxy_log_error(ngx_log_t *log, u_char *buf, size_t len);
 
 static void *ngx_stream_proxy_create_srv_conf(ngx_conf_t *cf);
 static char *ngx_stream_proxy_merge_srv_conf(ngx_conf_t *cf, void *parent,
@@ -358,7 +357,8 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
 
     uscf = pscf->upstream;
 
-    if (uscf->peer.init(s, uscf) != NGX_OK) {
+    if (uscf->peer.init(s, uscf) != NGX_OK) 
+	{
         ngx_stream_proxy_finalize(s, NGX_ERROR);
         return;
     }
@@ -374,7 +374,8 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
     u->start_sec = ngx_time();
 
     p = ngx_pnalloc(c->pool, pscf->buffer_size);
-    if (p == NULL) {
+    if (p == NULL) 
+	{
         ngx_stream_proxy_finalize(s, NGX_ERROR);
         return;
     }

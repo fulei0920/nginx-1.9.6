@@ -52,7 +52,8 @@ struct ngx_http_upstream_rr_peer_s {
 
 typedef struct ngx_http_upstream_rr_peers_s  ngx_http_upstream_rr_peers_t;
 
-struct ngx_http_upstream_rr_peers_s {
+struct ngx_http_upstream_rr_peers_s 
+{
     ngx_uint_t                      number;
 
 #if (NGX_HTTP_UPSTREAM_ZONE)
@@ -118,7 +119,8 @@ struct ngx_http_upstream_rr_peers_s {
 #endif
 
 
-typedef struct {
+typedef struct 
+{
     ngx_http_upstream_rr_peers_t   *peers;
     ngx_http_upstream_rr_peer_t    *current;
     uintptr_t                      *tried;

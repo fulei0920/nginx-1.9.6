@@ -174,16 +174,15 @@ ngx_stream_init_connection(ngx_connection_t *c)
         }
     }
 
-    if (cscf->tcp_nodelay && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET) {
+    if (cscf->tcp_nodelay && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET)
+	{
         ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0, "tcp_nodelay");
 
         tcp_nodelay = 1;
 
-        if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY,
-                       (const void *) &tcp_nodelay, sizeof(int)) == -1)
+        if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay, sizeof(int)) == -1)
         {
-            ngx_connection_error(c, ngx_socket_errno,
-                                 "setsockopt(TCP_NODELAY) failed");
+            ngx_connection_error(c, ngx_socket_errno, "setsockopt(TCP_NODELAY) failed");
             ngx_stream_close_connection(c);
             return;
         }
@@ -198,13 +197,13 @@ ngx_stream_init_connection(ngx_connection_t *c)
 
     sslcf = ngx_stream_get_module_srv_conf(s, ngx_stream_ssl_module);
 
-    if (addr_conf->ssl) {
+    if (addr_conf->ssl)
+	{
         c->log->action = "SSL handshaking";
 
-        if (sslcf->ssl.ctx == NULL) {
-            ngx_log_error(NGX_LOG_ERR, c->log, 0,
-                          "no \"ssl_certificate\" is defined "
-                          "in server listening on SSL port");
+        if (sslcf->ssl.ctx == NULL)
+		{
+            ngx_log_error(NGX_LOG_ERR, c->log, 0, "no \"ssl_certificate\" is defined in server listening on SSL port");
             ngx_stream_close_connection(c);
             return;
         }
@@ -231,7 +230,8 @@ ngx_stream_init_session(ngx_connection_t *c)
     cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
 
     s->ctx = ngx_pcalloc(c->pool, sizeof(void *) * ngx_stream_max_module);
-    if (s->ctx == NULL) {
+    if (s->ctx == NULL)
+	{
         ngx_stream_close_connection(c);
         return;
     }

@@ -343,7 +343,8 @@ ngx_resolve_start(ngx_resolver_t *r, ngx_resolver_ctx_t *temp)
         }
     }
 
-    if (r->udp_connections.nelts == 0) {
+    if (r->udp_connections.nelts == 0) 
+	{
         return NGX_NO_RESOLVER;
     }
 
@@ -369,8 +370,7 @@ ngx_resolve_name(ngx_resolver_ctx_t *ctx)
         ctx->name.len--;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_CORE, r->log, 0,
-                   "resolve: \"%V\"", &ctx->name);
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, r->log, 0, "resolve: \"%V\"", &ctx->name);
 
     if (ctx->quick) {
         ctx->handler(ctx);

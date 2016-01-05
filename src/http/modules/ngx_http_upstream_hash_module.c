@@ -110,7 +110,8 @@ ngx_module_t  ngx_http_upstream_hash_module = {
 static ngx_int_t
 ngx_http_upstream_init_hash(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 {
-    if (ngx_http_upstream_init_round_robin(cf, us) != NGX_OK) {
+    if (ngx_http_upstream_init_round_robin(cf, us) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -121,8 +122,7 @@ ngx_http_upstream_init_hash(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 
 
 static ngx_int_t
-ngx_http_upstream_init_hash_peer(ngx_http_request_t *r,
-    ngx_http_upstream_srv_conf_t *us)
+ngx_http_upstream_init_hash_peer(ngx_http_request_t *r, ngx_http_upstream_srv_conf_t *us)
 {
     ngx_http_upstream_hash_srv_conf_t   *hcf;
     ngx_http_upstream_hash_peer_data_t  *hp;

@@ -45,9 +45,9 @@ struct ngx_peer_connection_s
 	//在连接一个远端服务器时，当前连接出现异常失败后可以重试的次数，也就是允许的最多失败次数
     ngx_uint_t                       tries;			
     ngx_msec_t                       start_time;
-	//获取连接的方法，如果使用长连接构成的连接池，那么必须要实现get方法	
+	//获取连接ngx_connection_t的方法，如果使用长连接构成的连接池，那么必须要实现get方法	
     ngx_event_get_peer_pt            get;			
-	//与get方法对应的释放连接的方法	
+	//与get方法对应的释放连接ngx_connection_t的方法	
     ngx_event_free_peer_pt           free;	
 	//这个data指针仅用于和上面的get、free方法配合传递参数，它的具体含义与实现get方法、free方法的模块相关，
 	//可参照ngx_event_get_peer_pt和ngx_event_free_peer_pt方法原型中的data参数

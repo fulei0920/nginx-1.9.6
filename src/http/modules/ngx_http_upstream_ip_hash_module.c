@@ -33,14 +33,16 @@ static char *ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
 
-static ngx_command_t  ngx_http_upstream_ip_hash_commands[] = {
-
-    { ngx_string("ip_hash"),
-      NGX_HTTP_UPS_CONF|NGX_CONF_NOARGS,
-      ngx_http_upstream_ip_hash,
-      0,
-      0,
-      NULL },
+static ngx_command_t  ngx_http_upstream_ip_hash_commands[] = 
+{
+    { 
+		ngx_string("ip_hash"),
+		NGX_HTTP_UPS_CONF|NGX_CONF_NOARGS,
+		ngx_http_upstream_ip_hash,
+		0,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
@@ -83,7 +85,8 @@ static u_char ngx_http_upstream_ip_hash_pseudo_addr[3];
 static ngx_int_t
 ngx_http_upstream_init_ip_hash(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 {
-    if (ngx_http_upstream_init_round_robin(cf, us) != NGX_OK) {
+    if (ngx_http_upstream_init_round_robin(cf, us) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -94,8 +97,7 @@ ngx_http_upstream_init_ip_hash(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 
 
 static ngx_int_t
-ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r,
-    ngx_http_upstream_srv_conf_t *us)
+ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r, ngx_http_upstream_srv_conf_t *us)
 {
     struct sockaddr_in                     *sin;
 #if (NGX_HAVE_INET6)
@@ -104,13 +106,15 @@ ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r,
     ngx_http_upstream_ip_hash_peer_data_t  *iphp;
 
     iphp = ngx_palloc(r->pool, sizeof(ngx_http_upstream_ip_hash_peer_data_t));
-    if (iphp == NULL) {
+    if (iphp == NULL) 
+	{
         return NGX_ERROR;
     }
 
     r->upstream->peer.data = &iphp->rrp;
 
-    if (ngx_http_upstream_init_round_robin_peer(r, us) != NGX_OK) {
+    if (ngx_http_upstream_init_round_robin_peer(r, us) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -250,9 +254,9 @@ ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     uscf = ngx_http_conf_get_module_srv_conf(cf, ngx_http_upstream_module);
 
-    if (uscf->peer.init_upstream) {
-        ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                           "load balancing method redefined");
+    if (uscf->peer.init_upstream)
+	{
+        ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "load balancing method redefined");
     }
 
     uscf->peer.init_upstream = ngx_http_upstream_init_ip_hash;
