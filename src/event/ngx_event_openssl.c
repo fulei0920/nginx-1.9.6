@@ -1154,13 +1154,11 @@ ngx_ssl_handshake(ngx_connection_t *c)
 
             *d = '\0';
 
-            ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                           "SSL: %s, cipher: \"%s\"",
-                           SSL_get_version(c->ssl->connection), &buf[1]);
+            ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL: %s, cipher: \"%s\"", SSL_get_version(c->ssl->connection), &buf[1]);
 
-            if (SSL_session_reused(c->ssl->connection)) {
-                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                               "SSL reused session");
+            if (SSL_session_reused(c->ssl->connection)) 
+			{
+                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, 0, "SSL reused session");
             }
 
         } 
@@ -1222,7 +1220,8 @@ ngx_ssl_handshake(ngx_connection_t *c)
         c->read->handler = ngx_ssl_handshake_handler;
         c->write->handler = ngx_ssl_handshake_handler;
 
-        if (ngx_handle_read_event(c->read, 0) != NGX_OK) {
+        if (ngx_handle_read_event(c->read, 0) != NGX_OK)
+		{
             return NGX_ERROR;
         }
 

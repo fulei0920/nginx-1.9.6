@@ -2821,6 +2821,8 @@ ngx_http_named_location(ngx_http_request_t *r, ngx_str_t *name)
 
 
 //用于向请求ngx_http_request_t中添加ngx_http_cleanup_t结构体
+//这个方法返回的就是已经插入请求的ngx_http_cleanup_t结构体指针，其中data成员指向的内存都已经分配好了，
+//内存的大小由size参数指定
 ngx_http_cleanup_t *
 ngx_http_cleanup_add(ngx_http_request_t *r, size_t size)
 {

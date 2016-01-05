@@ -338,11 +338,11 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
 
     pscf = ngx_stream_get_module_srv_conf(s, ngx_stream_proxy_module);
 
-    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                   "proxy connection handler");
+    ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0, "proxy connection handler");
 
     u = ngx_pcalloc(c->pool, sizeof(ngx_stream_upstream_t));
-    if (u == NULL) {
+    if (u == NULL)
+	{
         ngx_stream_proxy_finalize(s, NGX_ERROR);
         return;
     }
@@ -365,8 +365,7 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
 
     u->peer.start_time = ngx_current_msec;
 
-    if (pscf->next_upstream_tries
-        && u->peer.tries > pscf->next_upstream_tries)
+    if (pscf->next_upstream_tries && u->peer.tries > pscf->next_upstream_tries)
     {
         u->peer.tries = pscf->next_upstream_tries;
     }

@@ -359,7 +359,8 @@ ngx_mail_ssl_merge_conf(ngx_conf_t *cf, void *parent, void *child)
         }
     }
 
-    if (ngx_ssl_create(&conf->ssl, conf->protocols, NULL) != NGX_OK) {
+    if (ngx_ssl_create(&conf->ssl, conf->protocols, NULL) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
