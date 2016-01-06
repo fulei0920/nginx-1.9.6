@@ -399,7 +399,7 @@ typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 struct ngx_http_request_s 
 {
     uint32_t                          signature;         /* "HTTP" */
-	//这个请求对应的客户端连接
+	//当前请求对应的客户端连接
     ngx_connection_t                 *connection;
 	//指向存放所有HTTP模块的上下文结构体的指针数组
     void                            **ctx;
@@ -427,7 +427,7 @@ struct ngx_http_request_s
     ngx_array_t                      *upstream_states;	  /* array of ngx_http_upstream_state_t */
                                        
 
-	//表示这个请求的内存池，在ngx_http_free_request方法中销毁。它与ngx_connection_t中的内存池意义不同，
+	//表示当前请求的内存池，在ngx_http_free_request方法中销毁。它与ngx_connection_t中的内存池意义不同，
 	//当请求释放时，TCP连接可能并没有关闭，这时请求的内存池会销毁，但ngx_connection_t的内存池并不会销毁
     ngx_pool_t                       *pool;
 	//用于接收HTTP请求内容的缓冲区，主要用于接收HTTP头部
@@ -451,21 +451,21 @@ struct ngx_http_request_s
     ngx_msec_t                        start_msec;
 
 	//以下9个成员都是ngx_http_processs_request_line方法在接收、解析HTTP请求行时解析出的信息
-    ngx_uint_t                        method;			/*NGX_HTTP_GET | NGX_HTTP_POST| ...*/
-    ngx_uint_t                        http_version;
-    ngx_str_t                         request_line;		// "GET / HTTP/1.1"
-    ngx_str_t                         uri;
-    ngx_str_t                         args;
-    ngx_str_t                         exten;
-    ngx_str_t                         unparsed_uri;
+	
+    ngx_uint_t                        method; 			/*方法名称 NGX_HTTP_GET | NGX_HTTP_POST| ...*/
+    ngx_uint_t                        http_version;		/*协议版本*/
+    ngx_str_t                         request_line;		/*请求行*/
+    ngx_str_t                         uri;				/*客户请求中的uri*/
+    ngx_str_t                         args;				/*uri中的参数*/
+    ngx_str_t                         exten;			/*客户请求的文件扩展名*/
+    ngx_str_t                         unparsed_uri;		/*没有进过URI解码的原始请求*/
 
-    ngx_str_t                         method_name;		// "GET"
-    ngx_str_t                         http_protocol;	// "HTTP/1.1"
+    ngx_str_t                         method_name;		/*方法名称字符串*/
+    ngx_str_t                         http_protocol;	/*其data成员指向请求中http的起始地址*/
 
-	//表示需要发送给客户端的HTTP响应。 out中保存着由headers_out中序列化后的表示HTTP头部的TCP流。
+	//存储需要发送给客户端的HTTP响应。 out中保存着由headers_out中序列化后的表示HTTP头部的TCP流。
 	//在调用ngx_http_output_filter方法后，out中还会保存待发送的HTTP包体，它是实现异步发送HTTP响应的关键
     ngx_chain_t                      *out;
-
 	
 	//主请求，通过这个域我们能够判断当前的请求是否是子请求
 	//当前请求既可能是用户发来的请求，也可能是派生出的子请求，而main则标识一系列相关的派生子请求的原始请求，

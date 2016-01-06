@@ -26,36 +26,52 @@ ngx_event_pipe(ngx_event_pipe_t *p, ngx_int_t do_write)
     ngx_uint_t    flags;
     ngx_event_t  *rev, *wev;
 
-    for ( ;; ) {
-        if (do_write) {
+    for ( ;; ) 
+	{	
+		/* 若 do_write标志位为1，表示向下游转发响应 */
+        if (do_write) 
+		{
             p->log->action = "sending to client";
 
+			/* 调用ngx_event_pipe_write_to_downstream方法向下游转发响应 */
             rc = ngx_event_pipe_write_to_downstream(p);
 
-            if (rc == NGX_ABORT) {
+            if (rc == NGX_ABORT) 
+			{
                 return NGX_ABORT;
             }
 
-            if (rc == NGX_BUSY) {
+            if (rc == NGX_BUSY)
+			{
                 return NGX_OK;
             }
         }
-
+		/* 若do_write标志位为0，则接收上游响应 */
         p->read = 0;
         p->upstream_blocked = 0;
 
         p->log->action = "reading upstream";
-
-        if (ngx_event_pipe_read_upstream(p) == NGX_ABORT) {
+		
+		/* 调用ngx_event_pipe_read_upstream方法读取上游响应 */	
+        if (ngx_event_pipe_read_upstream(p) == NGX_ABORT) 
+		{
             return NGX_ABORT;
         }
+		/* 
+				 * 若标志位read和upstream_blocked为0， 
+				 * 则没有可读的响应数据，break退出for循环； 
+				 */  
 
-        if (!p->read && !p->upstream_blocked) {
+        if (!p->read && !p->upstream_blocked) 
+		{
             break;
         }
 
         do_write = 1;
     }
+	/* 
+		 * 将上游读事件添加到定时器机制中，注册到epoll事件机制中； 
+		 */  
 
     if (p->upstream->fd != (ngx_socket_t) -1) {
         rev = p->upstream->read;
@@ -75,6 +91,9 @@ ngx_event_pipe(ngx_event_pipe_t *p, ngx_int_t do_write)
             }
         }
     }
+	/* 
+		* 将下游写事件添加到定时器机制中，注册到epoll事件机制中； 
+		*/	
 
     if (p->downstream->fd != (ngx_socket_t) -1
         && p->downstream->data == p->output_ctx)

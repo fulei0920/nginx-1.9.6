@@ -330,7 +330,8 @@ static ngx_http_module_t  ngx_http_upstream_module_ctx =
     NULL                                   /* merge location configuration */
 };
 
-
+//upstream 模块不产生自己的内容，而是通过请求后端服务器得到内容。Nginx 内部封装了请求并取得响应内容的整个过程，
+//所以upstream 模块只需要开发若干回调函数，完成构造请求和解析响应等具体的工作。
 ngx_module_t  ngx_http_upstream_module =
 {
     NGX_MODULE_V1,
@@ -2936,7 +2937,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         return;
     }
 
-	/* 将标志位header_sent设置为1 */
+	/* 将标志位header_sent设置为1，表示已经转发响应头部 */
     u->header_sent = 1;
 
     if (u->upgrade) 
@@ -3021,8 +3022,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
             if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay, sizeof(int)) == -1)
             {
-                ngx_connection_error(c, ngx_socket_errno,
-                                     "setsockopt(TCP_NODELAY) failed");
+                ngx_connection_error(c, ngx_socket_errno, "setsockopt(TCP_NODELAY) failed");
                 ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
                 return;
             }
@@ -3165,7 +3165,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
     }
 
 #endif
-	/* 初始化ngx_event_pipe_t结构体 p */
+	/* 初始化 ngx_http_upstream_t 结构体中的 ngx_event_pipe_t pipe 成员*/
     p = u->pipe;
 
     p->output_filter = (ngx_event_pipe_output_filter_pt) ngx_http_output_filter;
@@ -3193,7 +3193,8 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
     p->temp_file->path = u->conf->temp_path;
     p->temp_file->pool = r->pool;
 
-    if (p->cacheable) {
+    if (p->cacheable) 
+	{
         p->temp_file->persistent = 1;
 
 #if (NGX_HTTP_CACHE)
@@ -3202,10 +3203,11 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         }
 #endif
 
-    } else {
+    }
+	else
+	{
         p->temp_file->log_level = NGX_LOG_WARN;
-        p->temp_file->warn = "an upstream response is buffered "
-                             "to a temporary file";
+        p->temp_file->warn = "an upstream response is buffered to a temporary file";
     }
 
     p->max_temp_file_size = u->conf->max_temp_file_size;
@@ -3213,7 +3215,8 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 	
 	/* 初始化预读链表缓冲区preread_bufs */
     p->preread_bufs = ngx_alloc_chain_link(r->pool);
-    if (p->preread_bufs == NULL) {
+    if (p->preread_bufs == NULL) 
+	{
         ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
         return;
     }
@@ -3224,10 +3227,12 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     p->preread_size = u->buffer.last - u->buffer.pos;
 
-    if (u->cacheable) {
+    if (u->cacheable) 
+	{
 
         p->buf_to_file = ngx_calloc_buf(r->pool);
-        if (p->buf_to_file == NULL) {
+        if (p->buf_to_file == NULL)
+		{
             ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
             return;
         }
@@ -3238,7 +3243,8 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         p->buf_to_file->temporary = 1;
     }
 
-    if (ngx_event_flags & NGX_USE_IOCP_EVENT) {
+    if (ngx_event_flags & NGX_USE_IOCP_EVENT) 
+	{
         /* the posted aio operation may corrupt a shadow buffer */
         p->single_buf = 1;
     }
@@ -3252,7 +3258,8 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
      */
     u->buffer.last = u->buffer.pos;
 
-    if (u->conf->cyclic_temp_file) {
+    if (u->conf->cyclic_temp_file) 
+	{
 
         /*
          * we need to disable the use of sendfile() if we use cyclic temp file
@@ -3263,7 +3270,9 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         p->cyclic_temp_file = 1;
         c->sendfile = 0;
 
-    } else {
+    } 
+	else 
+	{
         p->cyclic_temp_file = 0;
     }
 
@@ -3273,7 +3282,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     p->length = -1;
 
-	 /* 调用input_filter_init方法进行初始化工作 */
+	 /* 调用input_filter_init为input_filter方法处理响应包体做初始化工作 */
     if (u->input_filter_init && u->input_filter_init(p->input_ctx) != NGX_OK)
     {
         ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
@@ -3626,6 +3635,11 @@ ngx_http_upstream_process_non_buffered_upstream(ngx_http_request_t *r, ngx_http_
     ngx_http_upstream_process_non_buffered_request(r, 0);
 }
 
+/* 以固定内存块方式转发响应包体给下游客户端 */
+/*
+ * 若do_write为0时，首先收来自上游服务器的响应，再转发响应给下游；
+ * 若do_write为1，首先转发响应给下游客户端，再接收来自上游服务器的响应
+ */
 
 static void
 ngx_http_upstream_process_non_buffered_request(ngx_http_request_t *r, ngx_uint_t do_write)
@@ -3639,7 +3653,9 @@ ngx_http_upstream_process_non_buffered_request(ngx_http_request_t *r, ngx_uint_t
     ngx_http_core_loc_conf_t  *clcf;
 
     u = r->upstream;
+	/* 获取Nginx与下游客户端之间的TCP连接 */ 
     downstream = r->connection;
+	/* 获取Nginx与上游服务器之间的TCP连接 */
     upstream = u->peer.connection;
 
     b = &u->buffer;
@@ -3649,42 +3665,59 @@ ngx_http_upstream_process_non_buffered_request(ngx_http_request_t *r, ngx_uint_t
 
     for ( ;; ) 
 	{
-
+		/* 若do_write为1，则开始向下游客户端转发响应包体 */  
         if (do_write) 
 		{
-
+			 /*
+             * 检查是否有响应包体需要转发给下游服务器；
+             * 其中out_bufs表示本次需要转发给下游服务器的响应包体；
+             * busy_bufs表示上一次向下游服务器转发响应包体时没有转发完的响应包体内存；
+             * 即若一次性转发不完所有的响应包体，则会保存在busy_bufs链表缓冲区中，
+             * 这里的保存只是将busy_bufs指向未发送完毕的响应数据；
+             */
+		
             if (u->out_bufs || u->busy_bufs)
 			{
+				/* 调用ngx_http_output_filter方法将响应包体发送给下游服务器 */
                 rc = ngx_http_output_filter(r, u->out_bufs);
 
-                if (rc == NGX_ERROR) {
+				/* 若返回值 rc = NGX_ERROR，则结束请求 */ 
+                if (rc == NGX_ERROR) 
+				{
                     ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
                     return;
                 }
-
-                ngx_chain_update_chains(r->pool, &u->free_bufs, &u->busy_bufs,
-                                        &u->out_bufs, u->output.tag);
+				/* 
+                 * 调用ngx_chain_update_chains方法更新free_bufs、busy_bufs、out_bufs链表； 
+                 * 即清空out_bufs链表，把out_bufs链表中已发送完的ngx_buf_t缓冲区清空，并将其添加到free_bufs链表中； 
+                 * 把out_bufs链表中未发送完的ngx_buf_t缓冲区添加到busy_bufs链表中； 
+                 */
+                ngx_chain_update_chains(r->pool, &u->free_bufs, &u->busy_bufs, &u->out_bufs, u->output.tag);
             }
 
-            if (u->busy_bufs == NULL) {
+			 /* 
+             * busy_bufs为空，表示所有响应包体已经转发到下游服务器， 
+             * 此时清空接收缓冲区buffer以便再次接收来自上游服务器的响应包体； 
+             */  
+            if (u->busy_bufs == NULL) 
+			{
 
-                if (u->length == 0
-                    || (upstream->read->eof && u->length == -1))
+                if (u->length == 0 || (upstream->read->eof && u->length == -1))
                 {
                     ngx_http_upstream_finalize_request(r, u, 0);
                     return;
                 }
 
-                if (upstream->read->eof) {
+                if (upstream->read->eof) 
+				{
                     ngx_log_error(NGX_LOG_ERR, upstream->log, 0, "upstream prematurely closed connection");
-
                     ngx_http_upstream_finalize_request(r, u, NGX_HTTP_BAD_GATEWAY);
                     return;
                 }
 
-                if (upstream->read->error) {
-                    ngx_http_upstream_finalize_request(r, u,
-                                                       NGX_HTTP_BAD_GATEWAY);
+                if (upstream->read->error)
+				{
+                    ngx_http_upstream_finalize_request(r, u, NGX_HTTP_BAD_GATEWAY);
                     return;
                 }
 
@@ -3693,18 +3726,28 @@ ngx_http_upstream_process_non_buffered_request(ngx_http_request_t *r, ngx_uint_t
             }
         }
 
+		/* 计算接收缓冲区buffer剩余可用的内存空间 */
         size = b->end - b->last;
-
+		/* 
+         * 若接收缓冲区buffer有剩余的可用空间， 
+         * 且此时读事件可读，即可读取来自上游服务器的响应包体； 
+         * 则调用recv方法开始接收来自上游服务器的响应包体，并保存在接收缓冲区buffer中； 
+         */ 
         if (size && upstream->read->ready) 
 		{
 
             n = upstream->recv(upstream, b->last, size);
-
+			/* 若返回值 n = NGX_AGAIN，则等待下一次可读事件发生继续接收响应 */  
             if (n == NGX_AGAIN) 
 			{
                 break;
             }
 
+			/* 
+             * 若返回值 n 大于0，表示接收到响应包体， 
+             * 则调用input_filter方法处理响应包体； 
+             * 并把do_write设置为1，表示已经接收到响应包体，此时可转发给下游服务器
+             */  
             if (n > 0) 
 			{
                 u->state->response_length += n;
@@ -3726,31 +3769,40 @@ ngx_http_upstream_process_non_buffered_request(ngx_http_request_t *r, ngx_uint_t
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-    if (downstream->data == r) {
-        if (ngx_handle_write_event(downstream->write, clcf->send_lowat)
-            != NGX_OK)
+	/* 调用ngx_handle_write_event方法将Nginx与下游之间的连接上的写事件注册的epoll事件机制中 */
+    if (downstream->data == r) 
+	{
+        if (ngx_handle_write_event(downstream->write, clcf->send_lowat) != NGX_OK)
         {
             ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
             return;
         }
     }
-
-    if (downstream->write->active && !downstream->write->ready) {
+	
+	/* 调用ngx_add_timer方法将Nginx与下游之间的连接上的写事件添加到定时器事件机制中 */
+    if (downstream->write->active && !downstream->write->ready)
+	{
         ngx_add_timer(downstream->write, clcf->send_timeout);
-
-    } else if (downstream->write->timer_set) {
+    }
+	else if (downstream->write->timer_set) 
+   	{
         ngx_del_timer(downstream->write);
     }
 
-    if (ngx_handle_read_event(upstream->read, 0) != NGX_OK) {
+	/* 调用ngx_handle_read_event方法将Nginx与上游之间的连接上的读事件注册的epoll事件机制中 */
+    if (ngx_handle_read_event(upstream->read, 0) != NGX_OK) 
+	{
         ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
         return;
     }
 
-    if (upstream->read->active && !upstream->read->ready) {
+	 /* 调用ngx_add_timer方法将Nginx与上游之间的连接上的读事件添加到定时器事件机制中 */
+    if (upstream->read->active && !upstream->read->ready)
+	{
         ngx_add_timer(upstream->read, u->conf->read_timeout);
-
-    } else if (upstream->read->timer_set) {
+    } 
+	else if (upstream->read->timer_set)
+	{
         ngx_del_timer(upstream->read);
     }
 }
@@ -3762,10 +3814,15 @@ ngx_http_upstream_non_buffered_filter_init(void *data)
     return NGX_OK;
 }
 
-
+/* upstream机制默认的input_filter方法 */
 static ngx_int_t
 ngx_http_upstream_non_buffered_filter(void *data, ssize_t bytes)
 {
+	 /* 
+     * data参数是ngx_http_upstream_t结构体中的input_filter_ctx， 
+     * 当HTTP模块没有实现input_filter方法时， 
+     * input_filter_ctx指向ngx_http_request_t结构体； 
+     */  
     ngx_http_request_t  *r = data;
 
     ngx_buf_t            *b;
@@ -3774,22 +3831,29 @@ ngx_http_upstream_non_buffered_filter(void *data, ssize_t bytes)
 
     u = r->upstream;
 
-    for (cl = u->out_bufs, ll = &u->out_bufs; cl; cl = cl->next) {
+	/* 找到out_bufs链表的最后一个缓冲区，并由ll指向该缓冲区 */ 
+    for (cl = u->out_bufs, ll = &u->out_bufs; cl; cl = cl->next)
+	{
         ll = &cl->next;
     }
 
+	/* 从free_bufs空闲链表缓冲区中获取一个ngx_buf_t结构体给cl */  
     cl = ngx_chain_get_free_buf(r->pool, &u->free_bufs);
-    if (cl == NULL) {
+    if (cl == NULL) 
+	{
         return NGX_ERROR;
     }
 
+	/* 将新分配的ngx_buf_t缓冲区添加到out_bufs链表的尾端 */ 
     *ll = cl;
 
     cl->buf->flush = 1;
     cl->buf->memory = 1;
 
+	 /* buffer是保存来自上游服务器的响应包体 */
     b = &u->buffer;
 
+	/* 将响应包体数据保存在cl缓冲区中 */ 
     cl->buf->pos = b->last;
     b->last += bytes;
     cl->buf->last = b->last;
@@ -3799,6 +3863,7 @@ ngx_http_upstream_non_buffered_filter(void *data, ssize_t bytes)
         return NGX_OK;
     }
 
+	/* 更新length长度，表示需要接收的包体长度减少bytes字节 */ 
     u->length -= bytes;
 
     return NGX_OK;
@@ -3813,59 +3878,73 @@ ngx_http_upstream_process_downstream(ngx_http_request_t *r)
     ngx_event_pipe_t     *p;
     ngx_http_upstream_t  *u;
 
+	/* 获取 Nginx 与下游客户端之间的连接 */ 
     c = r->connection;
     u = r->upstream;
     p = u->pipe;
     wev = c->write;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http upstream process downstream");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http upstream process downstream");
 
     c->log->action = "sending to client";
 
-    if (wev->timedout) {
-
-        if (wev->delayed) {
-
+	/* 检查下游连接上写事件是否超时*/
+    if (wev->timedout) 
+	{
+		//检查是否需要延迟处理这个事件
+        if (wev->delayed)
+		{
             wev->timedout = 0;
             wev->delayed = 0;
 
-            if (!wev->ready) {
+			//若写事件未准备就绪，则将写事件加入到定时器机制中和epoll事件机制中，并从当前函数返回
+            if (!wev->ready) 
+			{
                 ngx_add_timer(wev, p->send_timeout);
 
-                if (ngx_handle_write_event(wev, p->send_lowat) != NGX_OK) {
+                if (ngx_handle_write_event(wev, p->send_lowat) != NGX_OK)
+				{
                     ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
                 }
 
                 return;
             }
 
-            if (ngx_event_pipe(p, wev->write) == NGX_ABORT) {
+			//写事件已经准备就绪，将响应包体转发给下游客户端
+            if (ngx_event_pipe(p, wev->write) == NGX_ABORT) 
+			{
                 ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
                 return;
             }
 
-        } else {
+        } 
+		else 
+		{
+			//未设置延迟处理而写事件超时，则表示连接超时错误
             p->downstream_error = 1;
             c->timedout = 1;
             ngx_connection_error(c, NGX_ETIMEDOUT, "client timed out");
         }
 
-    } else {
+    } 
+	else 
+	{
+		//若需要延迟处理这个写事件，则将写事件加入到epoll机制中，并从当前函数返回
+        if (wev->delayed) 
+		{
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http downstream delayed");
 
-        if (wev->delayed) {
-
-            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                           "http downstream delayed");
-
-            if (ngx_handle_write_event(wev, p->send_lowat) != NGX_OK) {
+            if (ngx_handle_write_event(wev, p->send_lowat) != NGX_OK)
+			{
                 ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
             }
 
             return;
         }
 
-        if (ngx_event_pipe(p, 1) == NGX_ABORT) {
+		//将响应包体转发给下游客户端
+        if (ngx_event_pipe(p, 1) == NGX_ABORT)
+		{
             ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
             return;
         }
@@ -3876,8 +3955,7 @@ ngx_http_upstream_process_downstream(ngx_http_request_t *r)
 
 
 static void
-ngx_http_upstream_process_upstream(ngx_http_request_t *r,
-    ngx_http_upstream_t *u)
+ngx_http_upstream_process_upstream(ngx_http_request_t *r, ngx_http_upstream_t *u)
 {
     ngx_event_t       *rev;
     ngx_event_pipe_t  *p;
@@ -3887,53 +3965,65 @@ ngx_http_upstream_process_upstream(ngx_http_request_t *r,
     p = u->pipe;
     rev = c->read;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http upstream process upstream");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http upstream process upstream");
 
     c->log->action = "reading upstream";
 
-    if (rev->timedout) {
-
-        if (rev->delayed) {
+	/* 检查上游连接上读事件是否超时*/
+    if (rev->timedout) 
+	{
+        if (rev->delayed) 
+		{
 
             rev->timedout = 0;
             rev->delayed = 0;
 
-            if (!rev->ready) {
+			//若读事件未准备就绪，则将读事件加入到定时器机制中和epoll事件机制中，并从当前函数返回
+            if (!rev->ready) 
+			{
                 ngx_add_timer(rev, p->read_timeout);
 
-                if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+                if (ngx_handle_read_event(rev, 0) != NGX_OK) 
+				{
                     ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
                 }
 
                 return;
             }
 
-            if (ngx_event_pipe(p, 0) == NGX_ABORT) {
+			//读事件已经准备就绪，将读取响应包体
+            if (ngx_event_pipe(p, 0) == NGX_ABORT)
+			{
                 ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
                 return;
             }
 
-        } else {
+        } 
+		else
+		{
             p->upstream_error = 1;
             ngx_connection_error(c, NGX_ETIMEDOUT, "upstream timed out");
         }
 
-    } else {
+    } 
+	else 
+	{
 
-        if (rev->delayed) {
+        if (rev->delayed)
+		{
 
-            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                           "http upstream delayed");
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http upstream delayed");
 
-            if (ngx_handle_read_event(rev, 0) != NGX_OK) {
+            if (ngx_handle_read_event(rev, 0) != NGX_OK)
+			{
                 ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
             }
 
             return;
         }
 
-        if (ngx_event_pipe(p, 0) == NGX_ABORT) {
+        if (ngx_event_pipe(p, 0) == NGX_ABORT)
+		{
             ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
             return;
         }
@@ -3944,8 +4034,7 @@ ngx_http_upstream_process_upstream(ngx_http_request_t *r,
 
 
 static void
-ngx_http_upstream_process_request(ngx_http_request_t *r,
-    ngx_http_upstream_t *u)
+ngx_http_upstream_process_request(ngx_http_request_t *r, ngx_http_upstream_t *u)
 {
     ngx_temp_file_t   *tf;
     ngx_event_pipe_t  *p;
