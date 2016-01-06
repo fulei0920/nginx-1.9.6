@@ -314,8 +314,7 @@ typedef struct
 } ngx_http_upstream_resolved_t;
 
 
-typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r,
-    ngx_http_upstream_t *u);
+typedef void (*ngx_http_upstream_handler_pt)(ngx_http_request_t *r, ngx_http_upstream_t *u);
 
 
 struct ngx_http_upstream_s 
@@ -353,8 +352,8 @@ struct ngx_http_upstream_s
     ngx_http_upstream_resolved_t    *resolved;
 
     ngx_buf_t                        from_client;
-
-    ngx_buf_t                        buffer;		//接收上游服务器发来的响应的头部的缓冲区
+	//接收上游服务器发来的响应的头部的缓冲区
+    ngx_buf_t                        buffer;		
     //还需要接收上游包体的长度
     off_t                            length;
 
@@ -422,7 +421,9 @@ struct ngx_http_upstream_s
     unsigned                         buffering:1;
     unsigned                         keepalive:1;
     unsigned                         upgrade:1;
-	//表示是否已经传递了request_bufs缓冲区。在第一次以request_bufs作为参数调用ngx_output_chain方法后，request_sent会置为1
+	//表示是否已经传递了request_bufs缓冲区给ngx_output_chain。
+	//在第一次以request_bufs作为参数调用ngx_output_chain方法后，request_sent会置为1，
+	//后续调用ngx_output_chain将可以传递NULL
     unsigned                         request_sent:1;
 	//标志位，为1时表明上游服务器的响应需要直接转发给客户端，而且此时Nginx已经把响应包头转发给客户端了
     unsigned                         header_sent:1;

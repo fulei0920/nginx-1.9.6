@@ -38,8 +38,7 @@ static ngx_int_t ngx_http_ssl_variable(ngx_http_request_t *r,
 
 static ngx_int_t ngx_http_ssl_add_variables(ngx_conf_t *cf);
 static void *ngx_http_ssl_create_srv_conf(ngx_conf_t *cf);
-static char *ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf,
-    void *parent, void *child);
+static char *ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child);
 
 static char *ngx_http_ssl_enable(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_ssl_password_file(ngx_conf_t *cf, ngx_command_t *cmd,
@@ -90,12 +89,14 @@ static ngx_command_t  ngx_http_ssl_commands[] =
 		NULL 
     },
 
-    { ngx_string("ssl_certificate_key"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, certificate_key),
-      NULL },
+    { 
+    	ngx_string("ssl_certificate_key"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, certificate_key),
+		NULL 
+    },
 
     { ngx_string("ssl_password_file"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -209,12 +210,14 @@ static ngx_command_t  ngx_http_ssl_commands[] =
       offsetof(ngx_http_ssl_srv_conf_t, crl),
       NULL },
 
-    { ngx_string("ssl_stapling"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, stapling),
-      NULL },
+    { 
+    	ngx_string("ssl_stapling"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, stapling),
+		NULL 
+    },
 
     { ngx_string("ssl_stapling_file"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -609,8 +612,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_value(conf->stapling, prev->stapling, 0);
     ngx_conf_merge_value(conf->stapling_verify, prev->stapling_verify, 0);
     ngx_conf_merge_str_value(conf->stapling_file, prev->stapling_file, "");
-    ngx_conf_merge_str_value(conf->stapling_responder,
-                         prev->stapling_responder, "");
+    ngx_conf_merge_str_value(conf->stapling_responder, prev->stapling_responder, "");
 
     conf->ssl.log = cf->log;
 
@@ -755,24 +757,19 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     }
 #endif
 
-    ngx_conf_merge_ptr_value(conf->session_ticket_keys,
-                         prev->session_ticket_keys, NULL);
+    ngx_conf_merge_ptr_value(conf->session_ticket_keys, prev->session_ticket_keys, NULL);
 
-    if (ngx_ssl_session_ticket_keys(cf, &conf->ssl, conf->session_ticket_keys)
-        != NGX_OK)
+    if (ngx_ssl_session_ticket_keys(cf, &conf->ssl, conf->session_ticket_keys) != NGX_OK)
     {
         return NGX_CONF_ERROR;
     }
 
-    if (conf->stapling) {
-
-        if (ngx_ssl_stapling(cf, &conf->ssl, &conf->stapling_file,
-                             &conf->stapling_responder, conf->stapling_verify)
-            != NGX_OK)
+    if (conf->stapling) 
+	{
+        if (ngx_ssl_stapling(cf, &conf->ssl, &conf->stapling_file, &conf->stapling_responder, conf->stapling_verify) != NGX_OK)
         {
             return NGX_CONF_ERROR;
         }
-
     }
 
     return NGX_CONF_OK;

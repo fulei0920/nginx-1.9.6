@@ -53,6 +53,7 @@ typedef struct
     ngx_flag_t                      session_tickets;
     ngx_array_t                    *session_ticket_keys;
 
+	//表明是否启用OCSP stapling
     ngx_flag_t                      stapling;
     ngx_flag_t                      stapling_verify;
     ngx_str_t                       stapling_file;

@@ -942,8 +942,7 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
 #ifdef SSL_CTRL_CLEAR_OPTIONS
         /* only in 0.9.8m+ */
-        SSL_clear_options(ssl_conn, SSL_get_options(ssl_conn) &
-                                    ~SSL_CTX_get_options(sscf->ssl.ctx));
+        SSL_clear_options(ssl_conn, SSL_get_options(ssl_conn) & ~SSL_CTX_get_options(sscf->ssl.ctx));
 #endif
 
         SSL_set_options(ssl_conn, SSL_CTX_get_options(sscf->ssl.ctx));

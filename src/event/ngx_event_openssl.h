@@ -131,8 +131,7 @@ ngx_int_t ngx_ssl_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl,
 ngx_int_t ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_int_t depth);
 ngx_int_t ngx_ssl_trusted_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_int_t depth);
 ngx_int_t ngx_ssl_crl(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *crl);
-ngx_int_t ngx_ssl_stapling(ngx_conf_t *cf, ngx_ssl_t *ssl,
-    ngx_str_t *file, ngx_str_t *responder, ngx_uint_t verify);
+ngx_int_t ngx_ssl_stapling(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file, ngx_str_t *responder, ngx_uint_t verify);
 ngx_int_t ngx_ssl_stapling_resolver(ngx_conf_t *cf, ngx_ssl_t *ssl,
     ngx_resolver_t *resolver, ngx_msec_t resolver_timeout);
 RSA *ngx_ssl_rsa512_key_callback(ngx_ssl_conn_t *ssl_conn, int is_export,
@@ -151,10 +150,8 @@ void ngx_ssl_remove_cached_session(SSL_CTX *ssl, ngx_ssl_session_t *sess);
 ngx_int_t ngx_ssl_set_session(ngx_connection_t *c, ngx_ssl_session_t *session);
 #define ngx_ssl_get_session(c)      SSL_get1_session(c->ssl->connection)
 #define ngx_ssl_free_session        SSL_SESSION_free
-#define ngx_ssl_get_connection(ssl_conn)                                      \
-    SSL_get_ex_data(ssl_conn, ngx_ssl_connection_index)
-#define ngx_ssl_get_server_conf(ssl_ctx)                                      \
-    SSL_CTX_get_ex_data(ssl_ctx, ngx_ssl_server_conf_index)
+#define ngx_ssl_get_connection(ssl_conn)     	SSL_get_ex_data(ssl_conn, ngx_ssl_connection_index)
+#define ngx_ssl_get_server_conf(ssl_ctx)        SSL_CTX_get_ex_data(ssl_ctx, ngx_ssl_server_conf_index)
 
 #define ngx_ssl_verify_error_optional(n)                                      \
     (n == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT                              \
