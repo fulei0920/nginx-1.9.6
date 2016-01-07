@@ -145,7 +145,8 @@ typedef struct
 } ngx_resolver_t;
 
 
-struct ngx_resolver_ctx_s {
+struct ngx_resolver_ctx_s 
+{
     ngx_resolver_ctx_t       *next;
     ngx_resolver_t           *resolver;
     ngx_udp_connection_t     *udp_connection;

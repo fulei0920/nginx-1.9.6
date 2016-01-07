@@ -77,8 +77,7 @@ static void ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
 static void ngx_http_upstream_next(ngx_http_request_t *r,
     ngx_http_upstream_t *u, ngx_uint_t ft_type);
 static void ngx_http_upstream_cleanup(void *data);
-static void ngx_http_upstream_finalize_request(ngx_http_request_t *r,
-    ngx_http_upstream_t *u, ngx_int_t rc);
+static void ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_int_t rc);
 
 static ngx_int_t ngx_http_upstream_process_header_line(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
@@ -676,7 +675,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 #if (NGX_HTTP_SSL)
         u->ssl_name = u->resolved->host;
 #endif
-		      /*
+		/*
          * 若已经指定了上游服务器地址，则不需要解析，
          * 直接调用ngx_http_upstream_connection方法向上游服务器发起连接；
          * 并return从当前函数返回；
@@ -1053,10 +1052,10 @@ ngx_http_upstream_resolve_handler(ngx_resolver_ctx_t *ctx)
 
     ngx_http_set_log_request(c->log, r);
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http upstream resolve: \"%V?%V\"", &r->uri, &r->args);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http upstream resolve: \"%V?%V\"", &r->uri, &r->args);
 
-    if (ctx->state) {
+    if (ctx->state)
+	{
         ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                       "%V could not be resolved (%i: %s)",
                       &ctx->name, ctx->state,
@@ -1087,9 +1086,9 @@ ngx_http_upstream_resolve_handler(ngx_resolver_ctx_t *ctx)
     }
 #endif
 
-    if (ngx_http_upstream_create_round_robin_peer(r, ur) != NGX_OK) {
-        ngx_http_upstream_finalize_request(r, u,
-                                           NGX_HTTP_INTERNAL_SERVER_ERROR);
+    if (ngx_http_upstream_create_round_robin_peer(r, ur) != NGX_OK)
+	{
+        ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
         goto failed;
     }
 
@@ -1098,8 +1097,7 @@ ngx_http_upstream_resolve_handler(ngx_resolver_ctx_t *ctx)
 
     u->peer.start_time = ngx_current_msec;
 
-    if (u->conf->next_upstream_tries
-        && u->peer.tries > u->conf->next_upstream_tries)
+    if (u->conf->next_upstream_tries && u->peer.tries > u->conf->next_upstream_tries)
     {
         u->peer.tries = u->conf->next_upstream_tries;
     }
@@ -3253,8 +3251,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
     p->free_bufs = 1;
 
     /*
-     * event_pipe would do u->buffer.last += p->preread_size
-     * as though these bytes were read
+     * event_pipe would do u->buffer.last += p->preread_size as though these bytes were read
      */
     u->buffer.last = u->buffer.pos;
 
@@ -4109,11 +4106,12 @@ ngx_http_upstream_process_request(ngx_http_request_t *r, ngx_http_upstream_t *u)
         }
     }
 
-    if (p->downstream_error) {
-        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http upstream downstream error");
+    if (p->downstream_error)
+	{
+        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http upstream downstream error");
 
-        if (!u->cacheable && !u->store && u->peer.connection) {
+        if (!u->cacheable && !u->store && u->peer.connection) 
+		{
             ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
         }
     }
@@ -4349,7 +4347,7 @@ ngx_http_upstream_cleanup(void *data)
     ngx_http_upstream_finalize_request(r, r->upstream, NGX_DONE);
 }
 
-
+//结束 upstream 请求由函数 ngx_http_upstream_finalize_request 实现，该函数最终会调用 HTTP 框架的 ngx_http_finalize_request 方法来结束请求
 static void
 ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_int_t rc)
 {
@@ -4357,6 +4355,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "finalize http upstream request: %i", rc);
 
+	
     if (u->cleanup == NULL)
 	{
         /* the request was already finalized */
@@ -4364,16 +4363,20 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         return;
     }
 
+	/* 将 cleanup 指向的清理资源回调方法设置为 NULL */ 
     *u->cleanup = NULL;
     u->cleanup = NULL;
 
+	/* 释放解析主机域名时分配的资源 */ 
     if (u->resolved && u->resolved->ctx) 
 	{
         ngx_resolve_name_done(u->resolved->ctx);
         u->resolved->ctx = NULL;
     }
 
-    if (u->state && u->state->response_time) {
+	/* 设置当前时间为 HTTP 响应结束的时间 */ 
+    if (u->state && u->state->response_time) 
+	{
         u->state->response_time = ngx_current_msec - u->state->response_time;
 
         if (u->pipe && u->pipe->read_length) {
@@ -4381,20 +4384,25 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         }
     }
 
+	/* 调用该方法执行一些操作 */
     u->finalize_request(r, rc);
 
+	/* 调用 free 方法释放连接资源 */ 
     if (u->peer.free && u->peer.sockaddr) {
         u->peer.free(&u->peer, u->peer.data, 0);
         u->peer.sockaddr = NULL;
     }
 
-    if (u->peer.connection) {
+	/* 若上游连接还未关闭，则调用 ngx_close_connection 方法关闭该连接 */ 
+    if (u->peer.connection) 
+	{
 
 #if (NGX_HTTP_SSL)
 
         /* TODO: do not shutdown persistent connection */
 
-        if (u->peer.connection->ssl) {
+        if (u->peer.connection->ssl) 
+		{
 
             /*
              * We send the "close notify" shutdown alert to the upstream only
@@ -4408,11 +4416,10 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         }
 #endif
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "close http upstream connection: %d",
-                       u->peer.connection->fd);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "close http upstream connection: %d", u->peer.connection->fd);
 
-        if (u->peer.connection->pool) {
+        if (u->peer.connection->pool)
+		{
             ngx_destroy_pool(u->peer.connection->pool);
         }
 
@@ -4427,6 +4434,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
                        u->pipe->temp_file->file.fd);
     }
 
+	/* 若使用了文件缓存，则调用 ngx_delete_file 方法删除用于缓存响应的临时文件 */
     if (u->store && u->pipe && u->pipe->temp_file
         && u->pipe->temp_file->file.fd != NGX_INVALID_FILE)
     {
@@ -4501,6 +4509,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         rc = ngx_http_send_special(r, NGX_HTTP_FLUSH);
     }
 
+	/* 调用 HTTP 框架实现的 ngx_http_finalize_request 方法关闭请求 */ 
     ngx_http_finalize_request(r, rc);
 }
 

@@ -46,20 +46,20 @@ struct ngx_event_pipe_s
     ngx_event_pipe_output_filter_pt   output_filter;
     void                             *output_ctx;
 
-    unsigned           read:1;
-    unsigned           cacheable:1;
-    unsigned           single_buf:1;
+    unsigned           read:1;					//标志位，为1表示接收到上游响应包体
+    unsigned           cacheable:1;				//标志位，表示是否启用文件缓存
+    unsigned           single_buf:1;			//标志位，为1表示每次只能接收一个ngx_buf_t缓冲区的响应包体 
     unsigned           free_bufs:1;
-    unsigned           upstream_done:1;
-    unsigned           upstream_error:1;
-    unsigned           upstream_eof:1;
+    unsigned           upstream_done:1;			//标志位，为1表示上游连接已经关闭
+    unsigned           upstream_error:1;		//标志位，为1表示上游连接出错
+    unsigned           upstream_eof:1;			//标志位，为1表示上游连接通信已经结束
     unsigned           upstream_blocked:1;
-    unsigned           downstream_done:1;
-    unsigned           downstream_error:1;
+    unsigned           downstream_done:1;		//标志位，为1表示下游连接已经关闭
+    unsigned           downstream_error:1;		//标志位，为1表示下游连接出错
     unsigned           cyclic_temp_file:1;
 
-    ngx_int_t          allocated;
-    ngx_bufs_t         bufs;
+    ngx_int_t          allocated;				//表明当前已经分配的接收上游包体的缓冲区的个数
+    ngx_bufs_t         bufs;					//指定能够分配的接收上游包体的缓冲区的大小和个数
     ngx_buf_tag_t      tag;
 
     ssize_t            busy_size;
@@ -77,8 +77,8 @@ struct ngx_event_pipe_s
     ngx_pool_t        *pool;
     ngx_log_t         *log;
 
-    ngx_chain_t       *preread_bufs;
-    size_t             preread_size;
+    ngx_chain_t       *preread_bufs;		//预接收响应包体(在接收响应头部时接收到的响应包体)的缓冲区
+    size_t             preread_size; 		//预接收响应包体(在接收响应头部时接收到的响应包体)的长度
     ngx_buf_t         *buf_to_file;
 
     size_t             limit_rate;

@@ -734,10 +734,10 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    ngx_conf_merge_value(conf->builtin_session_cache,
-                         prev->builtin_session_cache, NGX_SSL_NONE_SCACHE);
+    ngx_conf_merge_value(conf->builtin_session_cache, prev->builtin_session_cache, NGX_SSL_NONE_SCACHE);
 
-    if (conf->shm_zone == NULL) {
+    if (conf->shm_zone == NULL) 
+	{
         conf->shm_zone = prev->shm_zone;
     }
 

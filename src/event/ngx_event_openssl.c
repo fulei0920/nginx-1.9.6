@@ -1889,7 +1889,8 @@ ngx_ssl_shutdown_handler(ngx_event_t *ev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ev->log, 0, "SSL shutdown handler");
 
-    if (ngx_ssl_shutdown(c) == NGX_AGAIN) {
+    if (ngx_ssl_shutdown(c) == NGX_AGAIN) 
+	{
         return;
     }
 
@@ -2461,8 +2462,7 @@ failed:
 
 
 static ngx_ssl_session_t *
-ngx_ssl_get_cached_session(ngx_ssl_conn_t *ssl_conn, u_char *id, int len,
-    int *copy)
+ngx_ssl_get_cached_session(ngx_ssl_conn_t *ssl_conn, u_char *id, int len, int *copy)
 {
 #if OPENSSL_VERSION_NUMBER >= 0x0090707fL
     const

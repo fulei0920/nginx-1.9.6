@@ -64,7 +64,8 @@ ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
          * that does not require the copy
          */
 
-        if (in == NULL) {
+        if (in == NULL) 
+		{
             return ctx->output_filter(ctx->filter_ctx, in);
         }
 
@@ -90,7 +91,8 @@ ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
     last_out = &out;
     last = NGX_NONE;
 
-    for ( ;; ) {
+    for ( ;; ) 
+	{
 
 #if (NGX_HAVE_FILE_AIO || NGX_THREADS)
         if (ctx->aio) {
@@ -98,7 +100,8 @@ ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
         }
 #endif
 
-        while (ctx->in) {
+        while (ctx->in)
+		{
 
             /*
              * cycle while there are the ctx->in bufs
@@ -107,7 +110,8 @@ ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
 
             bsize = ngx_buf_size(ctx->in->buf);
 
-            if (bsize == 0 && !ngx_buf_special(ctx->in->buf)) {
+            if (bsize == 0 && !ngx_buf_special(ctx->in->buf)) 
+			{
 
                 ngx_log_error(NGX_LOG_ALERT, ctx->pool->log, 0,
                               "zero size buf in output "
@@ -129,7 +133,8 @@ ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
                 continue;
             }
 
-            if (ngx_output_chain_as_is(ctx, ctx->in->buf)) {
+            if (ngx_output_chain_as_is(ctx, ctx->in->buf)) 
+			{
 
                 /* move the chain link to the output chain */
 
@@ -179,8 +184,10 @@ ngx_output_chain(ngx_output_chain_ctx_t *ctx, ngx_chain_t *in)
                 return rc;
             }
 
-            if (rc == NGX_AGAIN) {
-                if (out) {
+            if (rc == NGX_AGAIN)
+			{
+                if (out) 
+				{
                     break;
                 }
 

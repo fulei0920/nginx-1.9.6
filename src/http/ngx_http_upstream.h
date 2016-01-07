@@ -228,7 +228,7 @@ typedef struct
 #if (NGX_HTTP_CACHE)
     signed                           cache:2;
 #endif
-    signed                           store:2;
+    signed                           store:2;			/* 文件缓存标志位 */ 
     unsigned                         intercept_404:1;
     unsigned                         change_buffering:1;
 

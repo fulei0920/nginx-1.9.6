@@ -1123,8 +1123,7 @@ ngx_hex_dump(u_char *dst, u_char *src, size_t len)
 void
 ngx_encode_base64(ngx_str_t *dst, ngx_str_t *src)
 {
-    static u_char   basis64[] =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    static u_char   basis64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     ngx_encode_base64_internal(dst, src, basis64, 1);
 }

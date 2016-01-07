@@ -951,16 +951,15 @@ ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx,
         return NGX_ERROR;
     }
 
-    if (proxy.len > 7
-        && ngx_strncasecmp(proxy.data, (u_char *) "http://", 7) == 0)
+    if (proxy.len > 7 && ngx_strncasecmp(proxy.data, (u_char *) "http://", 7) == 0)
     {
         add = 7;
         port = 80;
 
 #if (NGX_HTTP_SSL)
 
-    } else if (proxy.len > 8
-               && ngx_strncasecmp(proxy.data, (u_char *) "https://", 8) == 0)
+    }
+	else if(proxy.len > 8 && ngx_strncasecmp(proxy.data, (u_char *) "https://", 8) == 0)
     {
         add = 8;
         port = 443;
@@ -968,9 +967,10 @@ ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx,
 
 #endif
 
-    } else {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "invalid URL prefix in \"%V\"", &proxy);
+    } 
+	else 
+	{
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "invalid URL prefix in \"%V\"", &proxy);
         return NGX_ERROR;
     }
 
@@ -987,10 +987,11 @@ ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx,
     url.uri_part = 1;
     url.no_resolve = 1;
 
-    if (ngx_parse_url(r->pool, &url) != NGX_OK) {
-        if (url.err) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "%s in upstream \"%V\"", url.err, &url.url);
+    if (ngx_parse_url(r->pool, &url) != NGX_OK) 
+	{
+        if (url.err)
+		{
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%s in upstream \"%V\"", url.err, &url.url);
         }
 
         return NGX_ERROR;
@@ -1016,17 +1017,21 @@ ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx,
     ngx_http_proxy_set_vars(&url, &ctx->vars);
 
     u->resolved = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_resolved_t));
-    if (u->resolved == NULL) {
+    if (u->resolved == NULL)
+	{
         return NGX_ERROR;
     }
 
-    if (url.addrs && url.addrs[0].sockaddr) {
+    if (url.addrs && url.addrs[0].sockaddr)
+	{
         u->resolved->sockaddr = url.addrs[0].sockaddr;
         u->resolved->socklen = url.addrs[0].socklen;
         u->resolved->naddrs = 1;
         u->resolved->host = url.addrs[0].name;
 
-    } else {
+    }
+	else 
+	{
         u->resolved->host = url.host;
         u->resolved->port = (in_port_t) (url.no_port ? port : url.port);
         u->resolved->no_port = url.no_port;
@@ -1198,7 +1203,6 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
     if (plcf->proxy_lengths && ctx->vars.uri.len)
 	{
         uri_len = ctx->vars.uri.len;
-
     }
 	else if (ctx->vars.uri.len == 0 && r->valid_unparsed_uri && r == r->main)
     {

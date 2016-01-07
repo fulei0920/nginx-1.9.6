@@ -293,8 +293,7 @@ ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream
 
 
 ngx_int_t
-ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r,
-    ngx_http_upstream_resolved_t *ur)
+ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream_resolved_t *ur)
 {
     u_char                            *p;
     size_t                             len;
@@ -307,9 +306,11 @@ ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r,
 
     rrp = r->upstream->peer.data;
 
-    if (rrp == NULL) {
+    if (rrp == NULL)
+	{
         rrp = ngx_palloc(r->pool, sizeof(ngx_http_upstream_rr_peer_data_t));
-        if (rrp == NULL) {
+        if (rrp == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -317,7 +318,8 @@ ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r,
     }
 
     peers = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_rr_peers_t));
-    if (peers == NULL) {
+    if (peers == NULL) 
+	{
         return NGX_ERROR;
     }
 

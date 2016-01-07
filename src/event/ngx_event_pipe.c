@@ -127,39 +127,53 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
     ngx_msec_t    delay;
     ngx_chain_t  *chain, *cl, *ln;
 
-    if (p->upstream_eof || p->upstream_error || p->upstream_done) {
+    if (p->upstream_eof || p->upstream_error || p->upstream_done)
+	{
         return NGX_OK;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                   "pipe read upstream: %d", p->upstream->read->ready);
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe read upstream: %d", p->upstream->read->ready);
 
-    for ( ;; ) {
+	/* 开始接收上游响应包体，并调用input_filter方法进行处理 */  
+    for ( ;; ) 
+	{
 
-        if (p->upstream_eof || p->upstream_error || p->upstream_done) {
+        if (p->upstream_eof || p->upstream_error || p->upstream_done)
+		{
             break;
         }
 
-        if (p->preread_bufs == NULL && !p->upstream->read->ready) {
+		 
+        //若preread_bufs链表缓冲区为空(表示在接收响应头部区间，未预接收响应包体)， 
+        //且上游读事件未准备就绪，即没有可读的响应包体， 
+        //则从for循环退出；   
+        if (p->preread_bufs == NULL && !p->upstream->read->ready)
+		{
             break;
         }
 
-        if (p->preread_bufs) {
-
+		//若 preread_bufs 链表缓冲区不为空，表示预接收了响应包体，则将 preread_bufs 链表缓冲区挂载到 chain 链表中
+        if (p->preread_bufs)
+		{
             /* use the pre-read bufs if they exist */
-
-            chain = p->preread_bufs;
+            chain = p->preread_bufs;		/* 将预接收响应包体缓冲区添加到chain链表中 */ 
             p->preread_bufs = NULL;
             n = p->preread_size;
 
-            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                           "pipe preread: %z", n);
+            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe preread: %z", n);
 
-            if (n) {
+            if (n) 
+			{
                 p->read = 1;
             }
 
-        } else {
+        }
+		else 
+		{
+			 /* 
+	         * 若preread_bufs链表缓冲区没有未处理的响应包体， 
+	         * 则需要有缓冲区来接收上游响应包体； 
+	         */  
 
 #if (NGX_HAVE_KQUEUE)
 
@@ -169,198 +183,267 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
              * and not to call c->recv_chain().
              */
 
-            if (p->upstream->read->available == 0
-                && p->upstream->read->pending_eof)
+            if (p->upstream->read->available == 0 && p->upstream->read->pending_eof)
             {
                 p->upstream->read->ready = 0;
                 p->upstream->read->eof = 1;
                 p->upstream_eof = 1;
                 p->read = 1;
 
-                if (p->upstream->read->kq_errno) {
+                if (p->upstream->read->kq_errno)
+				{
                     p->upstream->read->error = 1;
                     p->upstream_error = 1;
                     p->upstream_eof = 0;
 
-                    ngx_log_error(NGX_LOG_ERR, p->log,
-                                  p->upstream->read->kq_errno,
-                                  "kevent() reported that upstream "
-                                  "closed connection");
+                    ngx_log_error(NGX_LOG_ERR, p->log, p->upstream->read->kq_errno, "kevent() reported that upstream closed connection");
                 }
 
                 break;
             }
 #endif
 
-            if (p->limit_rate) {
-                if (p->upstream->read->delayed) {
+            if (p->limit_rate)
+			{
+                if (p->upstream->read->delayed)
+				{
                     break;
                 }
 
-                limit = (off_t) p->limit_rate * (ngx_time() - p->start_sec + 1)
-                        - p->read_length;
+                limit = (off_t) p->limit_rate * (ngx_time() - p->start_sec + 1) - p->read_length;
 
-                if (limit <= 0) {
+                if (limit <= 0) 
+				{
                     p->upstream->read->delayed = 1;
                     delay = (ngx_msec_t) (- limit * 1000 / p->limit_rate + 1);
                     ngx_add_timer(p->upstream->read, delay);
                     break;
                 }
 
-            } else {
+            } 
+			else 
+			{
                 limit = 0;
             }
 
-            if (p->free_raw_bufs) {
+			/* 
+             * 若 free_raw_bufs不为空，则使用该链表缓冲区接收上游响应包体； 
+             * free_raw_bufs链表缓冲区用来保存调用一次ngx_event_pipe_read_upstream方法所接收到的上游响应包体； 
+             */  
 
+			//获取接收上游包体的缓冲区....
+			
+            if (p->free_raw_bufs) 
+			{
                 /* use the free bufs if they exist */
 
+				//将空闲缓冲区链表free_raw_bufs中的缓冲区挂接到chain链表中
+				//若每次只能接收一个缓冲区，则仅将free_raw_bufs链表头结点缓冲区添加到chain链表中
+				//否则将free_raw_bufs链表中所有缓冲区结点添加到chain链表中
+
                 chain = p->free_raw_bufs;
-                if (p->single_buf) {
+                if (p->single_buf) 
+				{
                     p->free_raw_bufs = p->free_raw_bufs->next;
                     chain->next = NULL;
-                } else {
+                } 
+				else 
+				{
                     p->free_raw_bufs = NULL;
                 }
 
-            } else if (p->allocated < p->bufs.num) {
-
+            } 
+			else if (p->allocated < p->bufs.num) 
+			{
                 /* allocate a new buf if it's still allowed */
 
                 b = ngx_create_temp_buf(p->pool, p->bufs.size);
-                if (b == NULL) {
+                if (b == NULL) 
+				{
                     return NGX_ABORT;
                 }
 
                 p->allocated++;
 
                 chain = ngx_alloc_chain_link(p->pool);
-                if (chain == NULL) {
+                if (chain == NULL) 
+				{
                     return NGX_ABORT;
                 }
 
                 chain->buf = b;
                 chain->next = NULL;
 
-            } else if (!p->cacheable
-                       && p->downstream->data == p->output_ctx
-                       && p->downstream->write->ready
-                       && !p->downstream->write->delayed)
+            } 
+			else if (!p->cacheable && p->downstream->data == p->output_ctx && p->downstream->write->ready && !p->downstream->write->delayed)
             {
+
                 /*
                  * if the bufs are not needed to be saved in a cache and
                  * a downstream is ready then write the bufs to a downstream
                  */
-
+			  	//若不启用文件缓存，且可以向下游发送响应包体，则阻塞读取上游响应包体，并退出循环时
+				
+			/* 
+                 * 设置upstream_blocked标志位为1，表示阻塞读取上游响应， 
+                 * 因为没有缓冲区或文件缓存来接收响应包体，则应该阻塞读取上游响应包体； 
+                 * 并break退出for循环，此时会向下游转发响应，释放缓冲区，以便再次接收上游响应包体； 
+                 */  
                 p->upstream_blocked = 1;
 
-                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                               "pipe downstream ready");
+                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe downstream ready");
 
                 break;
 
-            } else if (p->cacheable
-                       || p->temp_file->offset < p->max_temp_file_size)
+            } 
+			
+			else if (p->cacheable || p->temp_file->offset < p->max_temp_file_size)
             {
-
                 /*
                  * if it is allowed, then save some bufs from p->in
                  * to a temporary file, and add them to a p->out chain
                  */
 
+				//若开启了文件缓存，则检查临时文件是否达到最大长度，若未达到最大长度，则将上游响应写入到临时文件，
+				//以便使有空余缓冲区来继续接收上游响应
+				
+				/* 将上游响应写入到临时文件中，此时free_raw_bufs有缓冲区空间来接收上游响应包体 */  
                 rc = ngx_event_pipe_write_chain_to_temp_file(p);
 
-                ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                               "pipe temp offset: %O", p->temp_file->offset);
+                ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe temp offset: %O", p->temp_file->offset);
 
-                if (rc == NGX_BUSY) {
+                if (rc == NGX_BUSY) 
+				{
                     break;
                 }
 
-                if (rc == NGX_AGAIN) {
-                    if (ngx_event_flags & NGX_USE_LEVEL_EVENT
-                        && p->upstream->read->active
-                        && p->upstream->read->ready)
+                if (rc == NGX_AGAIN) 
+				{
+                    if (ngx_event_flags & NGX_USE_LEVEL_EVENT && p->upstream->read->active && p->upstream->read->ready)
                     {
-                        if (ngx_del_event(p->upstream->read, NGX_READ_EVENT, 0)
-                            == NGX_ERROR)
+                        if (ngx_del_event(p->upstream->read, NGX_READ_EVENT, 0) == NGX_ERROR)
                         {
                             return NGX_ABORT;
                         }
                     }
                 }
 
-                if (rc != NGX_OK) {
+                if (rc != NGX_OK) 
+				{
                     return rc;
                 }
 
+				//将空闲缓冲区链表free_raw_bufs中的缓冲区挂接到chain链表中
+				//若每次只能接收一个缓冲区，则仅将free_raw_bufs链表头结点缓冲区添加到chain链表中
+				//否则将free_raw_bufs链表中所有缓冲区结点添加到chain链表中
                 chain = p->free_raw_bufs;
-                if (p->single_buf) {
+                if (p->single_buf)
+				{
                     p->free_raw_bufs = p->free_raw_bufs->next;
                     chain->next = NULL;
-                } else {
+                } 
+				else 
+				{
                     p->free_raw_bufs = NULL;
                 }
 
-            } else {
-
+            }
+			else 
+			{
+				/* 若没有缓冲区或文件缓存接收上游响应包体，则暂时不收受上游响应包体，break退出循环 */
                 /* there are no bufs to read in */
-
-                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                               "no pipe bufs to read in");
+                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0, "no pipe bufs to read in");
 
                 break;
             }
 
+			 /* 
+	         * 调用recv_chain方法接收上游响应包体并把接收到的上游响应包体缓冲区添加到free_raw_bufs链表
+	         */ 
             n = p->upstream->recv_chain(p->upstream, chain, limit);
 
-            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                           "pipe recv chain: %z", n);
+            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe recv chain: %z", n);
 
-            if (p->free_raw_bufs) {
+			/* 将保存接收到上游响应包体的缓冲区添加到free_raw_bufs链表*/ 
+            if (p->free_raw_bufs)
+			{
                 chain->next = p->free_raw_bufs;
             }
             p->free_raw_bufs = chain;
 
-            if (n == NGX_ERROR) {
+			/* 下面根据所接收上游响应包体的返回值n来进行判断 */  
+  
+            /* 
+             * n = NGX_ERROR，表示发生错误， 
+             * 则设置upstream_error标志位为1， 
+             * 并return NGX_ERROR从当前函数返回； 
+             */  
+            if (n == NGX_ERROR) 
+			{
                 p->upstream_error = 1;
                 return NGX_ERROR;
             }
 
-            if (n == NGX_AGAIN) {
-                if (p->single_buf) {
+			/* 
+             * n = NGX_AGAIN，表示没有读取到上游响应包体， 
+             * 则break跳出for循环； 
+             */  
+            if (n == NGX_AGAIN) 
+			{
+                if (p->single_buf)
+				{
                     ngx_event_pipe_remove_shadow_links(chain->buf);
                 }
 
                 break;
             }
 
+			/* 
+             * n 大于0，表示已经接收到上游响应包体， 
+             * 则设置read标志位为1； 
+             */  
             p->read = 1;
 
-            if (n == 0) {
+			/* 
+             * n = 0，表示上游服务器主动关闭连接， 
+             * 则设置upstream_eof标志位为1，表示已关闭连接； 
+             * 并break退出for循环； 
+             */  
+            if (n == 0) 
+			{
                 p->upstream_eof = 1;
                 break;
             }
         }
 
+
+
+		/* 下面开始处理已接收到的上游响应包体数据..... */  
         delay = p->limit_rate ? (ngx_msec_t) n * 1000 / p->limit_rate : 0;
 
         p->read_length += n;
         cl = chain;
         p->free_raw_bufs = NULL;
 
-        while (cl && n > 0) {
+		//遍历待处理缓冲区链表chain中的ngx_buf_t缓冲区   
+        while (cl && n > 0) 
+		{
 
+			// 调用ngx_event_pipe_remove_shadow_links方法将释放当前ngx_buf_t缓冲区中的shadow域 
             ngx_event_pipe_remove_shadow_links(cl->buf);
 
+			// 计算当前缓冲区剩余的空间大小 
             size = cl->buf->end - cl->buf->last;
-
-            if (n >= size) {
+			// 若本次接收到上游响应包体的长度不小于缓冲区剩余的空间，表示当前缓冲区已满 
+            if (n >= size)
+			{
                 cl->buf->last = cl->buf->end;
 
                 /* STUB */ cl->buf->num = p->num++;
-
-                if (p->input_filter(p, cl->buf) == NGX_ERROR) {
+				
+				/* 调用input_filter方法处理当前缓冲区响应包体，把其挂载到ln链表中 */  
+                if (p->input_filter(p, cl->buf) == NGX_ERROR)
+				{
                     return NGX_ABORT;
                 }
 
@@ -368,21 +451,29 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
                 ln = cl;
                 cl = cl->next;
                 ngx_free_chain(p->pool, ln);
-
-            } else {
+            } 
+			else 
+			{
+			/* 
+             * 若本次接收到上游响应包体的长度小于缓冲区剩余的空间， 
+             * 表示当前缓冲区还有剩余空间接收上游响应包体； 
+             * 则先把本次接收到的响应包体缓冲区添加到free_raw_bufs链表尾端； 
+             */  
                 cl->buf->last += n;
                 n = 0;
             }
         }
 
-        if (cl) {
+        if (cl) 
+		{
             for (ln = cl; ln->next; ln = ln->next) { /* void */ }
 
             ln->next = p->free_raw_bufs;
             p->free_raw_bufs = cl;
         }
 
-        if (delay > 0) {
+        if (delay > 0)
+		{
             p->upstream->read->delayed = 1;
             ngx_add_timer(p->upstream->read, delay);
             break;
@@ -448,53 +539,67 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
 
 #endif
 
-    if (p->free_raw_bufs && p->length != -1) {
+	/* 若free_raw_bufs不为空 */
+    if (p->free_raw_bufs && p->length != -1)
+	{
         cl = p->free_raw_bufs;
 
-        if (cl->buf->last - cl->buf->pos >= p->length) {
+        if (cl->buf->last - cl->buf->pos >= p->length) 
+		{
 
             p->free_raw_bufs = cl->next;
 
             /* STUB */ cl->buf->num = p->num++;
-
-            if (p->input_filter(p, cl->buf) == NGX_ERROR) {
+			 /* 调用input_filter方法处理free_raw_bufs缓冲区 */  
+            if (p->input_filter(p, cl->buf) == NGX_ERROR) 
+			{
                  return NGX_ABORT;
             }
-
+			 /* 释放已被处理的chain缓冲区数据 */  
             ngx_free_chain(p->pool, cl);
         }
     }
 
-    if (p->length == 0) {
+    if (p->length == 0) 
+	{
         p->upstream_done = 1;
         p->read = 1;
     }
 
-    if ((p->upstream_eof || p->upstream_error) && p->free_raw_bufs) {
+	/* 
+     * 检查upstream_eof或upstream_error标志位是否为1，若其中一个为1，表示连接已经关闭， 
+     * 若连接已经关闭，且free_raw_bufs缓冲区不为空； 
+     */  
+    if ((p->upstream_eof || p->upstream_error) && p->free_raw_bufs) 
+	{
 
         /* STUB */ p->free_raw_bufs->buf->num = p->num++;
-
-        if (p->input_filter(p, p->free_raw_bufs->buf) == NGX_ERROR) {
+			/* 再次调用input_filter方法处理free_raw_bufs缓冲区的响应包体数据 */ 
+        if (p->input_filter(p, p->free_raw_bufs->buf) == NGX_ERROR)
+		{
             return NGX_ABORT;
         }
 
         p->free_raw_bufs = p->free_raw_bufs->next;
-
-        if (p->free_bufs && p->buf_to_file == NULL) {
-            for (cl = p->free_raw_bufs; cl; cl = cl->next) {
-                if (cl->buf->shadow == NULL) {
+		/* 检查free_bufs标志位，若为1，则释放shadow域为空的缓冲区 */
+        if (p->free_bufs && p->buf_to_file == NULL)
+		{
+            for (cl = p->free_raw_bufs; cl; cl = cl->next) 
+			{
+                if (cl->buf->shadow == NULL) 
+				{
                     ngx_pfree(p->pool, cl->buf->start);
                 }
             }
         }
     }
 
-    if (p->cacheable && (p->in || p->buf_to_file)) {
+    if (p->cacheable && (p->in || p->buf_to_file)) 
+	{
+        ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe write chain");
 
-        ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                       "pipe write chain");
-
-        if (ngx_event_pipe_write_chain_to_temp_file(p) == NGX_ABORT) {
+        if (ngx_event_pipe_write_chain_to_temp_file(p) == NGX_ABORT)
+		{
             return NGX_ABORT;
         }
     }
@@ -502,7 +607,10 @@ ngx_event_pipe_read_upstream(ngx_event_pipe_t *p)
     return NGX_OK;
 }
 
-
+/*
+将 in 链表和 out 链表中管理的缓冲区发送到下游服务器，由于 out 链表中缓冲区的内容在响应中的位置比 in 链表靠前，
+因此优先发送 out 链表内容给下游服务器
+*/
 static ngx_int_t
 ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
 {
@@ -513,37 +621,45 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
     ngx_chain_t       *out, **ll, *cl;
     ngx_connection_t  *downstream;
 
+	/* 获取Nginx与下游服务器之间的连接 */  
     downstream = p->downstream;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                   "pipe write downstream: %d", downstream->write->ready);
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe write downstream: %d", downstream->write->ready);
 
     flushed = 0;
 
-    for ( ;; ) {
-        if (p->downstream_error) {
+    for ( ;; ) 
+	{
+        if (p->downstream_error) 
+		{
             return ngx_event_pipe_drain_chains(p);
         }
 
-        if (p->upstream_eof || p->upstream_error || p->upstream_done) {
+		//检查Nginx与上游之间的连接是否关闭
+        if (p->upstream_eof || p->upstream_error || p->upstream_done)
+		{
 
             /* pass the p->out and p->in chains to the output filter */
 
-            for (cl = p->busy; cl; cl = cl->next) {
+            for (cl = p->busy; cl; cl = cl->next) 
+			{
                 cl->buf->recycled = 0;
             }
 
-            if (p->out) {
-                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                               "pipe write downstream flush out");
+			/* 调用output_filter方法将out链表中的缓冲区响应包体转发给下游 */
+            if (p->out) 
+			{
+                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe write downstream flush out");
 
-                for (cl = p->out; cl; cl = cl->next) {
+                for (cl = p->out; cl; cl = cl->next)
+				{
                     cl->buf->recycled = 0;
                 }
 
                 rc = p->output_filter(p->output_ctx, p->out);
 
-                if (rc == NGX_ERROR) {
+                if (rc == NGX_ERROR) 
+				{
                     p->downstream_error = 1;
                     return ngx_event_pipe_drain_chains(p);
                 }
@@ -551,17 +667,20 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
                 p->out = NULL;
             }
 
-            if (p->in) {
-                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                               "pipe write downstream flush in");
+			/* 调用output_filter方法将in链表中的缓冲区响应包体转发给下游 */
+            if (p->in) 
+			{
+                ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe write downstream flush in");
 
-                for (cl = p->in; cl; cl = cl->next) {
+                for (cl = p->in; cl; cl = cl->next) 
+				{
                     cl->buf->recycled = 0;
                 }
 
                 rc = p->output_filter(p->output_ctx, p->in);
 
-                if (rc == NGX_ERROR) {
+                if (rc == NGX_ERROR) 
+				{
                     p->downstream_error = 1;
                     return ngx_event_pipe_drain_chains(p);
                 }
@@ -569,8 +688,7 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
                 p->in = NULL;
             }
 
-            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                           "pipe write downstream done");
+            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe write downstream done");
 
             /* TODO: free unused bufs */
 
@@ -578,9 +696,13 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
             break;
         }
 
-        if (downstream->data != p->output_ctx
-            || !downstream->write->ready
-            || downstream->write->delayed)
+		  /* 
+         * 若上游连接没有关闭，则检查下游连接上的写事件是否准备就绪； 
+         * 若准备就绪，则表示可以向下游转发响应包体； 
+         * 若未准备就绪，则break退出for循环，return NGX_OK从当前函数返回； 
+         */  
+
+        if (downstream->data != p->output_ctx || !downstream->write->ready || downstream->write->delayed)
         {
             break;
         }
@@ -590,10 +712,14 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
         prev = NULL;
         bsize = 0;
 
-        for (cl = p->busy; cl; cl = cl->next) {
+		/* 计算busy链表缓冲区中待发送响应包体的长度bsize */  
+        for (cl = p->busy; cl; cl = cl->next)
+		{
 
-            if (cl->buf->recycled) {
-                if (prev == cl->buf->start) {
+            if (cl->buf->recycled)
+			{
+                if (prev == cl->buf->start) 
+				{
                     continue;
                 }
 
@@ -602,32 +728,45 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
             }
         }
 
-        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0,
-                       "pipe write busy: %uz", bsize);
+        ngx_log_debug1(NGX_LOG_DEBUG_EVENT, p->log, 0, "pipe write busy: %uz", bsize);
 
         out = NULL;
 
+		/* 检查bsize是否大于busy_size配置项 */ 
         if (bsize >= (size_t) p->busy_size) {
             flush = 1;
             goto flush;
         }
 
+		 /* 若bsize小于busy_size配置项 */
+
         flush = 0;
         ll = NULL;
         prev_last_shadow = 1;
 
-        for ( ;; ) {
-            if (p->out) {
+		/* 
+         * 检查in、out链表缓冲区是否为空，若不为空； 
+         * 将out、in链表首个缓冲区作为发送内容； 
+         */  
+
+        for ( ;; )
+		{
+            if (p->out)
+			{	
+				/* out链表不为空，则取出首个缓冲区作为发送响应内容 */
                 cl = p->out;
 
-                if (cl->buf->recycled) {
-                    ngx_log_error(NGX_LOG_ALERT, p->log, 0,
-                                  "recycled buffer in pipe out chain");
+                if (cl->buf->recycled) 
+				{
+                    ngx_log_error(NGX_LOG_ALERT, p->log, 0, "recycled buffer in pipe out chain");
                 }
 
                 p->out = p->out->next;
 
-            } else if (!p->cacheable && p->in) {
+            } 
+			else if (!p->cacheable && p->in) 
+			{
+				/* 若out为空，检查in是否为空，若in不为空，则首个缓冲区作为发送内容 */  
                 cl = p->in;
 
                 ngx_log_debug3(NGX_LOG_DEBUG_EVENT, p->log, 0,
@@ -636,8 +775,11 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
                                cl->buf->pos,
                                cl->buf->last - cl->buf->pos);
 
-                if (cl->buf->recycled && prev_last_shadow) {
-                    if (bsize + cl->buf->end - cl->buf->start > p->busy_size) {
+                if (cl->buf->recycled && prev_last_shadow) 
+				{
+					/* 判断待发送响应包体长度加上本次缓冲区的长度是否大于busy_size */ 
+                    if (bsize + cl->buf->end - cl->buf->start > p->busy_size) 
+					{
                         flush = 1;
                         break;
                     }
@@ -668,20 +810,25 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
         ngx_log_debug2(NGX_LOG_DEBUG_EVENT, p->log, 0,
                        "pipe write: out:%p, f:%d", out, flush);
 
-        if (out == NULL) {
+        if (out == NULL) 
+		{
 
-            if (!flush) {
+            if (!flush) 
+			{
                 break;
             }
 
             /* a workaround for AIO */
-            if (flushed++ > 10) {
+            if (flushed++ > 10)
+			{
                 return NGX_BUSY;
             }
         }
 
+		/* 调用output_filter方法发送out链表缓冲区 */ 
         rc = p->output_filter(p->output_ctx, out);
 
+		/* 更新free、busy、out链表缓冲区 */
         ngx_chain_update_chains(p->pool, &p->free, &p->busy, &out, p->tag);
 
         if (rc == NGX_ERROR) {
@@ -689,6 +836,7 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
             return ngx_event_pipe_drain_chains(p);
         }
 
+		/* 遍历free链表，释放缓冲区中的shadow域 */
         for (cl = p->free; cl; cl = cl->next) {
 
             if (cl->buf->temp_file) {
@@ -707,8 +855,10 @@ ngx_event_pipe_write_to_downstream(ngx_event_pipe_t *p)
 
             /* add the free shadow raw buf to p->free_raw_bufs */
 
-            if (cl->buf->last_shadow) {
-                if (ngx_event_pipe_add_free_buf(p, cl->buf->shadow) != NGX_OK) {
+            if (cl->buf->last_shadow)
+			{
+                if (ngx_event_pipe_add_free_buf(p, cl->buf->shadow) != NGX_OK) 
+				{
                     return NGX_ABORT;
                 }
 

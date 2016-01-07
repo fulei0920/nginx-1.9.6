@@ -66,7 +66,8 @@ typedef struct {
 } ngx_path_init_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_file_t                 file;
     off_t                      offset;
     ngx_path_t                *path;

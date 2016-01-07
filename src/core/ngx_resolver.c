@@ -324,10 +324,12 @@ ngx_resolve_start(ngx_resolver_t *r, ngx_resolver_ctx_t *temp)
     in_addr_t            addr;
     ngx_resolver_ctx_t  *ctx;
 
-    if (temp) {
+    if (temp) 
+	{
         addr = ngx_inet_addr(temp->name.data, temp->name.len);
 
-        if (addr != INADDR_NONE) {
+        if (addr != INADDR_NONE) 
+		{
             temp->resolver = r;
             temp->state = NGX_OK;
             temp->naddrs = 1;
@@ -349,8 +351,8 @@ ngx_resolve_start(ngx_resolver_t *r, ngx_resolver_ctx_t *temp)
     }
 
     ctx = ngx_resolver_calloc(r, sizeof(ngx_resolver_ctx_t));
-
-    if (ctx) {
+    if (ctx) 
+	{
         ctx->resolver = r;
     }
 
@@ -381,19 +383,22 @@ ngx_resolve_name(ngx_resolver_ctx_t *ctx)
 
     rc = ngx_resolve_name_locked(r, ctx);
 
-    if (rc == NGX_OK) {
+    if (rc == NGX_OK) 
+	{
         return NGX_OK;
     }
 
     /* unlock name mutex */
 
-    if (rc == NGX_AGAIN) {
+    if (rc == NGX_AGAIN) 
+	{
         return NGX_OK;
     }
 
     /* NGX_ERROR */
 
-    if (ctx->event) {
+    if (ctx->event) 
+	{
         ngx_resolver_free(r, ctx->event);
     }
 
@@ -490,9 +495,11 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
 
     rn = ngx_resolver_lookup_name(r, &ctx->name, hash);
 
-    if (rn) {
+    if (rn) 
+	{
 
-        if (rn->valid >= ngx_time()) {
+        if (rn->valid >= ngx_time()) 
+		{
 
             ngx_log_debug0(NGX_LOG_DEBUG_CORE, r->log, 0, "resolve cached");
 
@@ -570,7 +577,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
 
             /* unlock name mutex */
 
-            do {
+            do 
+			{
                 ctx->state = NGX_RESOLVE_NXDOMAIN;
                 next = ctx->next;
 
@@ -619,7 +627,9 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
 
         /* unlock alloc mutex */
 
-    } else {
+    } 
+	else 
+	{
 
         rn = ngx_resolver_alloc(r, sizeof(ngx_resolver_node_t));
         if (rn == NULL) {
@@ -644,7 +654,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
 
     rc = ngx_resolver_create_name_query(rn, ctx);
 
-    if (rc == NGX_ERROR) {
+    if (rc == NGX_ERROR) 
+	{
         goto failed;
     }
 
@@ -666,7 +677,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
     rn->naddrs6 = r->ipv6 ? (u_short) -1 : 0;
 #endif
 
-    if (ngx_resolver_send_query(r, rn) != NGX_OK) {
+    if (ngx_resolver_send_query(r, rn) != NGX_OK) 
+	{
         goto failed;
     }
 
@@ -684,7 +696,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
         ngx_add_timer(ctx->event, ctx->timeout);
     }
 
-    if (ngx_queue_empty(&r->name_resend_queue)) {
+    if (ngx_queue_empty(&r->name_resend_queue)) 
+	{
         ngx_add_timer(r->event, (ngx_msec_t) (r->resend_timeout * 1000));
     }
 
@@ -1077,11 +1090,13 @@ ngx_resolver_send_query(ngx_resolver_t *r, ngx_resolver_node_t *rn)
     uc = r->udp_connections.elts;
 
     uc = &uc[r->last_connection++];
-    if (r->last_connection == r->udp_connections.nelts) {
+    if (r->last_connection == r->udp_connections.nelts)
+	{
         r->last_connection = 0;
     }
 
-    if (uc->connection == NULL) {
+    if (uc->connection == NULL) 
+	{
 
         uc->log = *r->log;
         uc->log.handler = ngx_resolver_log_error;
@@ -1097,28 +1112,34 @@ ngx_resolver_send_query(ngx_resolver_t *r, ngx_resolver_node_t *rn)
         uc->connection->read->resolver = 1;
     }
 
-    if (rn->naddrs == (u_short) -1) {
+    if (rn->naddrs == (u_short) -1) 
+	{
         n = ngx_send(uc->connection, rn->query, rn->qlen);
 
-        if (n == -1) {
+        if (n == -1) 
+		{
             return NGX_ERROR;
         }
 
-        if ((size_t) n != (size_t) rn->qlen) {
+        if ((size_t) n != (size_t) rn->qlen)
+		{
             ngx_log_error(NGX_LOG_CRIT, &uc->log, 0, "send() incomplete");
             return NGX_ERROR;
         }
     }
 
 #if (NGX_HAVE_INET6)
-    if (rn->query6 && rn->naddrs6 == (u_short) -1) {
+    if (rn->query6 && rn->naddrs6 == (u_short) -1) 
+	{
         n = ngx_send(uc->connection, rn->query6, rn->qlen);
 
-        if (n == -1) {
+        if (n == -1) 
+		{
             return NGX_ERROR;
         }
 
-        if ((size_t) n != (size_t) rn->qlen) {
+        if ((size_t) n != (size_t) rn->qlen)
+		{
             ngx_log_error(NGX_LOG_CRIT, &uc->log, 0, "send() incomplete");
             return NGX_ERROR;
         }
@@ -1140,8 +1161,7 @@ ngx_resolver_resend_handler(ngx_event_t *ev)
 
     r = ev->data;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_CORE, r->log, 0,
-                   "resolver resend handler");
+    ngx_log_debug0(NGX_LOG_DEBUG_CORE, r->log, 0, "resolver resend handler");
 
     /* lock name mutex */
 
