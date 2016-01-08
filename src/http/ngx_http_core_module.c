@@ -96,7 +96,8 @@ static ngx_conf_post_t  ngx_http_core_lowat_post =
 static ngx_conf_post_handler_pt  ngx_http_core_pool_size_p = ngx_http_core_pool_size;
 
 
-static ngx_conf_enum_t  ngx_http_core_request_body_in_file[] = {
+static ngx_conf_enum_t  ngx_http_core_request_body_in_file[] = 
+{
     { ngx_string("off"), NGX_HTTP_REQUEST_BODY_FILE_OFF },
     { ngx_string("on"), NGX_HTTP_REQUEST_BODY_FILE_ON },
     { ngx_string("clean"), NGX_HTTP_REQUEST_BODY_FILE_CLEAN },
@@ -111,7 +112,8 @@ static ngx_conf_enum_t  ngx_http_core_satisfy[] = {
 };
 
 
-static ngx_conf_enum_t  ngx_http_core_lingering_close[] = {
+static ngx_conf_enum_t  ngx_http_core_lingering_close[] = 
+{
     { ngx_string("off"), NGX_HTTP_LINGERING_OFF },
     { ngx_string("on"), NGX_HTTP_LINGERING_ON },
     { ngx_string("always"), NGX_HTTP_LINGERING_ALWAYS },
@@ -229,7 +231,9 @@ static ngx_command_t  ngx_http_core_commands[] =
 		offsetof(ngx_http_core_srv_conf_t, request_pool_size),
 		&ngx_http_core_pool_size_p 
     },
-
+	//语法: client_header_timeout time (默认单位:秒);
+	//默认: client_header_timeout 60;
+	//读取HTTP头部(请求行和请求头)的超时时间
     { 
 		ngx_string("client_header_timeout"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -335,19 +339,28 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
-    { ngx_string("root"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
-      ngx_http_core_root,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
-
-    { ngx_string("alias"),
-      NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_http_core_root,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+	//语法: root path;
+	//默认: root html;
+	//以root方式设置资源路径
+    { 
+		ngx_string("root"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
+		ngx_http_core_root,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
+    
+	//语法: alias path;
+	////以alias方式设置资源路径
+    { 
+		ngx_string("alias"),
+		NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_http_core_root,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("limit_except"),
       NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_1MORE,
@@ -362,7 +375,9 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, client_max_body_size),
       NULL },
-
+	//语法: client_body_buffer_size time size;
+	//默认: client_body_buffer_size 8k/16k;
+	//存储HTTP包体的内存buffer大小
     { 
    		ngx_string("client_body_buffer_size"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -372,6 +387,9 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
+	//语法: client_body_timeout time (默认单位:秒);
+	//默认: client_body_timeout 60;
+	//读取HTTP包体的超时时间
     { ngx_string("client_body_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
@@ -386,12 +404,14 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, client_body_temp_path),
       NULL },
 
-    { ngx_string("client_body_in_file_only"),
+    { 
+    	ngx_string("client_body_in_file_only"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_enum_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, client_body_in_file_only),
-      &ngx_http_core_request_body_in_file },
+      &ngx_http_core_request_body_in_file 
+    },
 
     { ngx_string("client_body_in_single_buffer"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -449,7 +469,9 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, tcp_nopush),
       NULL },
-
+	//语法: tcp_nodelay on | off;
+	//默认: tcp_nodelay on;
+	//开启或关闭Nginx使用TCP_NODELAY选项的功能 
     { ngx_string("tcp_nodelay"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -457,6 +479,9 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, tcp_nodelay),
       NULL },
 
+	//语法: send_timeout time (默认单位:秒);
+	//默认: send_timeout 60;
+	//发送响应的超时时间
     { ngx_string("send_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
@@ -496,26 +521,41 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, limit_rate_after),
       NULL },
 
-    { ngx_string("keepalive_timeout"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
-      ngx_http_core_keepalive,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+	//语法: keepalive_timeout time1 [time2] (默认单位: 秒);
+	//默认: keepalive_timeout 75 0;
+	//time1是keepalive超时时间，time2是Nginx发送给客户端响应头中的Keep-Alive域的时间
+    { 
+		ngx_string("keepalive_timeout"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
+		ngx_http_core_keepalive,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
-    { ngx_string("keepalive_requests"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, keepalive_requests),
-      NULL },
+	//语法: keepalive_requests n;
+	//默认: keepalive_requests 100;
+	//一个keepalive长连接上允许承载的请求最大数目
+    { 
+		ngx_string("keepalive_requests"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, keepalive_requests),
+		NULL 
+    },
 
-    { ngx_string("keepalive_disable"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
-      ngx_conf_set_bitmask_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, keepalive_disable),
-      &ngx_http_core_keepalive_disable },
+	//语法: keepalive_disable [msie6|safari|none]...;
+	//默认: keepalive_disable msie6 safari;
+	//对某些浏览器禁用keepalive功能
+    { 
+		ngx_string("keepalive_disable"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
+		ngx_conf_set_bitmask_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, keepalive_disable),
+		&ngx_http_core_keepalive_disable 
+    },
 
     { ngx_string("satisfy"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -530,7 +570,10 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
-
+	
+	//语法: lingering_close off | on | always;
+	//默认: lingering_close on;
+	//控制Nginx关闭用户连接的方式(延迟关闭)
     { ngx_string("lingering_close"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_enum_slot,
@@ -538,13 +581,19 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, lingering_close),
       &ngx_http_core_lingering_close },
 
+	//语法: lingering_time time;
+	//默认: lingering_time 30s;
+	//保持延迟关闭状态的最长持续时间
     { ngx_string("lingering_time"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, lingering_time),
       NULL },
-
+      
+	//语法: lingering_timeout time;
+	//默认: lingering_timeout 5;
+	//保持延迟关闭状态的最长持续时间
     { ngx_string("lingering_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
@@ -552,6 +601,9 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, lingering_timeout),
       NULL },
 
+	//语法: reset_timedout_connection on | off;
+	//默认: reset_timedout_connection off;
+	//连接超时后将通过向客户端发送RST包来直接重置连接
     { ngx_string("reset_timedout_connection"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -669,12 +721,14 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
-    { ngx_string("error_log"),
+    { 
+    	ngx_string("error_log"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
       ngx_http_core_error_log,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
-      NULL },
+      NULL 
+   	},
 
     { ngx_string("open_file_cache"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
@@ -2100,14 +2154,15 @@ ngx_http_map_uri_to_path(ngx_http_request_t *r, ngx_str_t *path, size_t *root_le
 
     alias = clcf->alias;
 
-    if (alias && !r->valid_location) {
-        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
-                      "\"alias\" cannot be used in location \"%V\" "
+    if (alias && !r->valid_location) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "\"alias\" cannot be used in location \"%V\" "
                       "where URI was rewritten", &clcf->name);
         return NULL;
     }
 
-    if (clcf->root_lengths == NULL) {
+    if (clcf->root_lengths == NULL) 
+	{
 
         *root_length = clcf->root.len;
 
@@ -3699,8 +3754,7 @@ ngx_http_core_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
                               prev->connection_pool_size, 256);
     ngx_conf_merge_size_value(conf->request_pool_size,
                               prev->request_pool_size, 4096);
-    ngx_conf_merge_msec_value(conf->client_header_timeout,
-                              prev->client_header_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->client_header_timeout, prev->client_header_timeout, 60000);
     ngx_conf_merge_size_value(conf->client_header_buffer_size, prev->client_header_buffer_size, 1024);
     ngx_conf_merge_bufs_value(conf->large_client_header_buffers, prev->large_client_header_buffers, 4, 8192);
 
@@ -3991,11 +4045,8 @@ ngx_http_core_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_off_value(conf->client_max_body_size,
                               prev->client_max_body_size, 1 * 1024 * 1024);
-    ngx_conf_merge_size_value(conf->client_body_buffer_size,
-                              prev->client_body_buffer_size,
-                              (size_t) 2 * ngx_pagesize);
-    ngx_conf_merge_msec_value(conf->client_body_timeout,
-                              prev->client_body_timeout, 60000);
+    ngx_conf_merge_size_value(conf->client_body_buffer_size, prev->client_body_buffer_size, (size_t) 2 * ngx_pagesize);
+    ngx_conf_merge_msec_value(conf->client_body_timeout, prev->client_body_timeout, 60000);
 
     ngx_conf_merge_bitmask_value(conf->keepalive_disable,
                               prev->keepalive_disable,
@@ -4039,14 +4090,10 @@ ngx_http_core_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_size_value(conf->limit_rate, prev->limit_rate, 0);
     ngx_conf_merge_size_value(conf->limit_rate_after, prev->limit_rate_after,
                               0);
-    ngx_conf_merge_msec_value(conf->keepalive_timeout,
-                              prev->keepalive_timeout, 75000);
-    ngx_conf_merge_sec_value(conf->keepalive_header,
-                              prev->keepalive_header, 0);
-    ngx_conf_merge_uint_value(conf->keepalive_requests,
-                              prev->keepalive_requests, 100);
-    ngx_conf_merge_uint_value(conf->lingering_close,
-                              prev->lingering_close, NGX_HTTP_LINGERING_ON);
+    ngx_conf_merge_msec_value(conf->keepalive_timeout, prev->keepalive_timeout, 75000);
+    ngx_conf_merge_sec_value(conf->keepalive_header, prev->keepalive_header, 0);
+    ngx_conf_merge_uint_value(conf->keepalive_requests, prev->keepalive_requests, 100);
+    ngx_conf_merge_uint_value(conf->lingering_close, prev->lingering_close, NGX_HTTP_LINGERING_ON);
     ngx_conf_merge_msec_value(conf->lingering_time,
                               prev->lingering_time, 30000);
     ngx_conf_merge_msec_value(conf->lingering_timeout,
@@ -4643,14 +4690,12 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         if ((clcf->alias != 0) == alias)
 		{
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "\"%V\" directive is duplicate",
-                               &cmd->name);
-        } else {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "\"%V\" directive is duplicate, "
-                               "\"%s\" directive was specified earlier",
-                               &cmd->name, clcf->alias ? "alias" : "root");
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"%V\" directive is duplicate", &cmd->name);
+        } 
+		else 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"%V\" directive is duplicate, "
+				"\"%s\" directive was specified earlier", &cmd->name, clcf->alias ? "alias" : "root");
         }
 
         return NGX_CONF_ERROR;
@@ -4666,21 +4711,16 @@ ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     if (ngx_strstr(value[1].data, "$document_root") || ngx_strstr(value[1].data, "${document_root}"))
     {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "the $document_root variable cannot be used "
-                           "in the \"%V\" directive",
-                           &cmd->name);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the $document_root variable cannot be used "
+				"in the \"%V\" directive", &cmd->name);
 
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_strstr(value[1].data, "$realpath_root")
-        || ngx_strstr(value[1].data, "${realpath_root}"))
+    if (ngx_strstr(value[1].data, "$realpath_root") || ngx_strstr(value[1].data, "${realpath_root}"))
     {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "the $realpath_root variable cannot be used "
-                           "in the \"%V\" directive",
-                           &cmd->name);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the $realpath_root variable cannot be used "
+			"in the \"%V\" directive", &cmd->name);
 
         return NGX_CONF_ERROR;
     }
@@ -5290,7 +5330,8 @@ ngx_http_core_keepalive(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (clcf->keepalive_timeout != NGX_CONF_UNSET_MSEC) {
+    if (clcf->keepalive_timeout != NGX_CONF_UNSET_MSEC)
+	{
         return "is duplicate";
     }
 
@@ -5298,17 +5339,20 @@ ngx_http_core_keepalive(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     clcf->keepalive_timeout = ngx_parse_time(&value[1], 0);
 
-    if (clcf->keepalive_timeout == (ngx_msec_t) NGX_ERROR) {
+    if (clcf->keepalive_timeout == (ngx_msec_t) NGX_ERROR) 
+	{
         return "invalid value";
     }
 
-    if (cf->args->nelts == 2) {
+    if (cf->args->nelts == 2) 
+	{
         return NGX_CONF_OK;
     }
 
     clcf->keepalive_header = ngx_parse_time(&value[2], 1);
 
-    if (clcf->keepalive_header == (time_t) NGX_ERROR) {
+    if (clcf->keepalive_header == (time_t) NGX_ERROR) 
+	{
         return "invalid value";
     }
 

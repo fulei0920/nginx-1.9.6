@@ -175,7 +175,9 @@ static ngx_command_t  ngx_event_core_commands[] =
 		NULL 
     },
 
-	//需要对来自指定IP的TCP连接打印debug级别的调试日志
+	//需要对来自指定IP的TCP连接打印debug级别的调试日志，其他请求仍然沿用error_log配置的日志级别
+	//使用前，需要确保在执行configure时已经加入了--with-debug参数，否则不会生效
+	//语法: debug_connection [IP|CIDR]
     { 
 		ngx_string("debug_connection"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -1192,7 +1194,8 @@ ngx_event_debug_connection(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #if (NGX_HAVE_UNIX_DOMAIN)
 
-    if (ngx_strcmp(value[1].data, "unix:") == 0) {
+    if (ngx_strcmp(value[1].data, "unix:") == 0)
+	{
         cidr = ngx_array_push(&ecf->debug_connection);
         if (cidr == NULL) {
             return NGX_CONF_ERROR;

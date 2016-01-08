@@ -1569,18 +1569,16 @@ ngx_http_upstream_ssl_init_connection(ngx_http_request_t *r, ngx_http_upstream_t
 
         clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-        if (clcf->tcp_nodelay && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET) {
+        if (clcf->tcp_nodelay && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET)
+		{
             ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "tcp_nodelay");
 
             tcp_nodelay = 1;
 
-            if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY,
-                           (const void *) &tcp_nodelay, sizeof(int)) == -1)
+            if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay, sizeof(int)) == -1)
             {
-                ngx_connection_error(c, ngx_socket_errno,
-                                     "setsockopt(TCP_NODELAY) failed");
-                ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_INTERNAL_SERVER_ERROR);
+                ngx_connection_error(c, ngx_socket_errno, "setsockopt(TCP_NODELAY) failed");
+                ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
 
@@ -2015,6 +2013,7 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
         c = u->peer.connection;
         clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
+		//设置上游连接TCP_NODELAY选项
         if (clcf->tcp_nodelay && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET) 
 		{
             ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "tcp_nodelay");
@@ -2060,7 +2059,8 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
             }
         }
 
-        if (r->reading_body) {
+        if (r->reading_body) 
+		{
             /* read client request body */
 
             rc = ngx_http_read_unbuffered_request_body(r);

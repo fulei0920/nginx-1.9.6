@@ -237,9 +237,11 @@ typedef struct
     size_t                      connection_pool_size;	
 	//指定每个HTTP请求的内存池大小
     size_t                      request_pool_size;
+	//存储HTTP头部(请求行和请求头)时分配的内存buffer大小
     size_t                      client_header_buffer_size;
 
     ngx_bufs_t                  large_client_header_buffers;
+	//读取HTTP头部(请求行和请求头)的超时时间
     ngx_msec_t                  client_header_timeout;
     ngx_flag_t                  ignore_invalid_headers;
     ngx_flag_t                  merge_slashes;
@@ -370,7 +372,8 @@ typedef struct
     unsigned                   test_dir:1;
 } ngx_http_try_file_t;
 
-
+//完整的描叙了一个location块的信息，
+//以及匹配这个location的请求的http包的一些资源信息
 struct ngx_http_core_loc_conf_s 
 {
 	//location名称，即location指令后的表达式
@@ -399,8 +402,8 @@ struct ngx_http_core_loc_conf_s
     ngx_http_core_loc_conf_t       **regex_locations;
 #endif
 
-    
-    void        **loc_conf;		//指向所属location块内ngx_http_conf_ctx_t结构体中的loc_conf指针数组，它保存着当前location块内所有HTTP模块create_loc_conf方法产生的结构体指针
+    //指向所属location块内ngx_http_conf_ctx_t结构体中的loc_conf指针数组，它保存着当前location块内所有HTTP模块create_loc_conf方法产生的结构体指针
+    void        **loc_conf;		
 
     uint32_t      limit_except;
     void        **limit_except_loc_conf;
@@ -427,7 +430,10 @@ struct ngx_http_core_loc_conf_s
     off_t         client_max_body_size;    /* client_max_body_size */
     off_t         directio;                /* directio */
     off_t         directio_alignment;      /* directio_alignment */
-
+	//存储HTTP包体的内存缓冲区大小
+	//HTTP包体会先接收到指定的这块缓存中，之后才决定是否写入磁盘
+	//如果用户请求中包含有HTTP头部Content-Length，并且其标识的长度小于定义的缓冲区，
+	//那么Nginx会自动降低本次请求所使用的内存buffer，以降低内存消耗
     size_t        client_body_buffer_size; /* client_body_buffer_size */
     size_t        send_lowat;              /* send_lowat */
     size_t        postpone_output;         /* postpone_output */
@@ -435,35 +441,55 @@ struct ngx_http_core_loc_conf_s
     size_t        limit_rate_after;        /* limit_rate_after */
     size_t        sendfile_max_chunk;      /* sendfile_max_chunk */
     size_t        read_ahead;              /* read_ahead */
-
+	//读取HTTP包体的超时时间
     ngx_msec_t    client_body_timeout;     /* client_body_timeout */
+	//发送响应的超时时间
     ngx_msec_t    send_timeout;            /* send_timeout */
-    ngx_msec_t    keepalive_timeout;       /* keepalive_timeout */
-    ngx_msec_t    lingering_time;          /* lingering_time */
+	//keepalive超时时间
+    ngx_msec_t    keepalive_timeout;       
+	//保持延迟关闭状态的最长持续时间
+    ngx_msec_t    lingering_time;          
+	//延迟关闭的超时时间
+	//延迟关闭状态中，若超过lingering_timeout时间后还没有数据可读，就直接关闭连接
     ngx_msec_t    lingering_timeout;       /* lingering_timeout */
     ngx_msec_t    resolver_timeout;        /* resolver_timeout */
 
     ngx_resolver_t  *resolver;             /* resolver */
-
-    time_t        keepalive_header;        /* keepalive_timeout */
-
+	//Nginx发送给客户端响应头中的Keep-Alive域的时间
+    time_t        keepalive_header;        
+	//一个keepalive长连接上允许承载的请求最大数目
     ngx_uint_t    keepalive_requests;      /* keepalive_requests */
-    ngx_uint_t    keepalive_disable;       /* keepalive_disable */
+	//对某些浏览器禁用keepalive功能
+	//HTTP请求中的keepalive功能是为了让多个请求复用一个HTTP长连接
+	//但是有些浏览器对长连接处理有问题
+    ngx_uint_t    keepalive_disable;       
 	//仅可取值为NGX_HTTP_SATISFY_ALL或者NGX_HTTP_SATISFY_ANY
     ngx_uint_t    satisfy;                 /* satisfy */
+	//控制Nginx关闭用户连接的方式
+	//always表示关闭用户连接前必须无条件地处理连接上所有用户发送的数据
+	//off表示关闭连接时完全不管连接上是否已经有准备就绪的来自用户的数据
+	//on是中间值，一般情况下在关闭连接前都会处理连接上的用户发送的数据，
+	//除了有些情况下在业务上认定这之后的数据是不必要的
     ngx_uint_t    lingering_close;         /* lingering_close */
     ngx_uint_t    if_modified_since;       /* if_modified_since */
     ngx_uint_t    max_ranges;              /* max_ranges */
     ngx_uint_t    client_body_in_file_only; /* client_body_in_file_only */
 
+	//
     ngx_flag_t    client_body_in_single_buffer;
                                            /* client_body_in_singe_buffer */
+	//内部location，这种location只能由子请求或者内部跳转访问
     ngx_flag_t    internal;                /* internal */
     ngx_flag_t    sendfile;                /* sendfile */
     ngx_flag_t    aio;                     /* aio */
     ngx_flag_t    tcp_nopush;              /* tcp_nopush */
-    ngx_flag_t    tcp_nodelay;             /* tcp_nodelay */
-    ngx_flag_t    reset_timedout_connection; /* reset_timedout_connection */
+	//开启或关闭Nginx使用TCP_NODELAY选项的功能 
+	//这个选项在将连接转变为长连接的时候才被启用，在upstream发送响应到客户端时也会启用
+    ngx_flag_t    tcp_nodelay;           //确定对keepalive连接是否使用TCP_NODELAY选项
+	//连接超时后将通过向客户端发送RST包来直接重置连接
+	//相比正常的关闭方式，它使得服务器避免产生许多处于FIN_WAIT_1,FIN_WAIT_2/TIME_WAIT状态的TCP连接
+	//注意，使用RST重置包关闭连接会带来一些问题，默认情况下不会开启
+    ngx_flag_t    reset_timedout_connection; 
     ngx_flag_t    server_name_in_redirect; /* server_name_in_redirect */
     ngx_flag_t    port_in_redirect;        /* port_in_redirect */
     ngx_flag_t    msie_padding;            /* msie_padding */
@@ -499,6 +525,7 @@ struct ngx_http_core_loc_conf_s
     ngx_array_t  *error_pages;             /* error_page */
     ngx_http_try_file_t    *try_files;     /* try_files */
 
+	//HTTP包体的临时存放目录
     ngx_path_t   *client_body_temp_path;   /* client_body_temp_path */
 
     ngx_open_file_cache_t  *open_file_cache;

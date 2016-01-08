@@ -295,7 +295,8 @@ ngx_http_read_unbuffered_request_body(ngx_http_request_t *r)
 
     rc = ngx_http_do_read_client_request_body(r);
 
-    if (rc == NGX_OK) {
+    if (rc == NGX_OK)
+	{
         r->reading_body = 0;
     }
 
