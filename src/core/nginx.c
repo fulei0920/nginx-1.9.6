@@ -24,7 +24,8 @@ static char *ngx_set_cpu_affinity(ngx_conf_t *cf, ngx_command_t *cmd, void *conf
 static char *ngx_set_worker_processes(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
-static ngx_conf_enum_t  ngx_debug_points[] = {
+static ngx_conf_enum_t  ngx_debug_points[] = 
+{
     { ngx_string("stop"), NGX_DEBUG_POINTS_STOP },
     { ngx_string("abort"), NGX_DEBUG_POINTS_ABORT },
     { ngx_null_string, 0 }
@@ -33,7 +34,9 @@ static ngx_conf_enum_t  ngx_debug_points[] = {
 
 static ngx_command_t  ngx_core_commands[] = 
 {
-
+	//语法: daemon on|off
+	//默认: daemon on
+	//是否以守护进程的方式允许Nginx，守护进程是脱离终端并且在后台允许的进程
     {
 		ngx_string("daemon"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
@@ -43,6 +46,10 @@ static ngx_command_t  ngx_core_commands[] =
 		NULL 
     },
 
+	//语法: master_process on|off
+	//默认: master_process on
+	//是否以master/worker方式工作
+	//如果关闭了master_process工作方式，就不会fork出worker子进程来处理请求，而是用master进程自身来处理请求
     { 
 		ngx_string("master_process"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
@@ -52,6 +59,13 @@ static ngx_command_t  ngx_core_commands[] =
 		NULL 
     },
 
+	//语法: timer_resolution t;
+	//设置系统调用gettimeofday的执行频率
+	//当需要降低gettimeofday的调用频率时，可以使用timer_resolution配置。
+	//例如，"timer_resolution 100ms;"表示至少每100ms才调用一次gettimeofday
+	//但在目前的大多数内核中，如x86-64体系结构，gettimeofday只是一次vsyscall，仅仅对共享内存页中的数据做访问，
+	//并不是通常的系统调用，代价并不大，一般不必使用这个配置项。而且，如果希望日志文件中每行打印的时间更准确，
+	//也可以使用它
 	{ 
 		ngx_string("timer_resolution"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -60,7 +74,10 @@ static ngx_command_t  ngx_core_commands[] =
 		offsetof(ngx_core_conf_t, timer_resolution),
 		NULL 
 	},
-
+	//语法: pid path/file
+	//默认: logs/nginx.pid
+	//保存master进程ID的pid文件存放路径。默认与configure执行时的参数"--pid-path"所指定的路径是相同的，也可以随时修改
+	//应确保Nginx有权在相应的目标中创建pid文件
 	{ 
 		ngx_string("pid"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -88,13 +105,23 @@ static ngx_command_t  ngx_core_commands[] =
       	NULL 
  	},
 
-    { ngx_string("debug_points"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_enum_slot,
-      0,
-      offsetof(ngx_core_conf_t, debug_points),
-      &ngx_debug_points },
+	//语法: debug_points [stop|abort]
+	//Nginx在一些关键的错误逻辑中设置了调试点。
+	//如果设置了debug_points为stop，那么Nginx执行到这些调试点时就会发出SIGSTOP信号以用于调试
+	//如果设置了debug_points为abort，那么Nginx执行到这些调试点时就会产生一个coredump文件，可以使用gdb来查看Nginx当时的各种信息
+    { 
+		ngx_string("debug_points"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_enum_slot,
+		0,
+		offsetof(ngx_core_conf_t, debug_points),
+		&ngx_debug_points 
+    },
 
+	//语法: user username [groupname];
+	//默认: user nobody nobody;
+	//Nginxworker进程运行的用于及用户组，当按照"user username;"设置时，用户组名与用户名相同
+	//若用户在configure命令执行时使用了参数--user=username和--group=groupname，此时nginx.conf将使用参数中指定的用户和用户组
     { 
 		ngx_string("user"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE12,
@@ -116,22 +143,36 @@ static ngx_command_t  ngx_core_commands[] =
       ngx_set_cpu_affinity,
       0,
       0,
-      NULL },
+      NULL 
+    },
+      
+	//语法: worker_rlimit_nofile ;
+	//设置一个worker进程可以打开的最大句柄描述符个数
+    { 
+    	ngx_string("worker_rlimit_nofile"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		0,
+		offsetof(ngx_core_conf_t, rlimit_nofile),
+		NULL 
+    },
 
-    { ngx_string("worker_rlimit_nofile"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      0,
-      offsetof(ngx_core_conf_t, rlimit_nofile),
-      NULL },
+	//语法: worker_rlimit_core size
+	//限制coredump核心转储文件的大小
+	//在Linux系统中，当进程发生错误或收到信号而终止时，系统会将进程执行时的内存内容(核心映像)写入一个文件(core文件)，
+	//以作调试之用，这就是所谓的核心转储(core dump)
+    { 
+		ngx_string("worker_rlimit_core"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_off_slot,
+		0,
+		offsetof(ngx_core_conf_t, rlimit_core),
+		NULL 
+    },
 
-    { ngx_string("worker_rlimit_core"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_off_slot,
-      0,
-      offsetof(ngx_core_conf_t, rlimit_core),
-      NULL },
-
+	//语法: working_directory path
+	//指定coredump文件的生成目录
+	//worker进程的工作目录，这个配置项的唯一用途就是设置coredump文件所放置的目录，需确保worker进程有权限向该目录中写入文件
     { 
 		ngx_string("working_directory"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -141,12 +182,16 @@ static ngx_command_t  ngx_core_commands[] =
 		NULL 
 	},
 
-    { ngx_string("env"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_set_env,
-      0,
-      0,
-      NULL },
+	//语法: env VAR|VAR=VALUE
+	//定义环境变量
+    { 
+		ngx_string("env"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_set_env,
+		0,
+		0,
+		NULL 
+    },
 
       ngx_null_command
 };
@@ -1243,9 +1288,9 @@ ngx_set_user(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_set_errno(0);
     grp = getgrnam(group);
-    if (grp == NULL) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
-                           "getgrnam(\"%s\") failed", group);
+    if (grp == NULL)
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno, "getgrnam(\"%s\") failed", group);
         return NGX_CONF_ERROR;
     }
 

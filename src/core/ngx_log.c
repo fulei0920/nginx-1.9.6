@@ -31,14 +31,24 @@ typedef struct {
 #endif
 
 
-static ngx_command_t  ngx_errlog_commands[] = {
-
-    {ngx_string("error_log"),
-     NGX_MAIN_CONF|NGX_CONF_1MORE,
-     ngx_error_log,
-     0,
-     0,
-     NULL},
+static ngx_command_t  ngx_errlog_commands[] = 
+{
+	//语法: error_log /path/file level
+	//默认: error_log logs/error.log error
+	//设置error日志的路径和级别
+	///path/file参数可以是一个具体的文件，也可以是/dev/null，也可以是stderr
+	//level是日志的输出级别，取值范围是debug,info,notice,warn,error,crit,alert,emerg,从左到右级别依次增大
+	//当设定为一个级别时，大于等于该级别的日志都会被输出到/path/file，小于该级别的日志则不会输出
+	//如果设定的日志级别时debug，则会输出所有日志，数据量会很大，需要预先确保/path/file所在磁盘有足够的磁盘空间
+	//如果日志级别设定到debug，必须在configure时加入--with-debug配置项
+    {
+		ngx_string("error_log"),
+		NGX_MAIN_CONF|NGX_CONF_1MORE,
+		ngx_error_log,
+		0,
+		0,
+		NULL
+    },
 
     ngx_null_command
 };

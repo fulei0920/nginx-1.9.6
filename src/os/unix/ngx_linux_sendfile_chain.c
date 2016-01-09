@@ -173,7 +173,8 @@ ngx_linux_sendfile_chain(ngx_connection_t *c, ngx_chain_t *in, off_t limit)
 
             send += file_size;
 #if 1
-            if (file_size == 0) {
+            if (file_size == 0) 
+			{
                 ngx_debug_point();
                 return NGX_CHAIN_ERROR;
             }

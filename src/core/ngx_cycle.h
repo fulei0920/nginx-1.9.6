@@ -78,34 +78,38 @@ struct ngx_cycle_s
 
 typedef struct 
 {
-     ngx_flag_t               daemon;
-     ngx_flag_t               master;
+	ngx_flag_t               daemon;
 
-     ngx_msec_t               timer_resolution;
+	ngx_flag_t               master;
 
-     ngx_int_t                worker_processes;		/*工作进程的个数*/
-     ngx_int_t                debug_points;
+	//系统调用gettimeofday的执行频率
+	//默认情况下，每次内核的事件调用(如epoll)返回时，都会执行一次getimeofday，实现用内核时钟来更新Nginx中的缓存时钟                    
+	ngx_msec_t               timer_resolution;
 
-     ngx_int_t                rlimit_nofile;  		/*最大描述符个数限制??*/
-     off_t                    rlimit_core;			/*CoreDump文件大小*/
+	ngx_int_t                worker_processes;		/*工作进程的个数*/
 
-     int                      priority;
+	ngx_int_t                debug_points;
 
-     ngx_uint_t               cpu_affinity_n;	/*cpu_affinity数组个数*/
-     uint64_t                *cpu_affinity;  	/*uint64_t类型的数组，每个元素表示一个工作进程的CPU亲和性掩码*/
+	ngx_int_t                rlimit_nofile;  		/*最大描述符个数限制??*/
+	off_t                    rlimit_core;			/*CoreDump文件大小*/
 
-     char                    *username;  	/*用户名*/
-     ngx_uid_t                user;			/*用户uid*/
-     ngx_gid_t                group;		/*用户gid*/
+	int                      priority;
 
-     ngx_str_t                working_directory;  /*指定进程当前工作目录*/
-     ngx_str_t                lock_file;
+	ngx_uint_t               cpu_affinity_n;	/*cpu_affinity数组个数*/
+	uint64_t                *cpu_affinity;  	/*uint64_t类型的数组，每个元素表示一个工作进程的CPU亲和性掩码*/
 
-     ngx_str_t                pid;
-     ngx_str_t                oldpid;
+	char                    *username;  	/*用户名*/
+	ngx_uid_t                user;			/*用户uid*/
+	ngx_gid_t                group;		/*用户gid*/
 
-     ngx_array_t              env;    		/*ngx_str_t类型的数组, 存储环境变量*/
-     char                   **environment;
+	ngx_str_t                working_directory;  /*指定进程当前工作目录*/
+	ngx_str_t                lock_file;
+
+	ngx_str_t                pid;
+	ngx_str_t                oldpid;
+
+	ngx_array_t              env;    		/*ngx_str_t类型的动态数组, 存储环境变量*/
+	char                   **environment;
 } ngx_core_conf_t;
 
 

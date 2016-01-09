@@ -325,7 +325,7 @@ typedef struct
     ngx_http_regex_t                 *ssl_servername_regex;
 #endif
 #endif
-
+	//记录当前请求已经使用的large_client_header_buffers
     ngx_buf_t                       **busy;
     ngx_int_t                         nbusy;
 

@@ -402,7 +402,9 @@ ngx_http_header_filter(ngx_http_request_t *r)
     if (r->headers_out.status == NGX_HTTP_SWITCHING_PROTOCOLS) {
         len += sizeof("Connection: upgrade" CRLF) - 1;
 
-    } else if (r->keepalive) {
+    } 
+	else if (r->keepalive) 
+	{
         len += sizeof("Connection: keep-alive" CRLF) - 1;
 
         /*
@@ -413,11 +415,14 @@ ngx_http_header_filter(ngx_http_request_t *r)
          * Konqueror keeps the connection alive for about N seconds.
          */
 
-        if (clcf->keepalive_header) {
+        if (clcf->keepalive_header) 
+		{
             len += sizeof("Keep-Alive: timeout=") - 1 + NGX_TIME_T_LEN + 2;
         }
 
-    } else {
+    } 
+	else 
+	{
         len += sizeof("Connection: close" CRLF) - 1;
     }
 
@@ -579,13 +584,14 @@ ngx_http_header_filter(ngx_http_request_t *r)
         b->last = ngx_cpymem(b->last, "Connection: upgrade" CRLF,
                              sizeof("Connection: upgrade" CRLF) - 1);
 
-    } else if (r->keepalive) {
-        b->last = ngx_cpymem(b->last, "Connection: keep-alive" CRLF,
-                             sizeof("Connection: keep-alive" CRLF) - 1);
+    }
+	else if (r->keepalive)
+    {
+        b->last = ngx_cpymem(b->last, "Connection: keep-alive" CRLF, sizeof("Connection: keep-alive" CRLF) - 1);
 
-        if (clcf->keepalive_header) {
-            b->last = ngx_sprintf(b->last, "Keep-Alive: timeout=%T" CRLF,
-                                  clcf->keepalive_header);
+        if (clcf->keepalive_header)
+		{
+            b->last = ngx_sprintf(b->last, "Keep-Alive: timeout=%T" CRLF, clcf->keepalive_header);
         }
 
     } else {

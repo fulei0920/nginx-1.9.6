@@ -1503,7 +1503,7 @@ ngx_http_read_request_header(ngx_http_request_t *r)
 //参数:
 //	request_line  -- 1 为请求行扩展缓冲区， 0 为请求头扩展缓冲区
 //返回值:
-//	NGX_OK -- 表示成功分配到跟大的缓冲区
+//	NGX_OK -- 表示成功分配到更大的缓冲区
 //	NGX_DECLINED -- 表示已经达到缓冲区大小的上限，无法分配更大的缓冲区
 //	NGX_ERROR -- 表示出现错误
 static ngx_int_t
@@ -1573,13 +1573,14 @@ ngx_http_alloc_large_header_buffer(ngx_http_request_t *r, ngx_uint_t request_lin
 
     } 
 	else
-	{	  //如果超过了large buf的个数，那么直接400错误
+	{	//如果超过了large buf的个数，那么直接400错误
         return NGX_DECLINED;
     }
 
     hc->busy[hc->nbusy++] = b;
 
-    if (r->state == 0) {
+    if (r->state == 0) 
+	{
         /*
          * r->state == 0 means that a header line was parsed successfully
          * and we do not need to copy incomplete header line and
@@ -2712,8 +2713,8 @@ ngx_http_finalize_connection(ngx_http_request_t *r)
     }
 
 	//检查请求的lingering_close成员，如果为1，则说明需要延时关闭请求，这时也不能真的去结束请求
-    if (clcf->lingering_close == NGX_HTTP_LINGERING_ALWAYS || (clcf->lingering_close == NGX_HTTP_LINGERING_ON
-            && (r->lingering_close || r->header_in->pos < r->header_in->last || r->connection->read->ready)))
+    if (clcf->lingering_close == NGX_HTTP_LINGERING_ALWAYS || 
+		(clcf->lingering_close == NGX_HTTP_LINGERING_ON && (r->lingering_close || r->header_in->pos < r->header_in->last || r->connection->read->ready)))
     {
     	//延迟关闭请求，实际上，这个方法的意义就在于把一些必须做完的事情做完(如接收用户端发来的字符流)再关闭连接
         ngx_http_set_lingering_close(r);
@@ -3207,8 +3208,10 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     c->log->action = "keepalive";
 
-    if (c->tcp_nopush == NGX_TCP_NOPUSH_SET) {
-        if (ngx_tcp_push(c->fd) == -1) {
+    if (c->tcp_nopush == NGX_TCP_NOPUSH_SET) 
+	{
+        if (ngx_tcp_push(c->fd) == -1)
+		{
             ngx_connection_error(c, ngx_socket_errno, ngx_tcp_push_n " failed");
             ngx_http_close_connection(c);
             return;
@@ -3217,19 +3220,17 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
         c->tcp_nopush = NGX_TCP_NOPUSH_UNSET;
         tcp_nodelay = ngx_tcp_nodelay_and_tcp_nopush ? 1 : 0;
 
-    } else {
+    } 
+	else
+	{
         tcp_nodelay = 1;
     }
 
-    if (tcp_nodelay
-        && clcf->tcp_nodelay
-        && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET)
+    if (tcp_nodelay && clcf->tcp_nodelay && c->tcp_nodelay == NGX_TCP_NODELAY_UNSET)
     {
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "tcp_nodelay");
 
-        if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY,
-                       (const void *) &tcp_nodelay, sizeof(int))
-            == -1)
+        if (setsockopt(c->fd, IPPROTO_TCP, TCP_NODELAY, (const void *) &tcp_nodelay, sizeof(int)) == -1)
         {
 #if (NGX_SOLARIS)
             /* Solaris returns EINVAL if a socket has been shut down */
