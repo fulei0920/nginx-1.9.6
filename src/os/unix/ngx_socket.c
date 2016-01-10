@@ -55,9 +55,7 @@ ngx_tcp_nopush(ngx_socket_t s)
     int  tcp_nopush;
 
     tcp_nopush = 1;
-
-    return setsockopt(s, IPPROTO_TCP, TCP_NOPUSH,
-                      (const void *) &tcp_nopush, sizeof(int));
+    return setsockopt(s, IPPROTO_TCP, TCP_NOPUSH, (const void *) &tcp_nopush, sizeof(int));
 }
 
 
@@ -67,9 +65,7 @@ ngx_tcp_push(ngx_socket_t s)
     int  tcp_nopush;
 
     tcp_nopush = 0;
-
-    return setsockopt(s, IPPROTO_TCP, TCP_NOPUSH,
-                      (const void *) &tcp_nopush, sizeof(int));
+    return setsockopt(s, IPPROTO_TCP, TCP_NOPUSH, (const void *) &tcp_nopush, sizeof(int));
 }
 
 #elif (NGX_LINUX)
@@ -81,9 +77,7 @@ ngx_tcp_nopush(ngx_socket_t s)
     int  cork;
 
     cork = 1;
-
-    return setsockopt(s, IPPROTO_TCP, TCP_CORK,
-                      (const void *) &cork, sizeof(int));
+    return setsockopt(s, IPPROTO_TCP, TCP_CORK, (const void *) &cork, sizeof(int));
 }
 
 

@@ -215,7 +215,9 @@ static ngx_command_t  ngx_http_core_commands[] =
 		0,
 		NULL 
     },
-
+    //语法: connection_pool_size size;
+	//默认: connection_pool_size 256;
+	//指定每个TCP连接上初始内存池大小，用于减少内核对于小块内存的分配次数
     { ngx_string("connection_pool_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_size_slot,
@@ -223,6 +225,9 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_srv_conf_t, connection_pool_size),
       &ngx_http_core_pool_size_p },
 
+	//语法: request_pool_size size;
+	//默认: request_pool_size 4k;
+	//指定每个HTTP请求的初始内存池大小，用于减少内核对于小块内存的分配次数
     { 
 		ngx_string("request_pool_size"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -251,7 +256,9 @@ static ngx_command_t  ngx_http_core_commands[] =
 		offsetof(ngx_http_core_srv_conf_t, client_header_buffer_size),
 		NULL 
     },
-
+	//语法: large_client_header_buffers number size;
+	//默认: large_client_header_buffers 4 8k;
+	//存储超大HTTP头部的内存buffer大小和个数
     { 
 		ngx_string("large_client_header_buffers"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE2,
@@ -260,27 +267,43 @@ static ngx_command_t  ngx_http_core_commands[] =
 		offsetof(ngx_http_core_srv_conf_t, large_client_header_buffers),
 		NULL 
     },
-
-    { ngx_string("ignore_invalid_headers"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, ignore_invalid_headers),
-      NULL },
-
-    { ngx_string("merge_slashes"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, merge_slashes),
-      NULL },
-
-    { ngx_string("underscores_in_headers"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_core_srv_conf_t, underscores_in_headers),
-      NULL },
+	//语法: ignore_invalid_headers on | off;
+	//默认: ignore_invalid_headers on;
+	//忽略不合法的HTTP头部
+	//如果将其设置为off，那么当出现不和法的HTTP头部时，Nginx会拒绝服务，并直接向用户发送400(Bad Request)错误
+	//如果将其设置为on，则会忽略此HTTP头部
+    { 
+		ngx_string("ignore_invalid_headers"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, ignore_invalid_headers),
+		NULL 
+    },
+	//语法: merge_slashes on | off;
+	//默认: merge_slashes off;
+	//是否合并相邻的'/'
+	//例如: //test///a.txt，在配置为on时，会将其匹配为 location /test/a.txt;
+	//	如果配置为off，则不会匹配，URI仍将是//test///a.txt
+    { 
+		ngx_string("merge_slashes"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, merge_slashes),
+		NULL 
+    },
+	//语法: underscores_in_headers on | off;
+	//默认: underscores_in_headers off;
+	//是否允许HTTP头部的名称中带'_'(下划线)
+    { 
+		ngx_string("underscores_in_headers"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_core_srv_conf_t, underscores_in_headers),
+		NULL 
+    },
 
     { 
     	ngx_string("location"),
@@ -306,21 +329,32 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_SRV_CONF_OFFSET,
       0,
       NULL },
-
-    { ngx_string("types_hash_max_size"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, types_hash_max_size),
-      NULL },
-
-    { ngx_string("types_hash_bucket_size"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, types_hash_bucket_size),
-      NULL },
-
+	//语法: types_hash_max_size size;
+	//默认: types_hash_max_size 1024;
+	//存储MIME type到文件扩展名的映射的散列表的冲突桶的个数
+    { 
+		ngx_string("types_hash_max_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, types_hash_max_size),
+		NULL 
+    },
+	//语法: types_hash_bucket_size size;
+	//默认: types_hash_bucket_size 32|64|128;
+	//存储MIME type到文件扩展名的映射的散列表的冲突桶占用的内存大小
+    { 
+    	ngx_string("types_hash_bucket_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, types_hash_bucket_size),
+		NULL 
+    },
+    
+	//语法: types {...};
+	//定义文件扩展名到MIME type的映射。
+	//多个扩展名可以映射到同一个MIME type
 	{ 
 		ngx_string("types"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF |NGX_CONF_BLOCK|NGX_CONF_NOARGS,
@@ -330,6 +364,10 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
 	},
 
+	//语法: default_type MIME-type;
+	//默认: defautl_type text/plain;
+	//当找不到相应的MIME type与文件扩展名之间的映射时，
+	//使用默认的MIME type作为HTTP header中的Content-type
     { 
 		ngx_string("default_type"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -362,19 +400,35 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
-    { ngx_string("limit_except"),
-      NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_1MORE,
-      ngx_http_core_limit_except,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
-
-    { ngx_string("client_max_body_size"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_off_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, client_max_body_size),
-      NULL },
+	//语法: limit_except method ...{};
+	//例子:
+	//		limit_except GET {
+	//			allow 192.168.1.0/32
+	//			deny all;
+	//		}
+	//按HTTP方法名限制用户请求
+	//方法名可取值包括:GET/HEAD/POST/PUT/DELETE/MKCOL/COPY/
+	//MOVE/OPTIONS/PROPFIND/PROPPATCH/LOCK/UNLOCK/PATCH
+	//注意:允许GET方法就意味着也允许HEAD方法
+    { 
+		ngx_string("limit_except"),
+		NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_1MORE,
+		ngx_http_core_limit_except,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
+	//语法: client_max_body_size size;
+	//默认: client_max_body_size 1m;
+	//HTTP请求包体的最大值
+    { 
+		ngx_string("client_max_body_size"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_off_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, client_max_body_size),
+		NULL 
+    },
 	//语法: client_body_buffer_size time size;
 	//默认: client_body_buffer_size 8k/16k;
 	//存储HTTP包体的内存buffer大小
@@ -390,19 +444,32 @@ static ngx_command_t  ngx_http_core_commands[] =
 	//语法: client_body_timeout time (默认单位:秒);
 	//默认: client_body_timeout 60;
 	//读取HTTP包体的超时时间
-    { ngx_string("client_body_timeout"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_msec_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, client_body_timeout),
-      NULL },
-
-    { ngx_string("client_body_temp_path"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1234,
-      ngx_conf_set_path_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, client_body_temp_path),
-      NULL },
+    { 
+		ngx_string("client_body_timeout"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_msec_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, client_body_timeout),
+		NULL 
+    },
+	//语法: client_body_temp_path dir-path [level1 [level2 [levle3]]]
+	//默认: client_body_temp_path client_body_temp;
+	//定义HTTP包体存放的临时目录。
+	//在接收HTTP包体时，如果包体的大小大于client_body_buffer_size，则会以一个递增的
+	//整数命名并存放到client_body_temp_path指定的目录中。后面跟着的level1、level2、level3，
+	//是为了防止一个目录下的文件数量太多，从而导致性能下降，因此使用了level参数，这样可以
+	//按照临时文件名最多再加三层目录。
+	//例如: client_body_temp_path /opt/nginx/client_temp 1 2
+	//	如果新上传的HTTP包体使用00000123456作为临时文件名，就会被存放在这个目录中
+	//	/ope/nginx/client_temp/6/45/00000123456
+    { 
+		ngx_string("client_body_temp_path"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1234,
+		ngx_conf_set_path_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, client_body_temp_path),
+		NULL 
+    },
 
     { 
     	ngx_string("client_body_in_file_only"),
@@ -419,14 +486,17 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, client_body_in_single_buffer),
       NULL },
-
-    { ngx_string("sendfile"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                        |NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, sendfile),
-      NULL },
+	//语法: sendfile on | off;
+	//默认: sendfile off;
+	//确定是否启用sendfile系统调用来发送文件
+    { 
+		ngx_string("sendfile"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, sendfile),
+		NULL 
+    },
 
     { ngx_string("sendfile_max_chunk"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -435,12 +505,18 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, sendfile_max_chunk),
       NULL },
 
-    { ngx_string("aio"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_http_core_set_aio,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+	//语法: aio on | off;
+	//默认: aio off;
+	//是否在FreeBSD或Linux系统上启用内核级别的异步文件I/O功能。
+	//注意: 它与sendfile功能是互斥的
+    { 
+		ngx_string("aio"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_http_core_set_aio,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("read_ahead"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -448,30 +524,45 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, read_ahead),
       NULL },
-
-    { ngx_string("directio"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_http_core_directio,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
-
+	//语法: directio size | off;
+	//默认: directio off;
+	//指定在FreeBSD和Linux系统上使用O_DIRECT选项去读取文件时，
+	//缓冲区的大小为size，通常对大文件的读取速度有优化作用。
+	//注意，它与sendfile功能是互斥的
+    { 
+		ngx_string("directio"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_http_core_directio,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
+	//语法: directio_alignment size;
+	//默认: directio_alignment 512;
+	//与directio配合使用，指定以directio方式读取文件时的对齐方式。
     { ngx_string("directio_alignment"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_off_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, directio_alignment),
       NULL },
-
-    { ngx_string("tcp_nopush"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, tcp_nopush),
-      NULL },
+	//语法: tcp_nopush on | off;
+	//默认: tcp_nopush off;
+	//确定是否开启FreeBSD系统上的TCP_NOPUSH或Linux系统上的TCP_CORK功能。
+	//仅在使用sendfile的时候才有效
+	//打开tcp_nopush后，将会在发送响应时把整个响应包头放到一个TCP包中发送
+    { 
+		ngx_string("tcp_nopush"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, tcp_nopush),
+		NULL 
+    },
 	//语法: tcp_nodelay on | off;
 	//默认: tcp_nodelay on;
-	//开启或关闭Nginx使用TCP_NODELAY选项的功能 
+	//开启或关闭Nginx使用TCP_NODELAY选项的功能(禁用Nagle算法) 
+	//这个选项在将连接转变为长连接的时候启用，在upstream发送响应到客户端时也会启用
     { ngx_string("tcp_nodelay"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -504,22 +595,36 @@ static ngx_command_t  ngx_http_core_commands[] =
 		offsetof(ngx_http_core_loc_conf_t, postpone_output),
 		NULL 
     },
-
-    { ngx_string("limit_rate"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                        |NGX_CONF_TAKE1,
-      ngx_conf_set_size_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, limit_rate),
-      NULL },
-
-    { ngx_string("limit_rate_after"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                        |NGX_CONF_TAKE1,
-      ngx_conf_set_size_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, limit_rate_after),
-      NULL },
+			
+	//语法: keepalive_timeout speed;
+	//默认: keepalive_timeout 0;
+	//对客户端请求限制每秒传输的字节数，0表示不限速
+	//针对不同的客户端，可以用$limit_rate参数执行不同的限速策略。
+	//例如:
+	//server {
+	//	if($slow) {
+	//		set $limit_rate 4k;
+	//	}
+	//}
+    { 
+		ngx_string("limit_rate"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_TAKE1,
+		ngx_conf_set_size_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, limit_rate),
+		NULL 
+    },
+	//语法: limit_rate_after speed;
+	//默认: limit_rate_after 1m;
+	//向客户端发送的响应长度超过limit_rate_after后才开始限速
+    { 
+		ngx_string("limit_rate_after"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_TAKE1,
+		ngx_conf_set_size_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, limit_rate_after),
+		NULL 
+    },
 
 	//语法: keepalive_timeout time1 [time2] (默认单位: 秒);
 	//默认: keepalive_timeout 75 0;
@@ -638,13 +743,18 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, msie_refresh),
       NULL },
-
-    { ngx_string("log_not_found"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, log_not_found),
-      NULL },
+	//语法: log_not_found on | off;
+	//默认: log_not_found exact;
+	//当处理用户请求且需要访问文件时，如果没有找到文件，是否将错误日志
+	//记录到erro.log文件中。这仅用于定位问题
+    { 
+		ngx_string("log_not_found"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, log_not_found),
+		NULL 
+    },
 
     { ngx_string("log_subrequest"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -659,20 +769,35 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, recursive_error_pages),
       NULL },
-
-    { ngx_string("server_tokens"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, server_tokens),
-      NULL },
-
-    { ngx_string("if_modified_since"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_enum_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, if_modified_since),
-      &ngx_http_core_if_modified_since },
+	//语法: server_tokens on | off;
+	//默认: server_tokens on;
+	//处理请求出错时是否在响应的Server头部中表明Nginx版本，这是为了方便问题
+    { 
+		ngx_string("server_tokens"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, server_tokens),
+		NULL 
+    },
+	//语法: if_modified_since [off | exact | before];
+	//默认: if_modified_since exact;
+	//对If_Modified_Since头部的处理策略
+	//off--表示忽略用户请求中的If_Modified_Since头部。这时，如果获取一个文件，
+	//	那么会正常地返回文件内容。HTTP响应码通常是200
+	//exact--将If_Modified_Since头部包含的时间与将要返回的文件上次修改的时间做精确比较，
+	//	如果没有匹配上，则返回200和文件的实际内容，如果匹配上，则表示浏览器缓存的文件内容已经是最新的了，
+	//	没有必要再返回文件从而浪费时间与带宽了，这时会返回304 Not Modified，浏览器收到后会直接读取自己的本地缓存
+	//before--是比exact更宽松的比较。只要文件的上次修改时间等于或早于用户请求中的If_Modified_Since头部时间，
+	//	就会向客户端返回304 Not Modified。
+    { 
+		ngx_string("if_modified_since"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_enum_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, if_modified_since),
+		&ngx_http_core_if_modified_since 
+    },
 
     { ngx_string("max_ranges"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -730,33 +855,57 @@ static ngx_command_t  ngx_http_core_commands[] =
       NULL 
    	},
 
-    { ngx_string("open_file_cache"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
-      ngx_http_core_open_file_cache,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, open_file_cache),
-      NULL },
+	//语法: open_file_cache max=N [inactive=time] | off;
+	//默认: open_file_cache off;
+	//打开文件缓存，这样通过读取缓存减少了对磁盘的操作
+	//max--表示在内存中存储元素的最大个数。当达到最大限制数量后，将采用LRU(Least Recently Used)
+	//算法从缓存中淘汰最近最少使用的元素
+	//inactive--表示在inactive指定的时间段内没有被访问过的元素将会被淘汰。默认时间为60秒
+	//关闭缓存功能
+    { 
+		ngx_string("open_file_cache"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
+		ngx_http_core_open_file_cache,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, open_file_cache),
+		NULL 
+    },
+	//语法: open_file_cache_valid time;
+	//默认: open_file_cache_valid 60s;
+	//检验文件缓存中元素有效性的频率
+    { 
+		ngx_string("open_file_cache_valid"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_sec_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, open_file_cache_valid),
+		NULL 
+    },
 
-    { ngx_string("open_file_cache_valid"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_sec_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, open_file_cache_valid),
-      NULL },
+	//语法: open_file_cache_min_uses number;
+	//默认: open_file_cache_min_uses 1;
+	//指定文件缓存中，在inactive指定的时间段内，访问次数超过了open_file_cache_min_uses
+	//指定的最小次数，那么将不会被淘汰出缓存
+    { 
+		ngx_string("open_file_cache_min_uses"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, open_file_cache_min_uses),
+		NULL 
+    },
 
-    { ngx_string("open_file_cache_min_uses"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, open_file_cache_min_uses),
-      NULL },
-
-    { ngx_string("open_file_cache_errors"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, open_file_cache_errors),
-      NULL },
+	//语法: open_file_cache_errors on | off;
+	//默认: open_file_cache_errors off;
+	//是否在文件缓存中缓存打开文件时出现的找不到路径、没有权限等错误信息
+    { 
+		ngx_string("open_file_cache_errors"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, open_file_cache_errors),
+		NULL 
+    },
 
     { ngx_string("open_file_cache_events"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -764,7 +913,9 @@ static ngx_command_t  ngx_http_core_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_core_loc_conf_t, open_file_cache_events),
       NULL },
-
+	//语法: resolver address ...;
+	//设置DNS域名解析服务器的地址
+	//例如 resolver 127.0.0.1 192.0.2.1
     { 
 		ngx_string("resolver"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
@@ -773,13 +924,17 @@ static ngx_command_t  ngx_http_core_commands[] =
 		0,
 		NULL 
     },
-
-    { ngx_string("resolver_timeout"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_msec_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, resolver_timeout),
-      NULL },
+	//语法: resolver_timeout tiem;
+	//默认: resolver_timeout 30s;
+	//DNS解析的超时时间
+    { 
+		ngx_string("resolver_timeout"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_msec_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, resolver_timeout),
+		NULL 
+    },
 
 #if (NGX_HTTP_GZIP)
 
@@ -1049,18 +1204,14 @@ ngx_http_core_find_config_phase(ngx_http_request_t *r, ngx_http_phase_handler_t 
 
     ngx_http_update_location_config(r);
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http cl:%O max:%O",
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http cl:%O max:%O",
                    r->headers_in.content_length_n, clcf->client_max_body_size);
 
-    if (r->headers_in.content_length_n != -1
-        && !r->discard_body
+    if (r->headers_in.content_length_n != -1 && !r->discard_body
         && clcf->client_max_body_size
         && clcf->client_max_body_size < r->headers_in.content_length_n)
     {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "client intended to send too large body: %O bytes",
-                      r->headers_in.content_length_n);
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "client intended to send too large body: %O bytes", r->headers_in.content_length_n);
 
         r->expect_tested = 1;
         (void) ngx_http_discard_request_body(r);
@@ -4043,8 +4194,7 @@ ngx_http_core_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->default_type,
                               prev->default_type, "text/plain");
 
-    ngx_conf_merge_off_value(conf->client_max_body_size,
-                              prev->client_max_body_size, 1 * 1024 * 1024);
+    ngx_conf_merge_off_value(conf->client_max_body_size, prev->client_max_body_size, 1 * 1024 * 1024);
     ngx_conf_merge_size_value(conf->client_body_buffer_size, prev->client_body_buffer_size, (size_t) 2 * ngx_pagesize);
     ngx_conf_merge_msec_value(conf->client_body_timeout, prev->client_body_timeout, 60000);
 
@@ -4149,14 +4299,11 @@ ngx_http_core_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_sec_value(conf->open_file_cache_valid,
                               prev->open_file_cache_valid, 60);
 
-    ngx_conf_merge_uint_value(conf->open_file_cache_min_uses,
-                              prev->open_file_cache_min_uses, 1);
+    ngx_conf_merge_uint_value(conf->open_file_cache_min_uses, prev->open_file_cache_min_uses, 1);
 
-    ngx_conf_merge_sec_value(conf->open_file_cache_errors,
-                              prev->open_file_cache_errors, 0);
+    ngx_conf_merge_sec_value(conf->open_file_cache_errors, prev->open_file_cache_errors, 0);
 
-    ngx_conf_merge_sec_value(conf->open_file_cache_events,
-                              prev->open_file_cache_events, 0);
+    ngx_conf_merge_sec_value(conf->open_file_cache_events, prev->open_file_cache_events, 0);
 #if (NGX_HTTP_GZIP)
 
     ngx_conf_merge_value(conf->gzip_vary, prev->gzip_vary, 0);
@@ -4808,7 +4955,8 @@ ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_method_name_t    *name;
     ngx_http_core_loc_conf_t  *clcf;
 
-    if (pclcf->limit_except) {
+    if (pclcf->limit_except) 
+	{
         return "duplicate";
     }
 
@@ -4816,29 +4964,33 @@ ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    for (i = 1; i < cf->args->nelts; i++) {
-        for (name = ngx_methods_names; name->name; name++) {
+    for (i = 1; i < cf->args->nelts; i++)
+	{
+        for (name = ngx_methods_names; name->name; name++) 
+		{
 
-            if (ngx_strcasecmp(value[i].data, name->name) == 0) {
+            if (ngx_strcasecmp(value[i].data, name->name) == 0) 
+			{
                 pclcf->limit_except &= name->method;
                 goto next;
             }
         }
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid method \"%V\"", &value[i]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid method \"%V\"", &value[i]);
         return NGX_CONF_ERROR;
 
     next:
         continue;
     }
 
-    if (!(pclcf->limit_except & NGX_HTTP_GET)) {
+    if (!(pclcf->limit_except & NGX_HTTP_GET)) 
+	{
         pclcf->limit_except &= (uint32_t) ~NGX_HTTP_HEAD;
     }
 
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -4847,21 +4999,26 @@ ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ctx->srv_conf = pctx->srv_conf;
 
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->loc_conf == NULL) {
+    if (ctx->loc_conf == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
-    for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_HTTP_MODULE) {
+    for (i = 0; ngx_modules[i]; i++)
+	{
+        if (ngx_modules[i]->type != NGX_HTTP_MODULE)
+		{
             continue;
         }
 
         module = ngx_modules[i]->ctx;
 
-        if (module->create_loc_conf) {
+        if (module->create_loc_conf) 
+		{
 
             mconf = module->create_loc_conf(cf);
-            if (mconf == NULL) {
+            if (mconf == NULL)
+			{
                  return NGX_CONF_ERROR;
             }
 
@@ -4877,7 +5034,8 @@ ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     clcf->noname = 1;
     clcf->lmt_excpt = 1;
 
-    if (ngx_http_add_location(cf, &pclcf->locations, clcf) != NGX_OK) {
+    if (ngx_http_add_location(cf, &pclcf->locations, clcf) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -4900,7 +5058,8 @@ ngx_http_core_set_aio(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (clcf->aio != NGX_CONF_UNSET) {
+    if (clcf->aio != NGX_CONF_UNSET) 
+	{
         return "is duplicate";
     }
 
@@ -4911,19 +5070,19 @@ ngx_http_core_set_aio(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    if (ngx_strcmp(value[1].data, "off") == 0) {
+    if (ngx_strcmp(value[1].data, "off") == 0) 
+	{
         clcf->aio = NGX_HTTP_AIO_OFF;
         return NGX_CONF_OK;
     }
 
-    if (ngx_strcmp(value[1].data, "on") == 0) {
+    if (ngx_strcmp(value[1].data, "on") == 0) 
+	{
 #if (NGX_HAVE_FILE_AIO)
         clcf->aio = NGX_HTTP_AIO_ON;
         return NGX_CONF_OK;
 #else
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "\"aio on\" "
-                           "is unsupported on this platform");
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"aio on\ is unsupported on this platform");
         return NGX_CONF_ERROR;
 #endif
     }
@@ -5010,19 +5169,22 @@ ngx_http_core_directio(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (clcf->directio != NGX_CONF_UNSET) {
+    if (clcf->directio != NGX_CONF_UNSET)
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    if (ngx_strcmp(value[1].data, "off") == 0) {
+    if (ngx_strcmp(value[1].data, "off") == 0) 
+	{
         clcf->directio = NGX_OPEN_FILE_DIRECTIO_OFF;
         return NGX_CONF_OK;
     }
 
     clcf->directio = ngx_parse_offset(&value[1]);
-    if (clcf->directio == (off_t) NGX_ERROR) {
+    if (clcf->directio == (off_t) NGX_ERROR) 
+	{
         return "invalid value";
     }
 
@@ -5246,7 +5408,8 @@ ngx_http_core_open_file_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_int_t    max;
     ngx_uint_t   i;
 
-    if (clcf->open_file_cache != NGX_CONF_UNSET_PTR) {
+    if (clcf->open_file_cache != NGX_CONF_UNSET_PTR) 
+	{
         return "is duplicate";
     }
 
@@ -5255,58 +5418,63 @@ ngx_http_core_open_file_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     max = 0;
     inactive = 60;
 
-    for (i = 1; i < cf->args->nelts; i++) {
+    for (i = 1; i < cf->args->nelts; i++) 
+	{
 
-        if (ngx_strncmp(value[i].data, "max=", 4) == 0) {
+        if (ngx_strncmp(value[i].data, "max=", 4) == 0) 
+		{
 
             max = ngx_atoi(value[i].data + 4, value[i].len - 4);
-            if (max <= 0) {
+            if (max <= 0) 
+			{
                 goto failed;
             }
 
             continue;
         }
 
-        if (ngx_strncmp(value[i].data, "inactive=", 9) == 0) {
+        if (ngx_strncmp(value[i].data, "inactive=", 9) == 0) 
+		{
 
             s.len = value[i].len - 9;
             s.data = value[i].data + 9;
 
             inactive = ngx_parse_time(&s, 1);
-            if (inactive == (time_t) NGX_ERROR) {
+            if (inactive == (time_t) NGX_ERROR) 
+			{
                 goto failed;
             }
 
             continue;
         }
 
-        if (ngx_strcmp(value[i].data, "off") == 0) {
-
+        if (ngx_strcmp(value[i].data, "off") == 0) 
+		{
             clcf->open_file_cache = NULL;
-
+			
             continue;
         }
 
     failed:
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid \"open_file_cache\" parameter \"%V\"",
-                           &value[i]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid \"open_file_cache\" parameter \"%V\"", &value[i]);
         return NGX_CONF_ERROR;
     }
 
-    if (clcf->open_file_cache == NULL) {
+    if (clcf->open_file_cache == NULL) 
+	{
         return NGX_CONF_OK;
     }
 
-    if (max == 0) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                        "\"open_file_cache\" must have the \"max\" parameter");
+    if (max == 0) 
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"open_file_cache\" must have the \"max\" parameter");
         return NGX_CONF_ERROR;
     }
 
     clcf->open_file_cache = ngx_open_file_cache_init(cf->pool, max, inactive);
-    if (clcf->open_file_cache) {
+    if (clcf->open_file_cache) 
+	{
         return NGX_CONF_OK;
     }
 
@@ -5629,18 +5797,15 @@ ngx_http_core_pool_size(ngx_conf_t *cf, void *post, void *data)
 {
     size_t *sp = data;
 
-    if (*sp < NGX_MIN_POOL_SIZE) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "the pool size must be no less than %uz",
-                           NGX_MIN_POOL_SIZE);
+    if (*sp < NGX_MIN_POOL_SIZE) 
+	{
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the pool size must be no less than %uz", NGX_MIN_POOL_SIZE);
         return NGX_CONF_ERROR;
     }
 
     if (*sp % NGX_POOL_ALIGNMENT) 
 	{
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "the pool size must be a multiple of %uz",
-                           NGX_POOL_ALIGNMENT);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the pool size must be a multiple of %uz", NGX_POOL_ALIGNMENT);
         return NGX_CONF_ERROR;
     }
 

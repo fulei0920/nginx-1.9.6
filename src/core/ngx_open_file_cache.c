@@ -60,12 +60,12 @@ ngx_open_file_cache_init(ngx_pool_t *pool, ngx_uint_t max, time_t inactive)
     ngx_open_file_cache_t  *cache;
 
     cache = ngx_palloc(pool, sizeof(ngx_open_file_cache_t));
-    if (cache == NULL) {
+    if (cache == NULL) 
+	{
         return NULL;
     }
 
-    ngx_rbtree_init(&cache->rbtree, &cache->sentinel,
-                    ngx_open_file_cache_rbtree_insert_value);
+    ngx_rbtree_init(&cache->rbtree, &cache->sentinel, ngx_open_file_cache_rbtree_insert_value);
 
     ngx_queue_init(&cache->expire_queue);
 

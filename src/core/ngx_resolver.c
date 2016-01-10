@@ -234,13 +234,15 @@ ngx_resolver_create(ngx_conf_t *cf, ngx_str_t *names, ngx_uint_t n)
         }
 
         uc = ngx_array_push_n(&r->udp_connections, u.naddrs);
-        if (uc == NULL) {
+        if (uc == NULL) 
+		{
             return NULL;
         }
 
         ngx_memzero(uc, u.naddrs * sizeof(ngx_udp_connection_t));
 
-        for (j = 0; j < u.naddrs; j++) {
+        for (j = 0; j < u.naddrs; j++) 
+		{
             uc[j].sockaddr = u.addrs[j].sockaddr;
             uc[j].socklen = u.addrs[j].socklen;
             uc[j].server = u.addrs[j].name;
@@ -259,9 +261,9 @@ ngx_resolver_cleanup(void *data)
     ngx_uint_t             i;
     ngx_udp_connection_t  *uc;
 
-    if (r) {
-        ngx_log_debug0(NGX_LOG_DEBUG_CORE, ngx_cycle->log, 0,
-                       "cleanup resolver");
+    if (r) 
+	{
+        ngx_log_debug0(NGX_LOG_DEBUG_CORE, ngx_cycle->log, 0, "cleanup resolver");
 
         ngx_resolver_cleanup_tree(r, &r->name_rbtree);
 
@@ -271,7 +273,8 @@ ngx_resolver_cleanup(void *data)
         ngx_resolver_cleanup_tree(r, &r->addr6_rbtree);
 #endif
 
-        if (r->event) {
+        if (r->event)
+		{
             ngx_free(r->event);
         }
 

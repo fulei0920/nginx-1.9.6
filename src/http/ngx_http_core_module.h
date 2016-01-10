@@ -233,9 +233,12 @@ typedef struct
 	//当前server块的虚拟主机名，如果存在的话，则会与http请求中的Host头部做匹配，
 	//匹配上后再由当前ngx_http_core_srv_conf_t处理请求
     ngx_str_t                   server_name;		
-	//指定每个TCP连接上内存池大小
+	//指定每个TCP连接上初始内存池大小
     size_t                      connection_pool_size;	
-	//指定每个HTTP请求的内存池大小
+	//指定每个HTTP请求的初始内存池大小，用于减少内核对于小块内存的分配次数
+	//TCP连接关闭时会销毁connection_pool_size指定的连接内存池，HTTP请求结束时会
+	//销毁request_pool_size指定的HTTP请求内存池，但它们的创建、销毁时间并不一致，
+	//因为一个TCP连接可能被复用与多个HTTP请求
     size_t                      request_pool_size;
 	//存储HTTP头部(请求行和请求头)时分配的内存buffer大小
     size_t                      client_header_buffer_size;
@@ -243,8 +246,15 @@ typedef struct
     ngx_bufs_t                  large_client_header_buffers;
 	//读取HTTP头部(请求行和请求头)的超时时间
     ngx_msec_t                  client_header_timeout;
+	//如果将其设置为off，那么当出现不和法的HTTP头部时，
+	//Nginx会拒绝服务，并直接向用户发送400(Bad Request)错误
+	//如果将其设置为on，则会忽略此HTTP头部
     ngx_flag_t                  ignore_invalid_headers;
+	//是否合并相邻的'/'
+	//例如: //test///a.txt，在配置为on时，会将其匹配为 location /test/a.txt;
+	//	如果配置为off，则不会匹配，URI仍将是//test///a.txt
     ngx_flag_t                  merge_slashes;
+	//是否允许HTTP头部的名称中带'_'(下划线)
     ngx_flag_t                  underscores_in_headers;
 
     unsigned                    listen:1;			//表示是否配置listen 指令
@@ -425,10 +435,18 @@ struct ngx_http_core_loc_conf_s
 	*/
     ngx_array_t  *types;    		/*array of ngx_hash_key_t*/   			
     ngx_hash_t    types_hash;
+	//当找不到相应的MIME type与文件扩展名之间的映射时，
+	//使用默认的MIME type作为HTTP header中的Content-type
     ngx_str_t     default_type;   /*[config]defatult_type  application/octet-stream*/
-
-    off_t         client_max_body_size;    /* client_max_body_size */
-    off_t         directio;                /* directio */
+	//HTTP请求包体的最大值
+    off_t         client_max_body_size;   
+	//指定在FreeBSD和Linux系统上使用O_DIRECT选项去读取文件时，
+	//缓冲区的大小，通常对大文件的读取速度有优化作用。
+	//注意，它与sendfile功能是互斥的
+    off_t         directio;                
+	//与directio配合使用，指定以directio方式读取文件时的对齐方式。
+	//一般情况下512B已经足够了，但针对一些高性能文件系统，如Linux下的XFS文件系统，
+	//可能需要设置到4KB作为对齐方式
     off_t         directio_alignment;      /* directio_alignment */
 	//存储HTTP包体的内存缓冲区大小
 	//HTTP包体会先接收到指定的这块缓存中，之后才决定是否写入磁盘
@@ -437,8 +455,10 @@ struct ngx_http_core_loc_conf_s
     size_t        client_body_buffer_size; /* client_body_buffer_size */
     size_t        send_lowat;              /* send_lowat */
     size_t        postpone_output;         /* postpone_output */
-    size_t        limit_rate;              /* limit_rate */
-    size_t        limit_rate_after;        /* limit_rate_after */
+	//对客户端请求限制每秒传输的字节数，0表示不限速
+    size_t        limit_rate;   
+	//向客户端发送的响应长度超过limit_rate_after后才开始限速
+    size_t        limit_rate_after;        
     size_t        sendfile_max_chunk;      /* sendfile_max_chunk */
     size_t        read_ahead;              /* read_ahead */
 	//读取HTTP包体的超时时间
@@ -452,7 +472,8 @@ struct ngx_http_core_loc_conf_s
 	//延迟关闭的超时时间
 	//延迟关闭状态中，若超过lingering_timeout时间后还没有数据可读，就直接关闭连接
     ngx_msec_t    lingering_timeout;       /* lingering_timeout */
-    ngx_msec_t    resolver_timeout;        /* resolver_timeout */
+	//DNS解析的超时时间
+    ngx_msec_t    resolver_timeout;        
 
     ngx_resolver_t  *resolver;             /* resolver */
 	//Nginx发送给客户端响应头中的Keep-Alive域的时间
@@ -471,7 +492,18 @@ struct ngx_http_core_loc_conf_s
 	//on是中间值，一般情况下在关闭连接前都会处理连接上的用户发送的数据，
 	//除了有些情况下在业务上认定这之后的数据是不必要的
     ngx_uint_t    lingering_close;         /* lingering_close */
-    ngx_uint_t    if_modified_since;       /* if_modified_since */
+	//对If_Modified_Since头部的处理策略
+	//处于性能的考虑，Web浏览器一般会在客户端本地缓存一些文件，并存储当时获取的时间。
+	//这样，下次向Web服务器获取缓存过的资源时，就可以用If-Modified-Since头部把上次获取
+	//的时间捎带上，而Nginx将根据if_modified_since的值来决定如何处理If-Modified-Since头部
+	//off--表示忽略用户请求中的If_Modified_Since头部。这时，如果获取一个文件，
+	//	那么会正常地返回文件内容。HTTP响应码通常是200
+	//exact--将If_Modified_Since头部包含的时间与将要返回的文件上次修改的时间做精确比较，
+	//	如果没有匹配上，则返回200和文件的实际内容，如果匹配上，则表示浏览器缓存的文件内容已经是最新的了，
+	//	没有必要再返回文件从而浪费时间与带宽了，这时会返回304 Not Modified，浏览器收到后会直接读取自己的本地缓存
+	//before--是比exact更宽松的比较。只要文件的上次修改时间等于或早于用户请求中的If_Modified_Since头部时间，
+	//	就会向客户端返回304 Not Modified。
+    ngx_uint_t    if_modified_since;       
     ngx_uint_t    max_ranges;              /* max_ranges */
     ngx_uint_t    client_body_in_file_only; /* client_body_in_file_only */
 
@@ -480,12 +512,18 @@ struct ngx_http_core_loc_conf_s
                                            /* client_body_in_singe_buffer */
 	//内部location，这种location只能由子请求或者内部跳转访问
     ngx_flag_t    internal;                /* internal */
-    ngx_flag_t    sendfile;                /* sendfile */
+	//确定是否启用sendfile系统调用来发送文件
+	//sendfile系统调用减少了内核态与用户态之间的两次内存复制，这样就会从磁盘中读取文件后直接
+	//在内核态发送到网卡设备，提高了发送文件的效率
+    ngx_flag_t    sendfile;                
     ngx_flag_t    aio;                     /* aio */
-    ngx_flag_t    tcp_nopush;              /* tcp_nopush */
+	//确定是否开启FreeBSD系统上的TCP_NOPUSH或Linux系统上的TCP_CORK功能。
+	//仅在使用sendfile的时候才有效
+	//打开tcp_nopush后，将会在发送响应时把整个响应包头放到一个TCP包中发送
+    ngx_flag_t    tcp_nopush;              
 	//开启或关闭Nginx使用TCP_NODELAY选项的功能 
 	//这个选项在将连接转变为长连接的时候才被启用，在upstream发送响应到客户端时也会启用
-    ngx_flag_t    tcp_nodelay;           //确定对keepalive连接是否使用TCP_NODELAY选项
+    ngx_flag_t    tcp_nodelay;          
 	//连接超时后将通过向客户端发送RST包来直接重置连接
 	//相比正常的关闭方式，它使得服务器避免产生许多处于FIN_WAIT_1,FIN_WAIT_2/TIME_WAIT状态的TCP连接
 	//注意，使用RST重置包关闭连接会带来一些问题，默认情况下不会开启
@@ -494,10 +532,13 @@ struct ngx_http_core_loc_conf_s
     ngx_flag_t    port_in_redirect;        /* port_in_redirect */
     ngx_flag_t    msie_padding;            /* msie_padding */
     ngx_flag_t    msie_refresh;            /* msie_refresh */
-    ngx_flag_t    log_not_found;           /* log_not_found */
+	//当处理用户请求且需要访问文件时，如果没有找到文件，是否将错误日志
+	//记录到erro.log文件中。这仅用于定位问题
+	ngx_flag_t    log_not_found;           
     ngx_flag_t    log_subrequest;          /* log_subrequest */
     ngx_flag_t    recursive_error_pages;   /* recursive_error_pages */
-    ngx_flag_t    server_tokens;           /* server_tokens */
+	//处理请求出错时是否在响应的Server头部中表明Nginx版本，这是为了方便问题
+    ngx_flag_t    server_tokens;          
     ngx_flag_t    chunked_transfer_encoding; /* chunked_transfer_encoding */
     ngx_flag_t    etag;                    /* etag */
 
@@ -528,15 +569,23 @@ struct ngx_http_core_loc_conf_s
 	//HTTP包体的临时存放目录
     ngx_path_t   *client_body_temp_path;   /* client_body_temp_path */
 
+	//文件缓存，通过读取缓存就减少了对磁盘的操作
     ngx_open_file_cache_t  *open_file_cache;
+	//检验文件缓存中元素有效性的频率
     time_t        open_file_cache_valid;
+	//指定文件缓存中，在inactive指定的时间段内，访问次数超过了
+	//open_file_cache_min_uses指定的最小次数，那么将不会被淘汰出缓存
     ngx_uint_t    open_file_cache_min_uses;
+	//是否在文件缓存中缓存打开文件时出现的找不到路径、没有权限等错误信息
     ngx_flag_t    open_file_cache_errors;
     ngx_flag_t    open_file_cache_events;
 
     ngx_log_t    *error_log;
-
+	//为了快速寻找到相应MIME type，Nginx使用散列表来存储文件扩展名到MIME type的映射
+	//types_hash_max_size散列表中的冲突桶的个数
     ngx_uint_t    types_hash_max_size;
+	//为了快速寻找到相应MIME type，Nginx使用散列表来存储文件扩展名到MIME type的映射
+	//types_hash_bucket_size设置了散列表中每个冲突桶桶占用的内存大小
     ngx_uint_t    types_hash_bucket_size;
 
 	//属于当前块的所有location块通过ngx_http_location_queue_t结构体构成的双向链表

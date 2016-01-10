@@ -345,12 +345,14 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     slot = (ngx_path_t **) (p + cmd->offset);
 
-    if (*slot) {
+    if (*slot) 
+	{
         return "is duplicate";
     }
 
     path = ngx_pcalloc(cf->pool, sizeof(ngx_path_t));
-    if (path == NULL) {
+    if (path == NULL)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -362,16 +364,19 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         path->name.len--;
     }
 
-    if (ngx_conf_full_name(cf->cycle, &path->name, 0) != NGX_OK) {
+    if (ngx_conf_full_name(cf->cycle, &path->name, 0) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 
     path->conf_file = cf->conf_file->file.name.data;
     path->line = cf->conf_file->line;
 
-    for (i = 0, n = 2; n < cf->args->nelts; i++, n++) {
+    for (i = 0, n = 2; n < cf->args->nelts; i++, n++) 
+	{
         level = ngx_atoi(value[n].data, value[n].len);
-        if (level == NGX_ERROR || level == 0) {
+        if (level == NGX_ERROR || level == 0)
+		{
             return "invalid value";
         }
 
@@ -379,13 +384,15 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         path->len += level + 1;
     }
 
-    if (path->len > 10 + i) {
+    if (path->len > 10 + i) 
+	{
         return "invalid value";
     }
 
     *slot = path;
 
-    if (ngx_add_path(cf, slot) == NGX_ERROR) {
+    if (ngx_add_path(cf, slot) == NGX_ERROR)
+	{
         return NGX_CONF_ERROR;
     }
 

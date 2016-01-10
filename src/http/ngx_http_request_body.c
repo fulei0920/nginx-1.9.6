@@ -1176,21 +1176,18 @@ ngx_http_request_body_chunked_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
             rc = ngx_http_parse_chunked(r, cl->buf, rb->chunked);
 
-            if (rc == NGX_OK) {
+            if (rc == NGX_OK) 
+			{
 
                 /* a chunk has been parsed successfully */
 
                 clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-                if (clcf->client_max_body_size
-                    && clcf->client_max_body_size
-                       - r->headers_in.content_length_n < rb->chunked->size)
+                if (clcf->client_max_body_size && 
+					clcf->client_max_body_size  - r->headers_in.content_length_n < rb->chunked->size)
                 {
-                    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                                  "client intended to send too large chunked "
-                                  "body: %O+%O bytes",
-                                  r->headers_in.content_length_n,
-                                  rb->chunked->size);
+                    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "client intended to send too large chunked "
+                                  "body: %O+%O bytes", r->headers_in.content_length_n, rb->chunked->size);
 
                     r->lingering_close = 1;
 

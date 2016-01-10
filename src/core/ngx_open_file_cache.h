@@ -87,14 +87,22 @@ struct ngx_cached_open_file_s {
     ngx_event_t             *event;
 };
 
-
-typedef struct {
+//文件缓存
+//文件缓存会在内存中存储以下3中信息
+//文件句柄、文件大小和上次修改时间
+//已经打开过的目录结构
+//没有找到的或者没有权限操作的文件信息
+typedef struct 
+{
     ngx_rbtree_t             rbtree;
     ngx_rbtree_node_t        sentinel;
     ngx_queue_t              expire_queue;
 
     ngx_uint_t               current;
+	//表示在内存中存储元素的最大个数。当达到最大限制数量后，
+	//将采用LRU(Least Recently Used)算法从缓存中淘汰最近最少使用的元素
     ngx_uint_t               max;
+	//表示在inactive指定的时间段内没有被访问过的元素将会被淘汰。默认时间为60秒
     time_t                   inactive;
 } ngx_open_file_cache_t;
 
