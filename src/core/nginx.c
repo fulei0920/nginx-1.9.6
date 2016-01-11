@@ -36,7 +36,7 @@ static ngx_command_t  ngx_core_commands[] =
 {
 	//语法: daemon on|off
 	//默认: daemon on
-	//是否以守护进程的方式允许Nginx，守护进程是脱离终端并且在后台允许的进程
+	//是否以守护进程的方式允许Nginx
     {
 		ngx_string("daemon"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
@@ -49,7 +49,6 @@ static ngx_command_t  ngx_core_commands[] =
 	//语法: master_process on|off
 	//默认: master_process on
 	//是否以master/worker方式工作
-	//如果关闭了master_process工作方式，就不会fork出worker子进程来处理请求，而是用master进程自身来处理请求
     { 
 		ngx_string("master_process"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
@@ -95,7 +94,11 @@ static ngx_command_t  ngx_core_commands[] =
 		offsetof(ngx_core_conf_t, lock_file),
 		NULL 
     },
-
+	//语法: worker_processes number;
+	//默认: worker_processes 1;
+	//Nginx worker进程的个数
+	//每个worker进程都是单线程的进程，如果不会出现阻塞式的调用，那么有多少个CPU内核就应该配置多少个进程；
+	//反之，如果有可能出现阻塞式调用，那么需要配置稍多一些的worker进程
     { 
     	ngx_string("worker_processes"),
       	NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -120,7 +123,7 @@ static ngx_command_t  ngx_core_commands[] =
 
 	//语法: user username [groupname];
 	//默认: user nobody nobody;
-	//Nginxworker进程运行的用于及用户组，当按照"user username;"设置时，用户组名与用户名相同
+	//Nginx Worker进程运行的用户及用户组，当按照"user username;"设置时，用户组名与用户名相同
 	//若用户在configure命令执行时使用了参数--user=username和--group=groupname，此时nginx.conf将使用参数中指定的用户和用户组
     { 
 		ngx_string("user"),
@@ -130,23 +133,39 @@ static ngx_command_t  ngx_core_commands[] =
 		0,
 		NULL 
      },
+	//语法: worker_priority nice;
+	//默认: worker_priority 0;
+	//设置Nginx worker进程的nice优先级
+	//优先级由静态优先级和内核根据进程执行情况所做的动态调整(目前只有±5的调整)共同决定。
+	//nice值是进程的静态优先级，它的取值范围是-20~+19，-20是最高优先级，+19是最低优先级。
+	//因此，如果用户希望Nginx占有更多的系统资源，那么可以把nice值配置得更小些，但不建议
+	//比内核进程的nice值(通常为-5)还要小
+    { 
+		ngx_string("worker_priority"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
+		ngx_set_priority,
+		0,
+		0,
+		NULL 
+    },
+	//语法: worker_cpu_affinity cpumask [cpumask];
+	//绑定Nginx worker进程到指定的CPU核
+	//注意: worker_cpu_affinity配置仅对Linux操作系统有效。Linux使用sched_setaffinity()系统调用实现这个功能
+	//例如: 如果有4个CPU核，就可以进行如下配置
+    //	worker_processes 4
+    //	worker_cpu_affinity 1000 0100 0010 0001
 
-    { ngx_string("worker_priority"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
-      ngx_set_priority,
-      0,
-      0,
-      NULL },
 
-    { ngx_string("worker_cpu_affinity"),
-      NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_1MORE,
-      ngx_set_cpu_affinity,
-      0,
-      0,
-      NULL 
+    { 
+		ngx_string("worker_cpu_affinity"),
+		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_1MORE,
+		ngx_set_cpu_affinity,
+		0,
+		0,
+		NULL 
     },
       
-	//语法: worker_rlimit_nofile ;
+	//语法: worker_rlimit_nofile limit;
 	//设置一个worker进程可以打开的最大句柄描述符个数
     { 
     	ngx_string("worker_rlimit_nofile"),
@@ -159,7 +178,8 @@ static ngx_command_t  ngx_core_commands[] =
 
 	//语法: worker_rlimit_core size
 	//限制coredump核心转储文件的大小
-	//在Linux系统中，当进程发生错误或收到信号而终止时，系统会将进程执行时的内存内容(核心映像)写入一个文件(core文件)，
+	//在Linux系统中，当进程发生错误或收到信号而终止时，
+	//系统会将进程执行时的内存内容(核心映像)写入一个文件(core文件)，
 	//以作调试之用，这就是所谓的核心转储(core dump)
     { 
 		ngx_string("worker_rlimit_core"),
@@ -172,7 +192,8 @@ static ngx_command_t  ngx_core_commands[] =
 
 	//语法: working_directory path
 	//指定coredump文件的生成目录
-	//worker进程的工作目录，这个配置项的唯一用途就是设置coredump文件所放置的目录，需确保worker进程有权限向该目录中写入文件
+	//worker进程的工作目录，这个配置项的唯一用途就是设置coredump文件所放置的目录，
+	//需确保worker进程有权限向该目录中写入文件
     { 
 		ngx_string("working_directory"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
@@ -184,6 +205,8 @@ static ngx_command_t  ngx_core_commands[] =
 
 	//语法: env VAR|VAR=VALUE
 	//定义环境变量
+	//这个配置项可以让用户直接设置操作系统上的环境变量
+	//例如: env TESTPATH=/tmp/;
     { 
 		ngx_string("env"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,

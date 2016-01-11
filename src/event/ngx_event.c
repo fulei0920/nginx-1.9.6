@@ -175,9 +175,12 @@ static ngx_command_t  ngx_event_core_commands[] =
 		NULL 
     },
 
-	//需要对来自指定IP的TCP连接打印debug级别的调试日志，其他请求仍然沿用error_log配置的日志级别
-	//使用前，需要确保在执行configure时已经加入了--with-debug参数，否则不会生效
 	//语法: debug_connection [IP|CIDR]
+	//仅对指定的客户端输出debug级别的日志，其他请求仍然沿用error_log配置的日志级别
+	//使用前，需要确保在执行configure时已经加入了--with-debug参数，否则不会生效
+	//例如: debug_connection 10.224.66.14;
+	//		debug_connection 10.224.57.0/24;
+	//	这样，仅仅来自以上IP地址的请求才会输出debug级别的日志
     { 
 		ngx_string("debug_connection"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,

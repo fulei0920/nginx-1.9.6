@@ -64,6 +64,10 @@ static void ngx_openssl_exit(ngx_cycle_t *cycle);
 
 static ngx_command_t  ngx_openssl_commands[] = 
 {
+	//语法: ssl_engine device;
+	//SSL硬件加速
+	//如果具有SSL硬件加速设备，那么就可以进行配置以加快SSL协议的处理速度，
+	//用户可以使用OpenSSL提供的命令来查看是否有SSL硬件加速设备: openssl engine -t
     { 
 		ngx_string("ssl_engine"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,

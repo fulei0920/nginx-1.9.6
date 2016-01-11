@@ -18,8 +18,9 @@ static void ngx_conf_flush_files(ngx_cycle_t *cycle);
 static ngx_command_t  ngx_conf_commands[] = 
 {
 	//语法: include /path/file
-	//将其他配置文件嵌入到当前的nginx.conf文件中，参数可以是绝对路径，相对路径，也可以是包含通配符*的文件名
-	//同时可以一次嵌入多个配置文件
+	//将其他配置文件嵌入到当前的nginx.conf文件中，参数可以是绝对路径，
+	//相对路径(相对于Nginx的配置目录，即nginx.conf所在的目录)，
+	//也可以是包含通配符*的文件名，同时可以一次嵌入多个配置文件
     { 
 		ngx_string("include"),
 		NGX_ANY_CONF|NGX_CONF_TAKE1,
