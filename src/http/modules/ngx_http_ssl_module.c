@@ -49,7 +49,8 @@ static char *ngx_http_ssl_session_cache(ngx_conf_t *cf, ngx_command_t *cmd,
 static ngx_int_t ngx_http_ssl_init(ngx_conf_t *cf);
 
 
-static ngx_conf_bitmask_t  ngx_http_ssl_protocols[] = {
+static ngx_conf_bitmask_t  ngx_http_ssl_protocols[] = 
+{
     { ngx_string("SSLv2"), NGX_SSL_SSLv2 },
     { ngx_string("SSLv3"), NGX_SSL_SSLv3 },
     { ngx_string("TLSv1"), NGX_SSL_TLSv1 },
@@ -119,12 +120,14 @@ static ngx_command_t  ngx_http_ssl_commands[] =
       offsetof(ngx_http_ssl_srv_conf_t, ecdh_curve),
       NULL },
 
-    { ngx_string("ssl_protocols"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
-      ngx_conf_set_bitmask_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, protocols),
-      &ngx_http_ssl_protocols },
+    { 
+		ngx_string("ssl_protocols"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
+		ngx_conf_set_bitmask_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, protocols),
+		&ngx_http_ssl_protocols 
+    },
 
     { ngx_string("ssl_ciphers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -147,12 +150,14 @@ static ngx_command_t  ngx_http_ssl_commands[] =
       offsetof(ngx_http_ssl_srv_conf_t, verify),
       &ngx_http_ssl_verify },
 
-    { ngx_string("ssl_verify_depth"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_num_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, verify_depth),
-      NULL },
+    { 
+		ngx_string("ssl_verify_depth"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_num_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, verify_depth),
+		NULL 
+    },
 
     { ngx_string("ssl_client_certificate"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -219,12 +224,14 @@ static ngx_command_t  ngx_http_ssl_commands[] =
 		NULL 
     },
 
-    { ngx_string("ssl_stapling_file"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      offsetof(ngx_http_ssl_srv_conf_t, stapling_file),
-      NULL },
+    { 
+		ngx_string("ssl_stapling_file"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		offsetof(ngx_http_ssl_srv_conf_t, stapling_file),
+		NULL 
+    },
 
     { ngx_string("ssl_stapling_responder"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_CONF_TAKE1,
@@ -581,12 +588,9 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_value(conf->prefer_server_ciphers,
                          prev->prefer_server_ciphers, 0);
 
-    ngx_conf_merge_bitmask_value(conf->protocols, prev->protocols,
-                         (NGX_CONF_BITMASK_SET|NGX_SSL_TLSv1
-                          |NGX_SSL_TLSv1_1|NGX_SSL_TLSv1_2));
+    ngx_conf_merge_bitmask_value(conf->protocols, prev->protocols, (NGX_CONF_BITMASK_SET|NGX_SSL_TLSv1 |NGX_SSL_TLSv1_1|NGX_SSL_TLSv1_2));
 
-    ngx_conf_merge_size_value(conf->buffer_size, prev->buffer_size,
-                         NGX_SSL_BUFSIZE);
+    ngx_conf_merge_size_value(conf->buffer_size, prev->buffer_size, NGX_SSL_BUFSIZE);
 
     ngx_conf_merge_uint_value(conf->verify, prev->verify, 0);
     ngx_conf_merge_uint_value(conf->verify_depth, prev->verify_depth, 1);
@@ -598,14 +602,11 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_str_value(conf->dhparam, prev->dhparam, "");
 
-    ngx_conf_merge_str_value(conf->client_certificate, prev->client_certificate,
-                         "");
-    ngx_conf_merge_str_value(conf->trusted_certificate,
-                         prev->trusted_certificate, "");
+    ngx_conf_merge_str_value(conf->client_certificate, prev->client_certificate, "");
+    ngx_conf_merge_str_value(conf->trusted_certificate, prev->trusted_certificate, "");
     ngx_conf_merge_str_value(conf->crl, prev->crl, "");
 
-    ngx_conf_merge_str_value(conf->ecdh_curve, prev->ecdh_curve,
-                         NGX_DEFAULT_ECDH_CURVE);
+    ngx_conf_merge_str_value(conf->ecdh_curve, prev->ecdh_curve, NGX_DEFAULT_ECDH_CURVE);
 
     ngx_conf_merge_str_value(conf->ciphers, prev->ciphers, NGX_DEFAULT_CIPHERS);
 
@@ -616,7 +617,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     conf->ssl.log = cf->log;
 
-    if (conf->enable) {
+    if (conf->enable) 
+	{
 
         if (conf->certificate.len == 0) {
             ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
@@ -634,7 +636,9 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
             return NGX_CONF_ERROR;
         }
 
-    } else {
+    }
+	else 
+	{
 
         if (conf->certificate.len == 0) {
             return NGX_CONF_OK;
@@ -674,7 +678,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 #endif
 
     cln = ngx_pool_cleanup_add(cf->pool, 0);
-    if (cln == NULL) {
+    if (cln == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -717,7 +722,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    if (conf->prefer_server_ciphers) {
+    if (conf->prefer_server_ciphers)
+	{
         SSL_CTX_set_options(conf->ssl.ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
     }
 
@@ -730,7 +736,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_ssl_ecdh_curve(cf, &conf->ssl, &conf->ecdh_curve) != NGX_OK) {
+    if (ngx_ssl_ecdh_curve(cf, &conf->ssl, &conf->ecdh_curve) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 

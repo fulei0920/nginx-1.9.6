@@ -217,7 +217,8 @@ typedef struct {
 
 #define NGX_CONF_BITMASK_SET  1
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                 name;
     ngx_uint_t                mask;
 } ngx_conf_bitmask_t;

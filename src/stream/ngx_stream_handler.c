@@ -248,7 +248,8 @@ ngx_stream_ssl_init_connection(ngx_ssl_t *ssl, ngx_connection_t *c)
     ngx_stream_session_t   *s;
     ngx_stream_ssl_conf_t  *sslcf;
 
-    if (ngx_ssl_create_connection(ssl, c, 0) == NGX_ERROR) {
+    if (ngx_ssl_create_connection(ssl, c, 0) == NGX_ERROR)
+	{
         ngx_stream_close_connection(c);
         return;
     }

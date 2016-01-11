@@ -774,18 +774,21 @@ ngx_ssl_ocsp_start(void)
     ngx_ssl_ocsp_ctx_t  *ctx;
 
     pool = ngx_create_pool(2048, ngx_cycle->log);
-    if (pool == NULL) {
+    if (pool == NULL) 
+	{
         return NULL;
     }
 
     ctx = ngx_pcalloc(pool, sizeof(ngx_ssl_ocsp_ctx_t));
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         ngx_destroy_pool(pool);
         return NULL;
     }
 
     log = ngx_palloc(pool, sizeof(ngx_log_t));
-    if (log == NULL) {
+    if (log == NULL) 
+	{
         ngx_destroy_pool(pool);
         return NULL;
     }
@@ -855,9 +858,9 @@ ngx_ssl_ocsp_request(ngx_ssl_ocsp_ctx_t *ctx)
             return;
         }
 
-        if (resolve == NGX_NO_RESOLVER) {
-            ngx_log_error(NGX_LOG_WARN, ctx->log, 0,
-                          "no resolver defined to resolve %V", &ctx->host);
+        if (resolve == NGX_NO_RESOLVER) 
+		{
+            ngx_log_error(NGX_LOG_WARN, ctx->log, 0, "no resolver defined to resolve %V", &ctx->host);
             goto connect;
         }
 
@@ -866,7 +869,8 @@ ngx_ssl_ocsp_request(ngx_ssl_ocsp_ctx_t *ctx)
         resolve->data = ctx;
         resolve->timeout = ctx->resolver_timeout;
 
-        if (ngx_resolve_name(resolve) != NGX_OK) {
+        if (ngx_resolve_name(resolve) != NGX_OK)
+		{
             ngx_ssl_ocsp_error(ctx);
             return;
         }
@@ -892,14 +896,12 @@ ngx_ssl_ocsp_resolve_handler(ngx_resolver_ctx_t *resolve)
     ngx_uint_t        i;
     struct sockaddr  *sockaddr;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ctx->log, 0,
-                   "ssl ocsp resolve handler");
+    ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ctx->log, 0, "ssl ocsp resolve handler");
 
-    if (resolve->state) {
-        ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
-                      "%V could not be resolved (%i: %s)",
-                      &resolve->name, resolve->state,
-                      ngx_resolver_strerror(resolve->state));
+    if (resolve->state) 
+	{
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "%V could not be resolved (%i: %s)",
+                      &resolve->name, resolve->state, ngx_resolver_strerror(resolve->state));
         goto failed;
     }
 
@@ -910,7 +912,8 @@ ngx_ssl_ocsp_resolve_handler(ngx_resolver_ctx_t *resolve)
 
     addr.data = text;
 
-    for (i = 0; i < resolve->naddrs; i++) {
+    for (i = 0; i < resolve->naddrs; i++) 
+	{
         addr.len = ngx_sock_ntop(resolve->addrs[i].sockaddr,
                                  resolve->addrs[i].socklen,
                                  text, NGX_SOCKADDR_STRLEN, 0);
@@ -1308,14 +1311,14 @@ ngx_ssl_ocsp_process_status_line(ngx_ssl_ocsp_ctx_t *ctx)
         return ctx->process(ctx);
     }
 
-    if (rc == NGX_AGAIN) {
+    if (rc == NGX_AGAIN) 
+	{
         return NGX_AGAIN;
     }
 
     /* rc == NGX_ERROR */
 
-    ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
-                  "OCSP responder sent invalid response");
+    ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "OCSP responder sent invalid response");
 
     return NGX_ERROR;
 }
@@ -1528,13 +1531,14 @@ ngx_ssl_ocsp_process_headers(ngx_ssl_ocsp_ctx_t *ctx)
     size_t     len;
     ngx_int_t  rc;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ctx->log, 0,
-                   "ssl ocsp process headers");
+    ngx_log_debug0(NGX_LOG_DEBUG_EVENT, ctx->log, 0, "ssl ocsp process headers");
 
-    for ( ;; ) {
+    for ( ;; ) 
+	{
         rc = ngx_ssl_ocsp_parse_header_line(ctx);
 
-        if (rc == NGX_OK) {
+        if (rc == NGX_OK) 
+		{
 
             ngx_log_debug4(NGX_LOG_DEBUG_EVENT, ctx->log, 0,
                            "ssl ocsp header \"%*s: %*s\"",
@@ -1546,24 +1550,15 @@ ngx_ssl_ocsp_process_headers(ngx_ssl_ocsp_ctx_t *ctx)
             len = ctx->header_name_end - ctx->header_name_start;
 
             if (len == sizeof("Content-Type") - 1
-                && ngx_strncasecmp(ctx->header_name_start,
-                                   (u_char *) "Content-Type",
-                                   sizeof("Content-Type") - 1)
-                   == 0)
+                && ngx_strncasecmp(ctx->header_name_start, (u_char *) "Content-Type", sizeof("Content-Type") - 1) == 0)
             {
                 len = ctx->header_end - ctx->header_start;
 
                 if (len != sizeof("application/ocsp-response") - 1
-                    || ngx_strncasecmp(ctx->header_start,
-                                       (u_char *) "application/ocsp-response",
-                                       sizeof("application/ocsp-response") - 1)
-                       != 0)
+                    || ngx_strncasecmp(ctx->header_start, (u_char *) "application/ocsp-response", sizeof("application/ocsp-response") - 1) != 0)
                 {
-                    ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
-                                  "OCSP responder sent invalid "
-                                  "\"Content-Type\" header: \"%*s\"",
-                                  ctx->header_end - ctx->header_start,
-                                  ctx->header_start);
+                    ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "OCSP responder sent invalid \"Content-Type\" header: \"%*s\"",
+                                  ctx->header_end - ctx->header_start, ctx->header_start);
                     return NGX_ERROR;
                 }
 
@@ -1575,18 +1570,19 @@ ngx_ssl_ocsp_process_headers(ngx_ssl_ocsp_ctx_t *ctx)
             continue;
         }
 
-        if (rc == NGX_DONE) {
+        if (rc == NGX_DONE) 
+		{
             break;
         }
 
-        if (rc == NGX_AGAIN) {
+        if (rc == NGX_AGAIN)
+		{
             return NGX_AGAIN;
         }
 
         /* rc == NGX_ERROR */
 
-        ngx_log_error(NGX_LOG_ERR, ctx->log, 0,
-                      "OCSP responder sent invalid response");
+        ngx_log_error(NGX_LOG_ERR, ctx->log, 0, "OCSP responder sent invalid response");
 
         return NGX_ERROR;
     }

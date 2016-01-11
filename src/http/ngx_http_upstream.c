@@ -153,11 +153,9 @@ static void *ngx_http_upstream_create_main_conf(ngx_conf_t *cf);
 static char *ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf);
 
 #if (NGX_HTTP_SSL)
-static void ngx_http_upstream_ssl_init_connection(ngx_http_request_t *,
-    ngx_http_upstream_t *u, ngx_connection_t *c);
+static void ngx_http_upstream_ssl_init_connection(ngx_http_request_t *, ngx_http_upstream_t *u, ngx_connection_t *c);
 static void ngx_http_upstream_ssl_handshake(ngx_connection_t *c);
-static ngx_int_t ngx_http_upstream_ssl_name(ngx_http_request_t *r,
-    ngx_http_upstream_t *u, ngx_connection_t *c);
+static ngx_int_t ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_connection_t *c);
 #endif
 
 
@@ -498,7 +496,6 @@ ngx_http_upstream_init(ngx_http_request_t *r)
 
     if (ngx_event_flags & NGX_USE_CLEAR_EVENT)
 	{
-
         if (!c->write->active) 
 		{
             if (ngx_add_event(c->write, NGX_WRITE_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR)
@@ -1550,18 +1547,20 @@ ngx_http_upstream_ssl_init_connection(ngx_http_request_t *r, ngx_http_upstream_t
     c->sendfile = 0;
     u->output.sendfile = 0;
 
-    if (u->conf->ssl_server_name || u->conf->ssl_verify) {
-        if (ngx_http_upstream_ssl_name(r, u, c) != NGX_OK) {
-            ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_INTERNAL_SERVER_ERROR);
+    if (u->conf->ssl_server_name || u->conf->ssl_verify) 
+	{
+        if (ngx_http_upstream_ssl_name(r, u, c) != NGX_OK) 
+		{
+            ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
         }
     }
 
-    if (u->conf->ssl_session_reuse) {
-        if (u->peer.set_session(&u->peer, u->peer.data) != NGX_OK) {
-            ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_INTERNAL_SERVER_ERROR);
+    if (u->conf->ssl_session_reuse) 
+	{
+        if (u->peer.set_session(&u->peer, u->peer.data) != NGX_OK)
+		{
+            ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
         }
 
@@ -1669,16 +1668,21 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
     u_char     *p, *last;
     ngx_str_t   name;
 
-    if (u->conf->ssl_name) {
-        if (ngx_http_complex_value(r, u->conf->ssl_name, &name) != NGX_OK) {
+    if (u->conf->ssl_name)
+	{
+        if (ngx_http_complex_value(r, u->conf->ssl_name, &name) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
-    } else {
+    } 
+	else 
+	{
         name = u->ssl_name;
     }
 
-    if (name.len == 0) {
+    if (name.len == 0) 
+	{
         goto done;
     }
 
@@ -1704,7 +1708,8 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
         name.len = p - name.data;
     }
 
-    if (!u->conf->ssl_server_name) {
+    if (!u->conf->ssl_server_name) 
+	{
         goto done;
     }
 
@@ -1726,7 +1731,8 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
      */
 
     p = ngx_pnalloc(r->pool, name.len + 1);
-    if (p == NULL) {
+    if (p == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -1737,9 +1743,9 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "upstream SSL server name: \"%s\"", name.data);
 
-    if (SSL_set_tlsext_host_name(c->ssl->connection, name.data) == 0) {
-        ngx_ssl_error(NGX_LOG_ERR, r->connection->log, 0,
-                      "SSL_set_tlsext_host_name(\"%s\") failed", name.data);
+    if (SSL_set_tlsext_host_name(c->ssl->connection, name.data) == 0)
+	{
+        ngx_ssl_error(NGX_LOG_ERR, r->connection->log, 0, "SSL_set_tlsext_host_name(\"%s\") failed", name.data);
         return NGX_ERROR;
     }
 
@@ -2834,7 +2840,7 @@ ngx_http_upstream_process_body_in_memory(ngx_http_request_t *r, ngx_http_upstrea
 		/* 检查当前接收缓冲区是否剩余的内存空间 */
         size = b->end - b->last;
 
-		        /*
+		/*
          * 若接收缓冲区不存在空闲的内存空间，
          * 则调用ngx_http_upstream_finalize_request方法结束请求；
          * 并return从当前函数返回；
@@ -4388,7 +4394,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
     u->finalize_request(r, rc);
 
 	/* 调用 free 方法释放连接资源 */ 
-    if (u->peer.free && u->peer.sockaddr) {
+    if (u->peer.free && u->peer.sockaddr) 
+	{
         u->peer.free(&u->peer, u->peer.data, 0);
         u->peer.sockaddr = NULL;
     }
@@ -4428,15 +4435,13 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
     u->peer.connection = NULL;
 
-    if (u->pipe && u->pipe->temp_file) {
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http upstream temp fd: %d",
-                       u->pipe->temp_file->file.fd);
+    if (u->pipe && u->pipe->temp_file)
+	{
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http upstream temp fd: %d", u->pipe->temp_file->file.fd);
     }
 
 	/* 若使用了文件缓存，则调用 ngx_delete_file 方法删除用于缓存响应的临时文件 */
-    if (u->store && u->pipe && u->pipe->temp_file
-        && u->pipe->temp_file->file.fd != NGX_INVALID_FILE)
+    if (u->store && u->pipe && u->pipe->temp_file && u->pipe->temp_file->file.fd != NGX_INVALID_FILE)
     {
         if (ngx_delete_file(u->pipe->temp_file->file.name.data)
             == NGX_FILE_ERROR)
@@ -4449,7 +4454,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
 #if (NGX_HTTP_CACHE)
 
-    if (r->cache) {
+    if (r->cache) 
+	{
 
         if (u->cacheable) {
 
@@ -4475,7 +4481,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         u->buffer.last = u->buffer.pos;
     }
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED) 
+	{
         return;
     }
 

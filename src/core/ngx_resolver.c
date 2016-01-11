@@ -371,13 +371,15 @@ ngx_resolve_name(ngx_resolver_ctx_t *ctx)
 
     r = ctx->resolver;
 
-    if (ctx->name.len > 0 && ctx->name.data[ctx->name.len - 1] == '.') {
+    if (ctx->name.len > 0 && ctx->name.data[ctx->name.len - 1] == '.') 
+	{
         ctx->name.len--;
     }
 
     ngx_log_debug1(NGX_LOG_DEBUG_CORE, r->log, 0, "resolve: \"%V\"", &ctx->name);
 
-    if (ctx->quick) {
+    if (ctx->quick) 
+	{
         ctx->handler(ctx);
         return NGX_OK;
     }
@@ -635,12 +637,14 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
 	{
 
         rn = ngx_resolver_alloc(r, sizeof(ngx_resolver_node_t));
-        if (rn == NULL) {
+        if (rn == NULL) 
+		{
             return NGX_ERROR;
         }
 
         rn->name = ngx_resolver_dup(r, ctx->name.data, ctx->name.len);
-        if (rn->name == NULL) {
+        if (rn->name == NULL) 
+		{
             ngx_resolver_free(r, rn);
             return NGX_ERROR;
         }
@@ -662,7 +666,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
         goto failed;
     }
 
-    if (rc == NGX_DECLINED) {
+    if (rc == NGX_DECLINED) 
+	{
         ngx_rbtree_delete(&r->name_rbtree, &rn->node);
 
         ngx_resolver_free(r, rn->query);
@@ -685,7 +690,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
         goto failed;
     }
 
-    if (ctx->event == NULL) {
+    if (ctx->event == NULL) 
+	{
         ctx->event = ngx_resolver_calloc(r, sizeof(ngx_event_t));
         if (ctx->event == NULL) {
             goto failed;
@@ -722,7 +728,8 @@ failed:
 
     ngx_rbtree_delete(&r->name_rbtree, &rn->node);
 
-    if (rn->query) {
+    if (rn->query) 
+	{
         ngx_resolver_free(r, rn->query);
     }
 
@@ -1106,7 +1113,8 @@ ngx_resolver_send_query(ngx_resolver_t *r, ngx_resolver_node_t *rn)
         uc->log.data = uc;
         uc->log.action = "resolving";
 
-        if (ngx_udp_connect(uc) != NGX_OK) {
+        if (ngx_udp_connect(uc) != NGX_OK)
+		{
             return NGX_ERROR;
         }
 
@@ -1280,10 +1288,12 @@ ngx_resolver_read_response(ngx_event_t *rev)
 
     c = rev->data;
 
-    do {
+    do 
+	{
         n = ngx_udp_recv(c, buf, NGX_RESOLVER_UDP_SIZE);
 
-        if (n < 0) {
+        if (n < 0) 
+		{
             return;
         }
 
@@ -3107,8 +3117,10 @@ ngx_udp_connect(ngx_udp_connection_t *uc)
 
     c = ngx_get_connection(s, &uc->log);
 
-    if (c == NULL) {
-        if (ngx_close_socket(s) == -1) {
+    if (c == NULL) 
+	{
+        if (ngx_close_socket(s) == -1) 
+		{
             ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno,
                           ngx_close_socket_n "failed");
         }
@@ -3116,10 +3128,9 @@ ngx_udp_connect(ngx_udp_connection_t *uc)
         return NGX_ERROR;
     }
 
-    if (ngx_nonblocking(s) == -1) {
-        ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno,
-                      ngx_nonblocking_n " failed");
-
+    if (ngx_nonblocking(s) == -1) 
+	{
+        ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno, ngx_nonblocking_n " failed");
         goto failed;
     }
 
@@ -3140,9 +3151,9 @@ ngx_udp_connect(ngx_udp_connection_t *uc)
 
     /* TODO: iocp */
 
-    if (rc == -1) {
-        ngx_log_error(NGX_LOG_CRIT, &uc->log, ngx_socket_errno,
-                      "connect() failed");
+    if (rc == -1) 
+	{
+        ngx_log_error(NGX_LOG_CRIT, &uc->log, ngx_socket_errno, "connect() failed");
 
         goto failed;
     }
@@ -3155,7 +3166,8 @@ ngx_udp_connect(ngx_udp_connection_t *uc)
                 /* select, poll, /dev/poll */       NGX_LEVEL_EVENT;
                 /* eventport event type has no meaning: oneshot only */
 
-    if (ngx_add_event(rev, NGX_READ_EVENT, event) != NGX_OK) {
+    if (ngx_add_event(rev, NGX_READ_EVENT, event) != NGX_OK) 
+	{
         goto failed;
     }
 

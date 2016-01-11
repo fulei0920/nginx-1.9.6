@@ -3244,7 +3244,8 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_str_value(conf->ssl_certificate_key, prev->ssl_certificate_key, "");
     ngx_conf_merge_ptr_value(conf->ssl_passwords, prev->ssl_passwords, NULL);
 
-    if (conf->ssl && ngx_http_proxy_set_ssl(cf, conf) != NGX_OK) {
+    if (conf->ssl && ngx_http_proxy_set_ssl(cf, conf) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -4353,69 +4354,63 @@ ngx_http_proxy_set_ssl(ngx_conf_t *cf, ngx_http_proxy_loc_conf_t *plcf)
     ngx_pool_cleanup_t  *cln;
 
     plcf->upstream.ssl = ngx_pcalloc(cf->pool, sizeof(ngx_ssl_t));
-    if (plcf->upstream.ssl == NULL) {
+    if (plcf->upstream.ssl == NULL) 
+	{
         return NGX_ERROR;
     }
 
     plcf->upstream.ssl->log = cf->log;
 
-    if (ngx_ssl_create(plcf->upstream.ssl, plcf->ssl_protocols, NULL)
-        != NGX_OK)
+    if (ngx_ssl_create(plcf->upstream.ssl, plcf->ssl_protocols, NULL) != NGX_OK)
     {
         return NGX_ERROR;
     }
 
     cln = ngx_pool_cleanup_add(cf->pool, 0);
-    if (cln == NULL) {
+    if (cln == NULL) 
+	{
         return NGX_ERROR;
     }
 
     cln->handler = ngx_ssl_cleanup_ctx;
     cln->data = plcf->upstream.ssl;
 
-    if (plcf->ssl_certificate.len) {
+    if (plcf->ssl_certificate.len) 
+	{
 
-        if (plcf->ssl_certificate_key.len == 0) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no \"proxy_ssl_certificate_key\" is defined "
-                          "for certificate \"%V\"", &plcf->ssl_certificate);
+        if (plcf->ssl_certificate_key.len == 0) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no \"proxy_ssl_certificate_key\" is defined for certificate \"%V\"", &plcf->ssl_certificate);
             return NGX_ERROR;
         }
 
-        if (ngx_ssl_certificate(cf, plcf->upstream.ssl, &plcf->ssl_certificate,
-                                &plcf->ssl_certificate_key, plcf->ssl_passwords)
-            != NGX_OK)
+        if (ngx_ssl_certificate(cf, plcf->upstream.ssl, &plcf->ssl_certificate, &plcf->ssl_certificate_key, plcf->ssl_passwords) != NGX_OK)
         {
             return NGX_ERROR;
         }
     }
 
-    if (SSL_CTX_set_cipher_list(plcf->upstream.ssl->ctx,
-                                (const char *) plcf->ssl_ciphers.data)
-        == 0)
+    if (SSL_CTX_set_cipher_list(plcf->upstream.ssl->ctx, (const char *) plcf->ssl_ciphers.data) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0,
-                      "SSL_CTX_set_cipher_list(\"%V\") failed",
-                      &plcf->ssl_ciphers);
+        ngx_ssl_error(NGX_LOG_EMERG, cf->log, 0, "SSL_CTX_set_cipher_list(\"%V\") failed", &plcf->ssl_ciphers);
         return NGX_ERROR;
     }
 
-    if (plcf->upstream.ssl_verify) {
-        if (plcf->ssl_trusted_certificate.len == 0) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                      "no proxy_ssl_trusted_certificate for proxy_ssl_verify");
+    if (plcf->upstream.ssl_verify) 
+	{
+        if (plcf->ssl_trusted_certificate.len == 0) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no proxy_ssl_trusted_certificate for proxy_ssl_verify");
             return NGX_ERROR;
         }
 
-        if (ngx_ssl_trusted_certificate(cf, plcf->upstream.ssl,
-                                        &plcf->ssl_trusted_certificate,
-                                        plcf->ssl_verify_depth)
-            != NGX_OK)
+        if (ngx_ssl_trusted_certificate(cf, plcf->upstream.ssl, &plcf->ssl_trusted_certificate, plcf->ssl_verify_depth) != NGX_OK)
         {
             return NGX_ERROR;
         }
 
-        if (ngx_ssl_crl(cf, plcf->upstream.ssl, &plcf->ssl_crl) != NGX_OK) {
+        if (ngx_ssl_crl(cf, plcf->upstream.ssl, &plcf->ssl_crl) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
     }

@@ -280,7 +280,8 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
 #endif
 #ifdef SSL_OP_NO_TLSv1_2
     SSL_CTX_clear_options(ssl->ctx, SSL_OP_NO_TLSv1_2);
-    if (!(protocols & NGX_SSL_TLSv1_2)) {
+    if (!(protocols & NGX_SSL_TLSv1_2))
+	{
         SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_TLSv1_2);
     }
 #endif
@@ -546,9 +547,7 @@ ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_
 
     if (SSL_CTX_load_verify_locations(ssl->ctx, (char *) cert->data, NULL) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_load_verify_locations(\"%s\") failed",
-                      cert->data);
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_load_verify_locations(\"%s\") failed", cert->data);
         return NGX_ERROR;
     }
 
@@ -561,9 +560,9 @@ ngx_ssl_client_certificate(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *cert, ngx_
 
     list = SSL_load_client_CA_file((char *) cert->data);
 
-    if (list == NULL) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_load_client_CA_file(\"%s\") failed", cert->data);
+    if (list == NULL)
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_load_client_CA_file(\"%s\") failed", cert->data);
         return NGX_ERROR;
     }
 
@@ -628,25 +627,23 @@ ngx_ssl_crl(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *crl)
 
     store = SSL_CTX_get_cert_store(ssl->ctx);
 
-    if (store == NULL) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_get_cert_store() failed");
+    if (store == NULL) 
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_get_cert_store() failed");
         return NGX_ERROR;
     }
 
     lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file());
 
-    if (lookup == NULL) {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "X509_STORE_add_lookup() failed");
+    if (lookup == NULL) 
+	{
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "X509_STORE_add_lookup() failed");
         return NGX_ERROR;
     }
 
-    if (X509_LOOKUP_load_file(lookup, (char *) crl->data, X509_FILETYPE_PEM)
-        == 0)
+    if (X509_LOOKUP_load_file(lookup, (char *) crl->data, X509_FILETYPE_PEM) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "X509_LOOKUP_load_file(\"%s\") failed", crl->data);
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "X509_LOOKUP_load_file(\"%s\") failed", crl->data);
         return NGX_ERROR;
     }
 
@@ -681,16 +678,15 @@ ngx_ssl_verify_callback(int ok, X509_STORE_CTX *x509_store)
     iname = X509_get_issuer_name(cert);
     issuer = iname ? X509_NAME_oneline(iname, NULL, 0) : "(none)";
 
-    ngx_log_debug5(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                   "verify:%d, error:%d, depth:%d, "
-                   "subject:\"%s\", issuer:\"%s\"",
-                   ok, err, depth, subject, issuer);
+    ngx_log_debug5(NGX_LOG_DEBUG_EVENT, c->log, 0, "verify:%d, error:%d, depth:%d, subject:\"%s\", issuer:\"%s\"", ok, err, depth, subject, issuer);
 
-    if (sname) {
+    if (sname) 
+	{
         OPENSSL_free(subject);
     }
 
-    if (iname) {
+    if (iname) 
+	{
         OPENSSL_free(issuer);
     }
 #endif
@@ -1225,7 +1221,8 @@ ngx_ssl_handshake(ngx_connection_t *c)
             return NGX_ERROR;
         }
 
-        if (ngx_handle_write_event(c->write, 0) != NGX_OK) {
+        if (ngx_handle_write_event(c->write, 0) != NGX_OK) 
+		{
             return NGX_ERROR;
         }
 
@@ -2859,9 +2856,8 @@ failed:
 
 
 static int
-ngx_ssl_session_ticket_key_callback(ngx_ssl_conn_t *ssl_conn,
-    unsigned char *name, unsigned char *iv, EVP_CIPHER_CTX *ectx,
-    HMAC_CTX *hctx, int enc)
+ngx_ssl_session_ticket_key_callback(ngx_ssl_conn_t *ssl_conn, unsigned char *name, 
+		unsigned char *iv, EVP_CIPHER_CTX *ectx, HMAC_CTX *hctx, int enc)
 {
     SSL_CTX                       *ssl_ctx;
     ngx_uint_t                     i;
@@ -2876,13 +2872,15 @@ ngx_ssl_session_ticket_key_callback(ngx_ssl_conn_t *ssl_conn,
     ssl_ctx = c->ssl->session_ctx;
 
     keys = SSL_CTX_get_ex_data(ssl_ctx, ngx_ssl_session_ticket_keys_index);
-    if (keys == NULL) {
+    if (keys == NULL) 
+	{
         return -1;
     }
 
     key = keys->elts;
 
-    if (enc == 1) {
+    if (enc == 1) 
+	{
         /* encrypt session ticket */
 
         ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0,
