@@ -77,7 +77,7 @@ typedef struct
     ngx_array_t                   *redirects;	//array of ngx_http_proxy_rewrite_t
     ngx_array_t                   *cookie_domains;
     ngx_array_t                   *cookie_paths;
-
+	//指定转发时的协议方法名
     ngx_str_t                      method;
     ngx_str_t                      location;	//proxy pass  指令所在的location的名称
     ngx_str_t                      url;		//proxy pass指令指定的url
@@ -214,7 +214,8 @@ static ngx_conf_post_t  ngx_http_proxy_lowat_post =
     { ngx_http_proxy_lowat_check };
 
 
-static ngx_conf_bitmask_t  ngx_http_proxy_next_upstream_masks[] = {
+static ngx_conf_bitmask_t  ngx_http_proxy_next_upstream_masks[] = 
+{
     { ngx_string("error"), NGX_HTTP_UPSTREAM_FT_ERROR },
     { ngx_string("timeout"), NGX_HTTP_UPSTREAM_FT_TIMEOUT },
     { ngx_string("invalid_header"), NGX_HTTP_UPSTREAM_FT_INVALID_HEADER },
@@ -256,7 +257,13 @@ ngx_module_t  ngx_http_proxy_module;
 
 static ngx_command_t  ngx_http_proxy_commands[] = 
 {
-
+	//语法: proxy_pass URL;
+	//此配置项将当前请求反向代理到URL参数指定的服务器上，
+	//URL可以是主机名或IP地址加端口的形式，也可以是Unix句柄，还可以直接使用upstream块
+	//例如:	proxy_pass http://localhost::8000/uri/
+	//		proxy_pass http://unix:/path/to/backend.socket:/uri/;
+	//		stream backend {...} server{ location / {proxy_pass http://backend; }}
+	//		proxy_pass https://192.168.0.1;
     { 
 		ngx_string("proxy_pass"),
 		NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_HTTP_LMT_CONF|NGX_CONF_TAKE1,
@@ -265,13 +272,22 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 		0,
 		NULL 
     },
-
-    { ngx_string("proxy_redirect"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
-      ngx_http_proxy_redirect,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      0,
-      NULL },
+	//语法: proxy_redirect [default | off | redirect replacement];
+	//默认: proxy_redirect default
+	//当上游服务器返回的是重定向或刷新请求(如HTTP响应码是301或者302)时，
+	//proxy_redirect可以重设HTTP头部的location字段或refresh字段。
+	//例如: 如果，上游服务器发出的是302重定向请求，location字段的URI是http://localhost:8000/two/some/uri/,
+	//		那么在proxy_redirect http://localhost:8000/two/  http://frontend/one;配置下，实际转发给客户端
+	//		的location是http://frontend/one/some/uri/
+	//
+    { 
+		ngx_string("proxy_redirect"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
+		ngx_http_proxy_redirect,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		0,
+		NULL 
+    },
 
     { ngx_string("proxy_cookie_domain"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,
@@ -356,13 +372,17 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.intercept_errors),
       NULL },
-
-    { ngx_string("proxy_set_header"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
-      ngx_conf_set_keyval_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, headers_source),
-      NULL },
+	//语法: proxy_set_header Host host;
+	//例如:
+	//	proxy_set_header Host $host; 转发请求中的host头部
+    { 
+		ngx_string("proxy_set_header"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
+		ngx_conf_set_keyval_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, headers_source),
+		NULL 
+    },
 
     { ngx_string("proxy_headers_hash_max_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -384,13 +404,17 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, body_source),
       NULL },
-
-    { ngx_string("proxy_method"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, method),
-      NULL },
+	//语法: proxy_method method;
+	//设置转发时的协议方法名
+	//例如: proxy_mehod POST;  那么客户端发来的GET请求在转发时方法名会改为POST
+    { 
+		ngx_string("proxy_method"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, method),
+		NULL 
+   	},
 
     { ngx_string("proxy_pass_request_headers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -399,12 +423,17 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.pass_request_headers),
       NULL },
 
-    { ngx_string("proxy_pass_request_body"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, upstream.pass_request_body),
-      NULL },
+	//语法: proxy_pass_request_body on | off;
+	//默认: proxy_pass_request_body on;
+	//确定是否向上游服务器发送HTTP包体部分
+	{ 
+		ngx_string("proxy_pass_request_body"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, upstream.pass_request_body),
+		NULL 
+    },
 
     { ngx_string("proxy_buffer_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -564,12 +593,28 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.temp_file_write_size_conf),
       NULL },
 
-    { ngx_string("proxy_next_upstream"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
-      ngx_conf_set_bitmask_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream),
-      &ngx_http_proxy_next_upstream_masks },
+	//语法: proxy_next_upstream [error | timeout | invalid_header | http_500 | http_502 | http_503 | http_504 | http_404 | off];
+	//默认: proxy_next_upstream error timeout;
+	//当向上一台上游服务器转发请求出现错误时，继续换下一台上游服务器处理这个请求
+	//proxy_next_upstream参数用来说明在那些情况下会继续选择下一台上游服务器转发请求
+	//注意: 一旦Nginx开始向客户端发送响应包， 之后的过程中若出现错误是不允许换下一台上游服务器继续处理的
+	//error -- 当向上游服务器发起连接、发送请求、读取响应时出错
+	//tiemout -- 发送请求或读取响应时发生超时
+	//invalid_header --上游服务器发送的响应是不合法的
+	//http_500 -- 上游服务器返回的HTTP响应码是500
+	//http_502 -- 上游服务器返回的HTTP响应码是502
+	//http_503 -- 上游服务器返回的HTTP响应码是503
+	//http_504 -- 上游服务器返回的HTTP响应码是504
+	//http_404 -- 上游服务器返回的HTTP响应码是404
+	//off -- 关闭proxy_next_upstream功能
+    { 
+		ngx_string("proxy_next_upstream"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
+		ngx_conf_set_bitmask_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream),
+		&ngx_http_proxy_next_upstream_masks 
+    },
 
     { 
     	ngx_string("proxy_next_upstream_tries"),
@@ -586,20 +631,31 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream_timeout),
       NULL },
+	//语法: proxy_pass_header the_header;
+	//与proxy_hide_header功能相反，会将原来禁止转发的header设置为允许转发
+	//例如: proxy_pass_header X-Accel-Redirect;
+    { 
+		ngx_string("proxy_pass_header"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_array_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, upstream.pass_headers),
+		NULL 
+    },
 
-    { ngx_string("proxy_pass_header"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_array_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, upstream.pass_headers),
-      NULL },
-
-    { ngx_string("proxy_hide_header"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_str_array_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, upstream.hide_headers),
-      NULL },
+	//语法: proxy_hide_header the_header;
+	//Nginx会将上游服务器的响应转发给客户端，但默认不会转发一下HTTP头部字段:Date、Server、X-Pad和X-Accel-*，
+	//使用proxy_hide_header后可以任意地指定哪些HTTP头部字段不能被转发
+	//例如: proxy_hide_header Cache-Control
+	//		proxy_hide_header MicrosoftOfficeWebServer
+    { 
+		ngx_string("proxy_hide_header"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_str_array_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, upstream.hide_headers),
+		NULL 
+    },
 
     { ngx_string("proxy_ignore_headers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
@@ -1490,9 +1546,11 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
         body = u->request_bufs;
         u->request_bufs = cl;
 
-        while (body) {
+        while (body)
+		{
             b = ngx_alloc_buf(r->pool);
-            if (b == NULL) {
+            if (b == NULL) 
+			{
                 return NGX_ERROR;
             }
 

@@ -175,6 +175,8 @@ typedef struct
     ngx_bufs_t                       bufs;
 	//针对ngx_http_upstream_t中的header_in成员，ignore_headers可根据位操作跳过一些头部
     ngx_uint_t                       ignore_headers;
+	//当向上一台上游服务器转发请求出现错误时，继续换下一台上游服务器处理这个请求
+	//next_upstream参数(位模式)用来说明在那些情况下会继续选择下一台上游服务器转发请求
     ngx_uint_t                       next_upstream;
 	//表示创建的目录、文件的权限
     ngx_uint_t                       store_access;
@@ -185,6 +187,7 @@ typedef struct
     ngx_flag_t                       buffering;
     ngx_flag_t                       request_buffering;
     ngx_flag_t                       pass_request_headers;
+	//表示是否向上游服务器发送HTTP包体部分
     ngx_flag_t                       pass_request_body;
 
 	// 1：上游服务器交互时不检查是否与下游客户端断开连接，继续执行交互内容
@@ -198,7 +201,10 @@ typedef struct
     ngx_path_t                      *temp_path;
 	//根据ngx_http_upstream_hide_headers_hash函数构造出的需要隐藏的HTTP头部散列表
     ngx_hash_t                       hide_headers_hash;
+	//ngx_str_t类型的动态数组，表示Nginx将上游服务器的响应转发给客户端时，不被转发的HTTP头部字段
+	//默认不会转发一下HTTP头部字段:Date、Server、X-Pad和X-Accel-*
     ngx_array_t                     *hide_headers;
+	//ngx_str_t类型的动态数组，表示Nginx将上游服务器的响应转发给客户端时，能够转发的HTTP头部字段
     ngx_array_t                     *pass_headers;
 
     ngx_http_upstream_local_t       *local;
@@ -245,7 +251,8 @@ typedef struct
 } ngx_http_upstream_conf_t;
 
 
-typedef struct {
+typedef struct 
+{
     ngx_str_t                        name;
     ngx_http_header_handler_pt       handler;
     ngx_uint_t                       offset;

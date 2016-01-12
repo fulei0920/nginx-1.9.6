@@ -1222,7 +1222,7 @@ ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     if (cmd->post) 
-	
+    {
         post = cmd->post;
         return post->post_handler(cf, post, np);
     }

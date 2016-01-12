@@ -35,6 +35,18 @@ static char *ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd,
 
 static ngx_command_t  ngx_http_upstream_ip_hash_commands[] = 
 {
+	//语法: ip_hash
+	//根据客户端ip做散列选取upstream集群中某台上游服务器，
+	//这样可以确保同一个客户端的请求只会转发到指定的上游服务器中
+	//如果upstream集群中有某台上游服务器暂时不可用，不能直接删除该配置，
+	//而是要用down参数标识，确保转发策略的一贯性
+	//ip_hash与weight(权重)配置不可同时使用
+	//例如:	upstream backend {
+	//			ip_hash
+	//			server backend1.example.com;
+	//			server backend2.example.com down;
+	//			server backend3.example.com;
+	//		}
     { 
 		ngx_string("ip_hash"),
 		NGX_HTTP_UPS_CONF|NGX_CONF_NOARGS,
@@ -48,7 +60,8 @@ static ngx_command_t  ngx_http_upstream_ip_hash_commands[] =
 };
 
 
-static ngx_http_module_t  ngx_http_upstream_ip_hash_module_ctx = {
+static ngx_http_module_t  ngx_http_upstream_ip_hash_module_ctx = 
+{
     NULL,                                  /* preconfiguration */
     NULL,                                  /* postconfiguration */
 
@@ -63,7 +76,8 @@ static ngx_http_module_t  ngx_http_upstream_ip_hash_module_ctx = {
 };
 
 
-ngx_module_t  ngx_http_upstream_ip_hash_module = {
+ngx_module_t  ngx_http_upstream_ip_hash_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_upstream_ip_hash_module_ctx, /* module context */
     ngx_http_upstream_ip_hash_commands,    /* module directives */
@@ -261,11 +275,7 @@ ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     uscf->peer.init_upstream = ngx_http_upstream_init_ip_hash;
 
-    uscf->flags = NGX_HTTP_UPSTREAM_CREATE
-                  |NGX_HTTP_UPSTREAM_WEIGHT
-                  |NGX_HTTP_UPSTREAM_MAX_FAILS
-                  |NGX_HTTP_UPSTREAM_FAIL_TIMEOUT
-                  |NGX_HTTP_UPSTREAM_DOWN;
+    uscf->flags = NGX_HTTP_UPSTREAM_CREATE |NGX_HTTP_UPSTREAM_WEIGHT |NGX_HTTP_UPSTREAM_MAX_FAILS |NGX_HTTP_UPSTREAM_FAIL_TIMEOUT |NGX_HTTP_UPSTREAM_DOWN;
 
     return NGX_CONF_OK;
 }

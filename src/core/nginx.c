@@ -1158,7 +1158,7 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
     if (ccf->cpu_affinity_n && ccf->cpu_affinity_n != 1 
 		&& ccf->cpu_affinity_n != (ngx_uint_t) ccf->worker_processes)
     {
-        ngx_log_error(NGX_LOG_WARN, cycle->log, 0, the number of \"worker_processes\" is not equal to "
+        ngx_log_error(NGX_LOG_WARN, cycle->log, 0, "the number of \"worker_processes\" is not equal to "
 			"the number of \"worker_cpu_affinity\" masks, using last mask for remaining worker processes");
     }
 

@@ -171,7 +171,6 @@ static ngx_str_t  ngx_http_gzip_private = ngx_string("private");
 
 #endif
 
-
 static ngx_command_t  ngx_http_core_commands[] = 
 {
 
@@ -187,8 +186,11 @@ static ngx_command_t  ngx_http_core_commands[] =
       ngx_conf_set_num_slot,
       NGX_HTTP_MAIN_CONF_OFFSET,
       offsetof(ngx_http_core_main_conf_t, variables_hash_bucket_size),
-      NULL },
-
+      NULL 
+     },
+	//语法: server_names_hash_max_size size;
+	//默认: server_names_hash_max_size 512;
+	//设置存储所有server_name的散列表的散列桶的个数
     { 
     	ngx_string("server_names_hash_max_size"),
 		NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
@@ -197,7 +199,9 @@ static ngx_command_t  ngx_http_core_commands[] =
 		offsetof(ngx_http_core_main_conf_t, server_names_hash_max_size),
 		NULL 
     },
-
+	//语法: server_names_hash_bucket_size size;
+	//默认: server_names_hash_bucket_size 32 | 64 | 128;
+	//设置存储所有server_name的散列表的每个散列桶占用的内存大小
     { 
     	ngx_string("server_names_hash_bucket_size"),
 		NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
@@ -733,19 +737,27 @@ static ngx_command_t  ngx_http_core_commands[] =
 	//语法: reset_timedout_connection on | off;
 	//默认: reset_timedout_connection off;
 	//连接超时后将通过向客户端发送RST包来直接重置连接
-    { ngx_string("reset_timedout_connection"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, reset_timedout_connection),
-      NULL },
-
-    { ngx_string("server_name_in_redirect"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, server_name_in_redirect),
-      NULL },
+    { 
+		ngx_string("reset_timedout_connection"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, reset_timedout_connection),
+		NULL 
+    },
+	//语法: server_name_in_redirect on | off;
+	//默认: server_name_in_redirect on;
+	//重定向主机名称的处理，需要配合server_name配置使用
+	//on--表示在重定向请求时会使用server_name里配置的第一个主机名代替原先请求的Host头部，
+	//off--表示在重定向请求时使用请求本身的Host头部
+    { 
+		ngx_string("server_name_in_redirect"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, server_name_in_redirect),
+		NULL 
+    },
 
     { ngx_string("port_in_redirect"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -2036,7 +2048,8 @@ ngx_http_set_content_type(ngx_http_request_t *r)
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
-    if (r->exten.len) {
+    if (r->exten.len) 
+	{
 
         hash = 0;
 
@@ -3563,7 +3576,7 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         if (name->data[0] == '=') 
 		{
             clcf->name.len = name->len - 1;
-            clcf->namkjhe.data = name->data + 1;
+            clcf->name.data = name->data + 1;
             clcf->exact_match = 1;
 
         } 
@@ -3787,7 +3800,7 @@ ngx_http_core_type(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
                 old = type[n].value;
                 type[n].value = content_type;
 
-                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, duplicate extension \"%V\", content type: \"%V\", "
+                ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "duplicate extension \"%V\", content type: \"%V\", "
 						"previous content type: \"%V\"", &value[i], content_type, old);
                 goto next;
             }
@@ -5106,7 +5119,7 @@ ngx_http_core_set_aio(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         clcf->aio = NGX_HTTP_AIO_ON;
         return NGX_CONF_OK;
 #else
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"aio on\ is unsupported on this platform");
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"aio on\" is unsupported on this platform");
         return NGX_CONF_ERROR;
 #endif
     }

@@ -290,6 +290,8 @@ ngx_http_upstream_header_t  ngx_http_upstream_headers_in[] = {
 
 static ngx_command_t  ngx_http_upstream_commands[] = 
 {
+	//语法: upstream name {...}
+	//upstream块定义了一个上游服务器的集群，便于方向代理中的proxy_pass使用
     { 
 		ngx_string("upstream"),
 		NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_TAKE1,
@@ -298,7 +300,21 @@ static ngx_command_t  ngx_http_upstream_commands[] =
 		0,
 		NULL 
     },
-
+	//语法: server name [weight=number | max_fails=number | fail_timeout=time | down | backpup]
+	//server配置项制订了一台上游服务器的名字，这个名字可以是域名、IP地址端口、UNIX句柄等，其后还可跟下列参数
+	//weight=number: 设置这台上游服务器转发的权重，默认为1
+	//max_fails=number: 默认为1，如果设置为0， 则表示不检查失败次数 
+	//fail_timeout=time: 默认为10秒
+	//	表示在fail_timeout时间段内转发失败max_fails次后就认为上游服务器暂时不可用，用于优化反向代理功能。
+	//	fail_timeout与向上游服务器建立连接的超时时间、读取上游服务器的响应超时时间等完全无关。
+	//down: 表示所在的上游服务器永久下线，只在使用ip_hash配置项时有效
+	//backup: 表示该上游服务器是备份服务器，只有在所有的非备份服务器都失效后，才会向该上游服务器转发请求，
+	//	在使用ip_hash配置项时无效
+	//例如: upstream backend {
+	//			server backend1.example.com weight=5
+	//			server 127.0.0.1:8080		max_fails=3 fail_timeout=30s
+	//			server unix:/tmp/backend3
+	
     { 
 		ngx_string("server"),
 		NGX_HTTP_UPS_CONF|NGX_CONF_1MORE,
@@ -6407,7 +6423,6 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 
     for (i = 0; i < umcf->upstreams.nelts; i++) 
 	{
-
         init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream: ngx_http_upstream_init_round_robin;
 
         if (init(cf, uscfp[i]) != NGX_OK)

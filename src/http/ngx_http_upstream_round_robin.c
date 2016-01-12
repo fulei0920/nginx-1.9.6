@@ -10,26 +10,21 @@
 #include <ngx_http.h>
 
 
-#define ngx_http_upstream_tries(p) ((p)->number                               \
-                                    + ((p)->next ? (p)->next->number : 0))
+#define ngx_http_upstream_tries(p) ((p)->number + ((p)->next ? (p)->next->number : 0))
 
 
-static ngx_http_upstream_rr_peer_t *ngx_http_upstream_get_peer(
-    ngx_http_upstream_rr_peer_data_t *rrp);
+static ngx_http_upstream_rr_peer_t *ngx_http_upstream_get_peer(ngx_http_upstream_rr_peer_data_t *rrp);
 
 #if (NGX_HTTP_SSL)
 
-static ngx_int_t ngx_http_upstream_empty_set_session(ngx_peer_connection_t *pc,
-    void *data);
-static void ngx_http_upstream_empty_save_session(ngx_peer_connection_t *pc,
-    void *data);
+static ngx_int_t ngx_http_upstream_empty_set_session(ngx_peer_connection_t *pc, void *data);
+static void ngx_http_upstream_empty_save_session(ngx_peer_connection_t *pc, void *data);
 
 #endif
 
 
 ngx_int_t
-ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
-    ngx_http_upstream_srv_conf_t *us)
+ngx_http_upstream_init_round_robin(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 {
     ngx_url_t                      u;
     ngx_uint_t                     i, j, n, w;
@@ -39,7 +34,8 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
 
     us->peer.init = ngx_http_upstream_init_round_robin_peer;
 
-    if (us->servers) {
+    if (us->servers) 
+	{
         server = us->servers->elts;
 
         n = 0;

@@ -119,7 +119,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 	/*ÉèÖÃcycle->paths*/
     n = old_cycle->paths.nelts ? old_cycle->paths.nelts : 10;
-	if(ngx_array_init(&cycle->paths, poll, n, sizeof(ngx_path_t *) != NGX_OK)
+	if(ngx_array_init(&cycle->paths, pool, n, sizeof(ngx_path_t *)) != NGX_OK)
 	{
         ngx_destroy_pool(pool);
         return NULL;
@@ -176,7 +176,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 	/*ÉèÖÃcycle->listening*/
     n = old_cycle->listening.nelts ? old_cycle->listening.nelts : 10;
-	if(ngx_array_init(&cycle->listening, poll, n, sizeof(ngx_listening_t) != NGX_OK)
+	if(ngx_array_init(&cycle->listening, pool, n, sizeof(ngx_listening_t)) != NGX_OK)
 	{
         ngx_destroy_pool(pool);
         return NULL;

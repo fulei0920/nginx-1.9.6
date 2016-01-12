@@ -205,8 +205,9 @@ typedef struct
 
     ngx_array_t                variables;       /* array of ngx_http_variable_t */
     ngx_uint_t                 ncaptures;
-
+	//表示存储所有server_name的散列表的散列桶的个数
     ngx_uint_t                 server_names_hash_max_size;
+	//表示存储所有server_name的散列表的每个散列桶占用的内存大小
     ngx_uint_t                 server_names_hash_bucket_size;
 
     ngx_uint_t                 variables_hash_max_size;
@@ -538,7 +539,10 @@ struct ngx_http_core_loc_conf_s
 	//相比正常的关闭方式，它使得服务器避免产生许多处于FIN_WAIT_1,FIN_WAIT_2/TIME_WAIT状态的TCP连接
 	//注意，使用RST重置包关闭连接会带来一些问题，默认情况下不会开启
     ngx_flag_t    reset_timedout_connection; 
-    ngx_flag_t    server_name_in_redirect; /* server_name_in_redirect */
+	//重定向主机名称的处理，需要配合server_name配置使用
+	//on--表示在重定向请求时会使用server_name里配置的第一个主机名代替原先请求的Host头部，
+	//off--表示在重定向请求时使用请求本身的Host头部
+    ngx_flag_t    server_name_in_redirect; 
     ngx_flag_t    port_in_redirect;        /* port_in_redirect */
     ngx_flag_t    msie_padding;            /* msie_padding */
     ngx_flag_t    msie_refresh;            /* msie_refresh */
