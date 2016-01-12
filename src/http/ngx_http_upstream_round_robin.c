@@ -41,8 +41,10 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t 
         n = 0;
         w = 0;
 
-        for (i = 0; i < us->servers->nelts; i++) {
-            if (server[i].backup) {
+        for (i = 0; i < us->servers->nelts; i++)
+		{
+            if (server[i].backup) 
+			{
                 continue;
             }
 
@@ -50,10 +52,9 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t 
             w += server[i].naddrs * server[i].weight;
         }
 
-        if (n == 0) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no servers in upstream \"%V\" in %s:%ui",
-                          &us->host, us->file_name, us->line);
+        if (n == 0) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no servers in upstream \"%V\" in %s:%ui", &us->host, us->file_name, us->line);
             return NGX_ERROR;
         }
 

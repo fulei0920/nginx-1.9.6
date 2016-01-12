@@ -159,7 +159,8 @@ static ngx_int_t ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upst
 #endif
 
 
-ngx_http_upstream_header_t  ngx_http_upstream_headers_in[] = {
+ngx_http_upstream_header_t  ngx_http_upstream_headers_in[] = 
+{
 
     { ngx_string("Status"),
                  ngx_http_upstream_process_header_line,
@@ -364,11 +365,11 @@ ngx_module_t  ngx_http_upstream_module =
 
 static ngx_http_variable_t  ngx_http_upstream_vars[] = 
 {
-
+	//处理请求的上游服务器地址
     { ngx_string("upstream_addr"), NULL,
       ngx_http_upstream_addr_variable, 0,
       NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
+	//上游服务器返回的响应中的HTTP响应码
     { ngx_string("upstream_status"), NULL,
       ngx_http_upstream_status_variable, 0,
       NGX_HTTP_VAR_NOCACHEABLE, 0 },
@@ -380,7 +381,7 @@ static ngx_http_variable_t  ngx_http_upstream_vars[] =
     { ngx_string("upstream_header_time"), NULL,
       ngx_http_upstream_response_time_variable, 1,
       NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
+	//上游服务器的响应时间，精确到毫秒
     { ngx_string("upstream_response_time"), NULL,
       ngx_http_upstream_response_time_variable, 0,
       NGX_HTTP_VAR_NOCACHEABLE, 0 },
@@ -5897,7 +5898,8 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strncmp(value[i].data, "fail_timeout=", 13) == 0) {
+        if (ngx_strncmp(value[i].data, "fail_timeout=", 13) == 0) 
+		{
 
             if (!(uscf->flags & NGX_HTTP_UPSTREAM_FAIL_TIMEOUT)) 
 			{
@@ -5970,16 +5972,13 @@ ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 invalid:
 
-    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                       "invalid parameter \"%V\"", &value[i]);
+    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter \"%V\"", &value[i]);
 
     return NGX_CONF_ERROR;
 
 not_supported:
 
-    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                       "balancing method does not support parameter \"%V\"",
-                       &value[i]);
+    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "balancing method does not support parameter \"%V\"", &value[i]);
 
     return NGX_CONF_ERROR;
 }
@@ -6015,7 +6014,6 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
 	/*查找全局上有服务器是否有相同ip和port的*/
     for (i = 0; i < umcf->upstreams.nelts; i++)
 	{
-
         if (uscfp[i]->host.len != u->host.len || ngx_strncasecmp(uscfp[i]->host.data, u->host.data, u->host.len) != 0)
         {
             continue;
@@ -6434,15 +6432,16 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 
     /* upstream_headers_in_hash */
 
-    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t))
-        != NGX_OK)
+    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t)) != NGX_OK)
     {
         return NGX_CONF_ERROR;
     }
 
-    for (header = ngx_http_upstream_headers_in; header->name.len; header++) {
+    for (header = ngx_http_upstream_headers_in; header->name.len; header++)
+	{
         hk = ngx_array_push(&headers_in);
-        if (hk == NULL) {
+        if (hk == NULL)
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -6459,7 +6458,8 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
     hash.pool = cf->pool;
     hash.temp_pool = NULL;
 
-    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK) {
+    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK)
+	{
         return NGX_CONF_ERROR;
     }
 

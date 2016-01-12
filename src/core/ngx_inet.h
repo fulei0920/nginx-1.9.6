@@ -91,11 +91,11 @@ typedef struct
 
     unsigned                  listen:1;
     unsigned                  uri_part:1;
-    unsigned                  no_resolve:1;
+    unsigned                  no_resolve:1;		//存储URL解析参数: 不进行域名解析
     unsigned                  one_addr:1;  /* compatibility */
 
-    unsigned                  no_port:1;
-    unsigned                  wildcard:1;
+    unsigned                  no_port:1;	//存储URL解析结果: url字符串中是否没有端口
+    unsigned                  wildcard:1;	//存储URL解析结果: url字符串中是否IP地址为通配地址
 
     socklen_t                 socklen;
     u_char                    sockaddr[NGX_SOCKADDRLEN];

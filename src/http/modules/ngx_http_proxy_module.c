@@ -79,8 +79,10 @@ typedef struct
     ngx_array_t                   *cookie_paths;
 	//指定转发时的协议方法名
     ngx_str_t                      method;
-    ngx_str_t                      location;	//proxy pass  指令所在的location的名称
-    ngx_str_t                      url;		//proxy pass指令指定的url
+	//proxy pass  指令所在的location的名称
+    ngx_str_t                      location;	
+	//proxy pass指令指定的url
+    ngx_str_t                      url;		
 
 #if (NGX_HTTP_CACHE)
     ngx_http_complex_value_t       cache_key;
@@ -800,7 +802,8 @@ static char  ngx_http_proxy_version[] = " HTTP/1.0" CRLF;
 static char  ngx_http_proxy_version_11[] = " HTTP/1.1" CRLF;
 
 
-static ngx_keyval_t  ngx_http_proxy_headers[] = {
+static ngx_keyval_t  ngx_http_proxy_headers[] = 
+{
     { ngx_string("Host"), ngx_string("$proxy_host") },
     { ngx_string("Connection"), ngx_string("close") },
     { ngx_string("Content-Length"), ngx_string("$proxy_internal_body_length") },
@@ -877,7 +880,8 @@ static ngx_http_variable_t  ngx_http_proxy_vars[] = {
 };
 
 
-static ngx_path_init_t  ngx_http_proxy_temp_path = {
+static ngx_path_init_t  ngx_http_proxy_temp_path = 
+{
     ngx_string(NGX_HTTP_PROXY_TEMP_PATH), { 1, 2, 0 }
 };
 

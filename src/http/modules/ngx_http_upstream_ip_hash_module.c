@@ -25,12 +25,9 @@ typedef struct {
 } ngx_http_upstream_ip_hash_peer_data_t;
 
 
-static ngx_int_t ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r,
-    ngx_http_upstream_srv_conf_t *us);
-static ngx_int_t ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc,
-    void *data);
-static char *ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static ngx_int_t ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r, ngx_http_upstream_srv_conf_t *us);
+static ngx_int_t ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data);
+static char *ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
 static ngx_command_t  ngx_http_upstream_ip_hash_commands[] = 

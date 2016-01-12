@@ -92,6 +92,7 @@ typedef struct
 
 typedef struct
 {
+	//server名称，即server指令后的表达式
     ngx_str_t                        name;
     ngx_addr_t                      *addrs;
     ngx_uint_t                       naddrs;

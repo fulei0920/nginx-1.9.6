@@ -801,11 +801,13 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
         return NGX_OK;
     }
 
-    if (u->no_resolve) {
+    if (u->no_resolve) 
+	{
         return NGX_OK;
     }
 
-    if (ngx_inet_resolve_host(pool, u) != NGX_OK) {
+    if (ngx_inet_resolve_host(pool, u) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -813,13 +815,15 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
     u->socklen = u->addrs[0].socklen;
     ngx_memcpy(u->sockaddr, u->addrs[0].sockaddr, u->addrs[0].socklen);
 
-    switch (u->family) {
+    switch (u->family) 
+	{
 
 #if (NGX_HAVE_INET6)
     case AF_INET6:
         sin6 = (struct sockaddr_in6 *) &u->sockaddr;
 
-        if (IN6_IS_ADDR_UNSPECIFIED(&sin6->sin6_addr)) {
+        if (IN6_IS_ADDR_UNSPECIFIED(&sin6->sin6_addr)) 
+		{
             u->wildcard = 1;
         }
 
@@ -829,7 +833,8 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
     default: /* AF_INET */
         sin = (struct sockaddr_in *) &u->sockaddr;
 
-        if (sin->sin_addr.s_addr == INADDR_ANY) {
+        if (sin->sin_addr.s_addr == INADDR_ANY)
+		{
             u->wildcard = 1;
         }
 

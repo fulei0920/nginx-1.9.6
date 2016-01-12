@@ -464,7 +464,8 @@ ngx_stream_proxy_connect(ngx_stream_session_t *s)
     pc->read->log = c->log;
     pc->write->log = c->log;
 
-    if (rc != NGX_AGAIN) {
+    if (rc != NGX_AGAIN) 
+	{
         ngx_stream_proxy_init_upstream(s);
         return;
     }
