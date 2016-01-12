@@ -226,8 +226,18 @@ typedef struct
 
 
 typedef struct 
-{
-    ngx_array_t                 server_names;  		/* ngx_http_server_name_t,  "server_name" directive  */
+{	
+	//在开始处理一个HTTP请求时，Nginx会取出header中的Host，与每个server中的server_name进行匹配，
+	//以此决定到底由哪一个server块来处理这个请求。
+	//当一个Host与多个server块中的sever_name都匹配，将根据server_name与Host匹配优先级来选择实际处理的server块
+	//1>选择字符串完全匹配的server_name，如www.testweb.com
+	//2>选择通配符在前面的server_name，如*.testweb.com
+	//3>选择通配符在后面的server_name，如www.testweb.*
+	//4>选择使用正则表达式才匹配的server_name，如~^\.testweb\.com$
+	//如果Host与所有的server_name都不匹配，将按一下顺序选择处理的server块
+	//1>选择在listen配置项后加入[default | default_server]的server块
+	//2>选择匹配listen端口的第一个server块
+    ngx_array_t                 server_names;  		/* ngx_http_server_name_t, 保存于该server配置相关的所有sever name*/
 	//指向当前server块所属的ngx_http_conf_ctx_t结构体
     ngx_http_conf_ctx_t        *ctx;	
 	//当前server块的虚拟主机名，如果存在的话，则会与http请求中的Host头部做匹配，

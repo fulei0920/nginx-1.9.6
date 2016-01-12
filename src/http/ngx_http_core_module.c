@@ -207,6 +207,8 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
+	//每一个server块就是一个虚拟主机，它只处理与之相对应的主机域名请求
+	//这样，一台服务器上的Nginx就能以不同的方式处理访问不同主机域名的HTTP请求了
     { 
 		ngx_string("server"),
 		NGX_HTTP_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
@@ -314,6 +316,21 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
+	//语法: listen address:port [default(deprecated in 0.8.21) | default_server |[ backlog=num |rcvbuf=size | sndbuf=size | accept_filter=filter | deferred | bind | ipv6only=[on | off] | ssl ]];
+	//默认: listen 80;
+	//决定Nginx服务如何监听端口
+	//default: 将所在的server块作为整个Web服务的默认server块。如果没有设置这个参数，那么将会以在nginx.conf中找到的第一个server块作为默认server块。当一个请求无法匹配配置文件中的所有主机域名时，就会选用
+	//	默认的虚拟主机
+	//default_server: 同上
+	//backlog=num: 表示TCP中backlog队列的大小。默认为-1，表示不予设置。
+	//rcvbuf=size: 设置监听句柄的SO_RCVBUF参数
+	//sndbuf=size: 设置监听句柄的SO_SNDBUF参数
+	//accept_filter=filter: 设置accept过滤器，只对FreeBSD操作系统有用
+	//deferred: 在设置该参数后，若用户发起建立连接请求，并且完成了TCP的三次握手，内核也不会为了这次的连接调度worker进程来处理，
+	//	只有用户真的发送请求数据时(内核已经在网卡中收到请求数据包)，内核才会唤醒worker进程处理这个连接。这个参数适用于大并发的情况下，
+	//	它减轻了worker进程的负担。当请求数据来临时，worker进程才会开始处理这个连接。只有确认上面所说的应用场景符合自己的业务需求时，才可以使用deferred配置。
+	//bind: 绑定当前端口/地址对，如127.0.0.1:8000。只有同时对一个端口监听多个地址才会生效
+	//ssl: 在当前监听的端口上建立的连接必须基于SSL协议
     { 
     	ngx_string("listen"),
 		NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
@@ -322,13 +339,20 @@ static ngx_command_t  ngx_http_core_commands[] =
 		0,
 		NULL 
     },
-
-    { ngx_string("server_name"),
-      NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
-      ngx_http_core_server_name,
-      NGX_HTTP_SRV_CONF_OFFSET,
-      0,
-      NULL },
+	//语法: server_name name [...];
+	//默认: server_name "";
+	//server_name配置所在的server块配置所对应主机名称
+	//server_name后可以跟多个主机名称
+	//Nginx正是使用server_name配置项针对特定Host域名的请求提供不同的服务，以此实现虚拟主机的功能
+	//例如: server_name www.testweb.com download.testweb.com;
+    { 
+		ngx_string("server_name"),
+		NGX_HTTP_SRV_CONF|NGX_CONF_1MORE,
+		ngx_http_core_server_name,
+		NGX_HTTP_SRV_CONF_OFFSET,
+		0,
+		NULL 
+    },
 	//语法: types_hash_max_size size;
 	//默认: types_hash_max_size 1024;
 	//存储MIME type到文件扩展名的映射的散列表的冲突桶的个数
@@ -4779,9 +4803,9 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         ngx_regex_compile_t   rc;
         u_char                errstr[NGX_MAX_CONF_ERRSTR];
 
-        if (value[i].len == 1) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "empty regex in server name \"%V\"", &value[i]);
+        if (value[i].len == 1) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "empty regex in server name \"%V\"", &value[i]);
             return NGX_CONF_ERROR;
         }
 

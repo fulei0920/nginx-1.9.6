@@ -72,7 +72,8 @@ struct ngx_cycle_s
     ngx_str_t                 conf_prefix;		//Nginx配置文件所在目录的路径
     ngx_str_t                 prefix;			//Nginx安装目录的路径
     ngx_str_t                 lock_file;		//用于进程间同步的文件锁名称
-    ngx_str_t                 hostname;			//使用gethostname系统调用得到的主机名
+    //使用gethostname系统调用得到的主机名
+    ngx_str_t                 hostname;			
 };
 
 
@@ -113,6 +114,7 @@ typedef struct
 	ngx_gid_t                group;		/*用户gid*/
 	//指定进程当前工作目录
 	ngx_str_t                working_directory;  
+	//lock文件的路径
 	ngx_str_t                lock_file;
 	//保存master进程ID的pid文件存放路径
 	ngx_str_t                pid;

@@ -125,7 +125,8 @@ static ngx_str_t  event_core_name = ngx_string("event_core");
 
 static ngx_command_t  ngx_event_core_commands[] = 
 {
-	//连接池的大小，也是每个worker进程中支持的TCP最大连接数
+	//语法: worker_connections number;
+	//每个worker进程可以同时处理的最大连接数，也是连接池的大小
     { 
 		ngx_string("worker_connections"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -134,7 +135,8 @@ static ngx_command_t  ngx_event_core_commands[] =
 		0,
 		NULL 
     },
-
+	//语法: use [kqueue | rtsig | epoll | /dev/poll | select | poll | eventport];
+	//默认: Nginx会自动使用最适合的事件模型
 	//确定选择哪一个事件模块作为事件驱动机制
     { 
 		ngx_string("use"),
@@ -144,8 +146,9 @@ static ngx_command_t  ngx_event_core_commands[] =
 		0,
 		NULL 
     },
-
-	//对于epoll事件驱动模式来说，意味着在接收到一个新连接事件时，调用accept以尽可能多地接收连接
+	//语法: multi_accept [on | off];
+	//默认: multi_accept off;
+	//当事件模型通知有新连接时，尽可能地对本次调度中客户端发起的所有TCP请求都建立连接
     { 
 		ngx_string("multi_accept"),
 		NGX_EVENT_CONF|NGX_CONF_FLAG,
@@ -155,7 +158,9 @@ static ngx_command_t  ngx_event_core_commands[] =
 		NULL 
 	},
 
-	//确定是否使用accept_mutex负载均衡锁，默认为开启
+	//语法: accept_mutex [on | off];
+	//默认: accept_mutex on;
+	//确定是否使用accept_mutex负载均衡锁
 	{ 
 		ngx_string("accept_mutex"),
 		NGX_EVENT_CONF|NGX_CONF_FLAG,
@@ -164,8 +169,9 @@ static ngx_command_t  ngx_event_core_commands[] =
 		offsetof(ngx_event_conf_t, accept_mutex),
 		NULL 
     },
-
-	//启用accept_mutex负载均衡锁后，延迟accept_mutex_delay毫秒后再试图处理新连接事件
+	//语法: accept_mutex_delay Nms;
+	//默认: accept_mutex_delay 500ms;
+	//启用accept_mutex负载均衡锁后，worker进程在拿不到锁时至少延迟accept_mutex_delay毫秒再重新获取负载均衡锁
     { 
     	ngx_string("accept_mutex_delay"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,

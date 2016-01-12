@@ -74,7 +74,7 @@ static ngx_command_t  ngx_core_commands[] =
 		NULL 
 	},
 	//语法: pid path/file
-	//默认: logs/nginx.pid
+	//默认: pid logs/nginx.pid
 	//保存master进程ID的pid文件存放路径。默认与configure执行时的参数"--pid-path"所指定的路径是相同的，也可以随时修改
 	//应确保Nginx有权在相应的目标中创建pid文件
 	{ 
@@ -85,7 +85,12 @@ static ngx_command_t  ngx_core_commands[] =
 		offsetof(ngx_core_conf_t, pid),
 		NULL 
 	},
-
+	//语法: lock_file path/file
+	//默认: lock_file logs/nginx.lock
+	//lock文件的路径
+	//accept锁可能需要这个lock文件，如果关闭accept锁，lock_file配置完全不生效。如果打开了accept锁，
+	//并且由于编译程序、操作系统架构等因素导致Nginx不支持原子锁，这时才会用文件锁实现accept锁，
+	//这样lock_file指定的文件才会生效
 	{ 
 		ngx_string("lock_file"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
