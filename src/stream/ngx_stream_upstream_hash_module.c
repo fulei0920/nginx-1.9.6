@@ -108,7 +108,8 @@ ngx_module_t  ngx_stream_upstream_hash_module = {
 static ngx_int_t
 ngx_stream_upstream_init_hash(ngx_conf_t *cf, ngx_stream_upstream_srv_conf_t *us)
 {
-    if (ngx_stream_upstream_init_round_robin(cf, us) != NGX_OK) {
+    if (ngx_stream_upstream_init_round_robin(cf, us) != NGX_OK)
+	{
         return NGX_ERROR;
     }
 

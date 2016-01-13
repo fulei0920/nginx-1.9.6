@@ -4235,17 +4235,18 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
     ngx_msec_t  timeout;
     ngx_uint_t  status, state;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http next upstream, %xi", ft_type);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http next upstream, %xi", ft_type);
 
-    if (u->peer.sockaddr) {
+    if (u->peer.sockaddr)
+	{
 
-        if (ft_type == NGX_HTTP_UPSTREAM_FT_HTTP_403
-            || ft_type == NGX_HTTP_UPSTREAM_FT_HTTP_404)
+        if (ft_type == NGX_HTTP_UPSTREAM_FT_HTTP_403 || ft_type == NGX_HTTP_UPSTREAM_FT_HTTP_404)
         {
             state = NGX_PEER_NEXT;
 
-        } else {
+        }
+		else 
+		{
             state = NGX_PEER_FAILED;
         }
 
@@ -4253,9 +4254,9 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         u->peer.sockaddr = NULL;
     }
 
-    if (ft_type == NGX_HTTP_UPSTREAM_FT_TIMEOUT) {
-        ngx_log_error(NGX_LOG_ERR, r->connection->log, NGX_ETIMEDOUT,
-                      "upstream timed out");
+    if (ft_type == NGX_HTTP_UPSTREAM_FT_TIMEOUT) 
+	{
+        ngx_log_error(NGX_LOG_ERR, r->connection->log, NGX_ETIMEDOUT, "upstream timed out");
     }
 
     if (u->peer.cached && ft_type == NGX_HTTP_UPSTREAM_FT_ERROR
@@ -4301,7 +4302,8 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         return;
     }
 
-    if (status) {
+    if (status)
+	{
         u->state->status = status;
         timeout = u->conf->next_upstream_timeout;
 
@@ -4334,10 +4336,9 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         }
     }
 
-    if (u->peer.connection) {
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "close http upstream connection: %d",
-                       u->peer.connection->fd);
+    if (u->peer.connection) 
+	{
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "close http upstream connection: %d", u->peer.connection->fd);
 #if (NGX_HTTP_SSL)
 
         if (u->peer.connection->ssl) {
@@ -4402,7 +4403,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 	{
         u->state->response_time = ngx_current_msec - u->state->response_time;
 
-        if (u->pipe && u->pipe->read_length) {
+        if (u->pipe && u->pipe->read_length) 
+		{
             u->state->response_length = u->pipe->read_length;
         }
     }
@@ -6104,8 +6106,7 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
 
 
 char *
-ngx_http_upstream_bind_set_slot(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf)
+ngx_http_upstream_bind_set_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
     char  *p = conf;
 

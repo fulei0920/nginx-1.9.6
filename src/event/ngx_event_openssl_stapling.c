@@ -84,11 +84,9 @@ struct ngx_ssl_ocsp_ctx_s {
 };
 
 
-static ngx_int_t ngx_ssl_stapling_file(ngx_conf_t *cf, ngx_ssl_t *ssl,
-    ngx_str_t *file);
+static ngx_int_t ngx_ssl_stapling_file(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *file);
 static ngx_int_t ngx_ssl_stapling_issuer(ngx_conf_t *cf, ngx_ssl_t *ssl);
-static ngx_int_t ngx_ssl_stapling_responder(ngx_conf_t *cf, ngx_ssl_t *ssl,
-    ngx_str_t *responder);
+static ngx_int_t ngx_ssl_stapling_responder(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *responder);
 
 static int ngx_ssl_certificate_status_callback(ngx_ssl_conn_t *ssl_conn, void *data);
 static void ngx_ssl_stapling_update(ngx_ssl_stapling_t *staple);
@@ -433,7 +431,8 @@ ngx_ssl_stapling_responder(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_str_t *responder)
     staple->uri = u.uri;
     staple->port = u.port;
 
-    if (staple->uri.len == 0) {
+    if (staple->uri.len == 0)
+	{
         ngx_str_set(&staple->uri, "/");
     }
 

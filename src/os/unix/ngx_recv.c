@@ -21,22 +21,23 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
 
     rev = c->read;
 
-    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
-        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                       "recv: eof:%d, avail:%d, err:%d",
-                       rev->pending_eof, rev->available, rev->kq_errno);
+    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) 
+	{
+        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0, "recv: eof:%d, avail:%d, err:%d", rev->pending_eof, rev->available, rev->kq_errno);
 
-        if (rev->available == 0) {
-            if (rev->pending_eof) {
+        if (rev->available == 0) 
+		{
+            if (rev->pending_eof) 
+			{
                 rev->ready = 0;
                 rev->eof = 1;
 
-                if (rev->kq_errno) {
+                if (rev->kq_errno)
+				{
                     rev->error = 1;
                     ngx_set_socket_errno(rev->kq_errno);
 
-                    return ngx_connection_error(c, rev->kq_errno,
-                               "kevent() reported about an closed connection");
+                    return ngx_connection_error(c, rev->kq_errno, "kevent() reported about an closed connection");
                 }
 
                 return 0;
@@ -48,14 +49,16 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
         }
     }
 
-    do {
+    do 
+	{
         n = recv(c->fd, buf, size, 0);
 
-        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                       "recv: fd:%d %d of %d", c->fd, n, size);
+        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0, "recv: fd:%d %d of %d", c->fd, n, size);
 
-        if (n >= 0) {
-            if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
+        if (n >= 0) 
+		{
+            if (ngx_event_flags & NGX_USE_KQUEUE_EVENT)
+			{
                 rev->available -= n;
 
                 /*
@@ -63,17 +66,21 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
                  * bytes may be received between kevent() and recv()
                  */
 
-                if (rev->available <= 0) {
-                    if (!rev->pending_eof) {
+                if (rev->available <= 0) 
+				{
+                    if (!rev->pending_eof) 
+					{
                         rev->ready = 0;
                     }
 
-                    if (rev->available < 0) {
+                    if (rev->available < 0) 
+					{
                         rev->available = 0;
                     }
                 }
 
-                if (n == 0) {
+                if (n == 0) 
+				{
 
                     /*
                      * on FreeBSD recv() may return 0 on closed socket
@@ -88,13 +95,13 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
                 return n;
             }
 
-            if ((size_t) n < size
-                && !(ngx_event_flags & NGX_USE_GREEDY_EVENT))
+            if ((size_t) n < size && !(ngx_event_flags & NGX_USE_GREEDY_EVENT))
             {
                 rev->ready = 0;
             }
 
-            if (n == 0) {
+            if (n == 0) 
+			{
                 rev->eof = 1;
             }
 
@@ -103,21 +110,24 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
 
         err = ngx_socket_errno;
 
-        if (err == NGX_EAGAIN || err == NGX_EINTR) {
-            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, err,
-                           "recv() not ready");
+        if (err == NGX_EAGAIN || err == NGX_EINTR) 
+		{
+            ngx_log_debug0(NGX_LOG_DEBUG_EVENT, c->log, err, "recv() not ready");
             n = NGX_AGAIN;
-
-        } else {
+        } 
+		else 
+		{
             n = ngx_connection_error(c, err, "recv() failed");
             break;
         }
 
-    } while (err == NGX_EINTR);
+    } 
+	while (err == NGX_EINTR);
 
     rev->ready = 0;
 
-    if (n == NGX_ERROR) {
+    if (n == NGX_ERROR) 
+	{
         rev->error = 1;
     }
 

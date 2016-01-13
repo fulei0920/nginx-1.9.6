@@ -1393,8 +1393,7 @@ ngx_stream_proxy_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->ssl_enable, prev->ssl_enable, 0);
 
-    ngx_conf_merge_value(conf->ssl_session_reuse,
-                              prev->ssl_session_reuse, 1);
+    ngx_conf_merge_value(conf->ssl_session_reuse, prev->ssl_session_reuse, 1);
 
     ngx_conf_merge_bitmask_value(conf->ssl_protocols, prev->ssl_protocols,
                               (NGX_CONF_BITMASK_SET|NGX_SSL_TLSv1

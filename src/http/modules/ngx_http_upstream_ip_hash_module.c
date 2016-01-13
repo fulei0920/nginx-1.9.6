@@ -131,7 +131,8 @@ ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r, ngx_http_upstream_srv
 
     r->upstream->peer.get = ngx_http_upstream_get_ip_hash_peer;
 
-    switch (r->connection->sockaddr->sa_family) {
+    switch (r->connection->sockaddr->sa_family)
+	{
 
     case AF_INET:
         sin = (struct sockaddr_in *) r->connection->sockaddr;

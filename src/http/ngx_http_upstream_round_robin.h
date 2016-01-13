@@ -16,7 +16,8 @@
 
 typedef struct ngx_http_upstream_rr_peer_s   ngx_http_upstream_rr_peer_t;
 
-struct ngx_http_upstream_rr_peer_s {
+struct ngx_http_upstream_rr_peer_s 
+{
     struct sockaddr                *sockaddr;
     socklen_t                       socklen;
     ngx_str_t                       name;
@@ -54,6 +55,7 @@ typedef struct ngx_http_upstream_rr_peers_s  ngx_http_upstream_rr_peers_t;
 
 struct ngx_http_upstream_rr_peers_s 
 {
+	//上游服务器总个数(不包括备份服务器)
     ngx_uint_t                      number;
 
 #if (NGX_HTTP_UPSTREAM_ZONE)
@@ -61,16 +63,17 @@ struct ngx_http_upstream_rr_peers_s
     ngx_atomic_t                    rwlock;
     ngx_http_upstream_rr_peers_t   *zone_next;
 #endif
-
+	//总权重大小
     ngx_uint_t                      total_weight;
-
+	//标志位，为1表示仅有一个上游服务器
     unsigned                        single:1;
+	//标志位，为0表示所有上游服务器的权重都为1
     unsigned                        weighted:1;
 
     ngx_str_t                      *name;
-
+	//当前所有备份类上游服务器的信息
     ngx_http_upstream_rr_peers_t   *next;
-
+	//当前所有非备份类上游服务器的链表
     ngx_http_upstream_rr_peer_t    *peer;
 };
 
@@ -121,23 +124,18 @@ struct ngx_http_upstream_rr_peers_s
 
 typedef struct 
 {
-    ngx_http_upstream_rr_peers_t   *peers;
-    ngx_http_upstream_rr_peer_t    *current;
-    uintptr_t                      *tried;
-    uintptr_t                       data;
+    ngx_http_upstream_rr_peers_t   *peers;   //所有的上游服务器信息
+    ngx_http_upstream_rr_peer_t    *current;	//指向当前使用的上游服务器结点
+    uintptr_t                      *tried;	//位图，用于标明使用哪个上游服务器
+    uintptr_t                       data;	//当上游服务器数目(非备份服务器数目和备份服务器数目)不大于8*sizeof(uintptr_t)时，用tried指向data，作为位图，不需要重新分配内存
 } ngx_http_upstream_rr_peer_data_t;
 
 
-ngx_int_t ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
-    ngx_http_upstream_srv_conf_t *us);
-ngx_int_t ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r,
-    ngx_http_upstream_srv_conf_t *us);
-ngx_int_t ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r,
-    ngx_http_upstream_resolved_t *ur);
-ngx_int_t ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc,
-    void *data);
-void ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc,
-    void *data, ngx_uint_t state);
+ngx_int_t ngx_http_upstream_init_round_robin(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us);
+ngx_int_t ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream_srv_conf_t *us);
+ngx_int_t ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream_resolved_t *ur);
+ngx_int_t ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data);
+void ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, ngx_uint_t state);
 
 #if (NGX_HTTP_SSL)
 ngx_int_t

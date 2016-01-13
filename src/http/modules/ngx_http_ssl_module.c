@@ -810,7 +810,8 @@ ngx_http_ssl_password_file(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (sscf->passwords != NGX_CONF_UNSET_PTR) {
+    if (sscf->passwords != NGX_CONF_UNSET_PTR)
+	{
         return "is duplicate";
     }
 
@@ -818,7 +819,8 @@ ngx_http_ssl_password_file(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     sscf->passwords = ngx_ssl_read_password_file(cf, &value[1]);
 
-    if (sscf->passwords == NULL) {
+    if (sscf->passwords == NULL) 
+	{
         return NGX_CONF_ERROR;
     }
 

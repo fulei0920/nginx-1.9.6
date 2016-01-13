@@ -994,8 +994,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 
 
 static ngx_int_t
-ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx,
-    ngx_http_proxy_loc_conf_t *plcf)
+ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx, ngx_http_proxy_loc_conf_t *plcf)
 {
     u_char               *p;
     size_t                add;
@@ -1004,9 +1003,7 @@ ngx_http_proxy_eval(ngx_http_request_t *r, ngx_http_proxy_ctx_t *ctx,
     ngx_url_t             url;
     ngx_http_upstream_t  *u;
 
-    if (ngx_http_script_run(r, &proxy, plcf->proxy_lengths->elts, 0,
-                            plcf->proxy_values->elts)
-        == NULL)
+    if (ngx_http_script_run(r, &proxy, plcf->proxy_lengths->elts, 0, plcf->proxy_values->elts) == NULL)
     {
         return NGX_ERROR;
     }
@@ -3278,31 +3275,23 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
 #if (NGX_HTTP_SSL)
 
-    ngx_conf_merge_value(conf->upstream.ssl_session_reuse,
-                              prev->upstream.ssl_session_reuse, 1);
+    ngx_conf_merge_value(conf->upstream.ssl_session_reuse, prev->upstream.ssl_session_reuse, 1);
 
-    ngx_conf_merge_bitmask_value(conf->ssl_protocols, prev->ssl_protocols,
-                                 (NGX_CONF_BITMASK_SET|NGX_SSL_TLSv1
-                                  |NGX_SSL_TLSv1_1|NGX_SSL_TLSv1_2));
+    ngx_conf_merge_bitmask_value(conf->ssl_protocols, prev->ssl_protocols, (NGX_CONF_BITMASK_SET|NGX_SSL_TLSv1 |NGX_SSL_TLSv1_1|NGX_SSL_TLSv1_2));
 
-    ngx_conf_merge_str_value(conf->ssl_ciphers, prev->ssl_ciphers,
-                             "DEFAULT");
+    ngx_conf_merge_str_value(conf->ssl_ciphers, prev->ssl_ciphers, "DEFAULT");
 
-    if (conf->upstream.ssl_name == NULL) {
+    if (conf->upstream.ssl_name == NULL)
+	{
         conf->upstream.ssl_name = prev->upstream.ssl_name;
     }
 
     ngx_conf_merge_value(conf->upstream.ssl_server_name, prev->upstream.ssl_server_name, 0);
-    ngx_conf_merge_value(conf->upstream.ssl_verify,
-                              prev->upstream.ssl_verify, 0);
-    ngx_conf_merge_uint_value(conf->ssl_verify_depth,
-                              prev->ssl_verify_depth, 1);
-    ngx_conf_merge_str_value(conf->ssl_trusted_certificate,
-                              prev->ssl_trusted_certificate, "");
+    ngx_conf_merge_value(conf->upstream.ssl_verify, prev->upstream.ssl_verify, 0);
+    ngx_conf_merge_uint_value(conf->ssl_verify_depth, prev->ssl_verify_depth, 1);
+    ngx_conf_merge_str_value(conf->ssl_trusted_certificate, prev->ssl_trusted_certificate, "");
     ngx_conf_merge_str_value(conf->ssl_crl, prev->ssl_crl, "");
-
-    ngx_conf_merge_str_value(conf->ssl_certificate,
-                              prev->ssl_certificate, "");
+    ngx_conf_merge_str_value(conf->ssl_certificate, prev->ssl_certificate, "");
     ngx_conf_merge_str_value(conf->ssl_certificate_key, prev->ssl_certificate_key, "");
     ngx_conf_merge_ptr_value(conf->ssl_passwords, prev->ssl_passwords, NULL);
 

@@ -30,8 +30,7 @@ static ngx_int_t ngx_http_core_postconfiguration(ngx_conf_t *cf);
 static void *ngx_http_core_create_main_conf(ngx_conf_t *cf);
 static char *ngx_http_core_init_main_conf(ngx_conf_t *cf, void *conf);
 static void *ngx_http_core_create_srv_conf(ngx_conf_t *cf);
-static char *ngx_http_core_merge_srv_conf(ngx_conf_t *cf,
-    void *parent, void *child);
+static char *ngx_http_core_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child);
 static void *ngx_http_core_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_core_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);

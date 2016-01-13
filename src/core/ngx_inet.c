@@ -647,6 +647,8 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
     u->family = AF_INET;
 
+
+//定位host,port,uri,args的位置
     host = u->url.data;
 
     last = host + u->url.len;
