@@ -49,7 +49,8 @@ ngx_parse_size(ngx_str_t *line)
     return size;
 }
 
-
+//指定空间时，可以使用多种单位
+//默认(不指定)为B(b)
 off_t
 ngx_parse_offset(ngx_str_t *line)
 {
@@ -97,7 +98,8 @@ ngx_parse_offset(ngx_str_t *line)
     return offset;
 }
 
-
+//指定时间时，可以使用多种单位
+//ms(毫秒), s(秒), m(分钟), h(小时), d(天), w(周，包含7天), M(月，包含30天), y(年，包含365天)
 ngx_int_t
 ngx_parse_time(ngx_str_t *line, ngx_uint_t is_sec)
 {

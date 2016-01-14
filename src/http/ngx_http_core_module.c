@@ -497,7 +497,12 @@ static ngx_command_t  ngx_http_core_commands[] =
 		offsetof(ngx_http_core_loc_conf_t, client_body_temp_path),
 		NULL 
     },
-
+	//语法: client_body_in_file_only on | clean| off;
+	//默认: client_body_in_file_only off;
+	//http包体只存储到磁盘文件中
+	//当值为off时，用户请求中的HTTP包体一律存储到磁盘文件中，即使只有0个字节也会存储为文件。
+	//当请求结束时，如果配置为on，则这个文件不会被删除(该配置一般用于调试，定位问题)，但
+	//如果配置为clean，则会删除这个文件
     { 
     	ngx_string("client_body_in_file_only"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -506,7 +511,11 @@ static ngx_command_t  ngx_http_core_commands[] =
       offsetof(ngx_http_core_loc_conf_t, client_body_in_file_only),
       &ngx_http_core_request_body_in_file 
     },
-
+   	//语法: client_body_in_single_buffer on | off;
+	//默认: client_body_in_single_buffer off;
+	//HTTP包体尽量写到一个内存buffer中
+	//用户请求中的HTTP包体一律存储到内存buffer中，当然，如果HTTP包体的大小
+	//超过了client_body_buffer_size设置的值，包体还是会写入到磁盘文件中
     { ngx_string("client_body_in_single_buffer"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,

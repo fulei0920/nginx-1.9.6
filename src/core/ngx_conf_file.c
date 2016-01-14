@@ -33,7 +33,10 @@ static ngx_command_t  ngx_conf_commands[] =
 	ngx_null_command
 };
 
-//在执行configure命令时，我们已经把许多模块编译进Nginx中，但是否启用这些模块，一般取决于配置文件中相应的配置项
+//在执行configure命令时，我们已经把许多模块编译进Nginx中，但是否启用这些模块，一般取决于配置文件中相应的配置项。
+//换句话说，每个Nginx模块都有自己感兴趣的配置项，大部分模块都必须在nginx.conf中读取某个配置后才会在运行时启用。
+//例如，只有当配置http{...}这个配置项时，ngx_http_module模块才会在Nginx中启用，其他依赖ngx_http_module的模块也
+//才能正常使用
 ngx_module_t  ngx_conf_module = 
 {
     NGX_MODULE_V1,

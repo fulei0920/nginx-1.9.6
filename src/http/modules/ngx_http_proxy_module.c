@@ -279,9 +279,25 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 	//当上游服务器返回的是重定向或刷新请求(如HTTP响应码是301或者302)时，
 	//proxy_redirect可以重设HTTP头部的location字段或refresh字段。
 	//例如: 如果，上游服务器发出的是302重定向请求，location字段的URI是http://localhost:8000/two/some/uri/,
-	//		那么在proxy_redirect http://localhost:8000/two/  http://frontend/one;配置下，实际转发给客户端
-	//		的location是http://frontend/one/some/uri/
+	//		那么在下面的配置下，实际转发给客户端的location是http://frontend/one/some/uri/	
+	//		proxy_redirect http://localhost:8000/two/  http:// /one;
+	//	这里还可以使用 ngx_http_core_module提供的变量来设置新的location字段。例如:
+	//	proxy_redirect http://localhost:8000/two/  http://$host:$server_port/;
+	//	也可以省略replacement参数中的主机名部分，这时会用虚拟主机名称来填充。例如:
+	//	proxy_redirect http://localhost:8000/two /one/;
+	//	使用off参数时，将使location或者refresh字段维持不变。例如:
+	//	proxy_redirect off;
+	//	使用默认的default参数时，会按照proxy_pass配置项和所属的location配置项重置发往客户端的location头部。
+	//	例如，下面两种配置效果是一样的:
+	//	location /one/ {
+	//			proxy_pass http://upstream:port/two/;
+	//			proxy_redirect defatult;
+	//	}
 	//
+	//	location /one/ {
+	//			proxy_pass http://upstream:port/two/;
+	//			proxy_redirect http://upstream/two/ /one/;
+	//	}
     { 
 		ngx_string("proxy_redirect"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE12,

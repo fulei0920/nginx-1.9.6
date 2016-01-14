@@ -526,15 +526,21 @@ struct ngx_http_core_loc_conf_s
 	//确定是否启用sendfile系统调用来发送文件
 	//sendfile系统调用减少了内核态与用户态之间的两次内存复制，这样就会从磁盘中读取文件后直接
 	//在内核态发送到网卡设备，提高了发送文件的效率
-    ngx_flag_t    sendfile;                
-    ngx_flag_t    aio;                     /* aio */
+    ngx_flag_t    sendfile;        
+
+	//是否在FreeBSD或Linux系统上启用内核级别的异步文件I/O功能。
+	//注意: 它与sendfile功能是互斥的
+    ngx_flag_t    aio;                   
+	
 	//确定是否开启FreeBSD系统上的TCP_NOPUSH或Linux系统上的TCP_CORK功能。
 	//仅在使用sendfile的时候才有效
 	//打开tcp_nopush后，将会在发送响应时把整个响应包头放到一个TCP包中发送
-    ngx_flag_t    tcp_nopush;              
+    ngx_flag_t    tcp_nopush;     
+	
 	//开启或关闭Nginx使用TCP_NODELAY选项的功能 
 	//这个选项在将连接转变为长连接的时候才被启用，在upstream发送响应到客户端时也会启用
-    ngx_flag_t    tcp_nodelay;          
+    ngx_flag_t    tcp_nodelay;      
+	
 	//连接超时后将通过向客户端发送RST包来直接重置连接
 	//相比正常的关闭方式，它使得服务器避免产生许多处于FIN_WAIT_1,FIN_WAIT_2/TIME_WAIT状态的TCP连接
 	//注意，使用RST重置包关闭连接会带来一些问题，默认情况下不会开启

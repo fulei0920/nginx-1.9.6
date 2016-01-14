@@ -152,122 +152,95 @@ static ngx_int_t ngx_http_variable_time_local(ngx_http_request_t *r,
 
 static ngx_http_variable_t  ngx_http_core_variables[] = 
 {
-
-    { ngx_string("http_host"), NULL, ngx_http_variable_header,
-      offsetof(ngx_http_request_t, headers_in.host), 0, 0 },
-
-    { ngx_string("http_user_agent"), NULL, ngx_http_variable_header,
-      offsetof(ngx_http_request_t, headers_in.user_agent), 0, 0 },
-
-    { ngx_string("http_referer"), NULL, ngx_http_variable_header,
-      offsetof(ngx_http_request_t, headers_in.referer), 0, 0 },
+	//表示当前HTTP请求中Host头部的值。
+    { ngx_string("http_host"), NULL, ngx_http_variable_header, offsetof(ngx_http_request_t, headers_in.host), 0, 0 },
+	//表示当前HTTP请求中User-Agent头部的值。
+    { ngx_string("http_user_agent"), NULL, ngx_http_variable_header, offsetof(ngx_http_request_t, headers_in.user_agent), 0, 0 },
+	//表示当前HTTP请求中Referer头部的值。
+    { ngx_string("http_referer"), NULL, ngx_http_variable_header, offsetof(ngx_http_request_t, headers_in.referer), 0, 0 },
 
 #if (NGX_HTTP_GZIP)
-    { ngx_string("http_via"), NULL, ngx_http_variable_header,
-      offsetof(ngx_http_request_t, headers_in.via), 0, 0 },
+	//表示当前HTTP请求中Via头部的值。
+    { ngx_string("http_via"), NULL, ngx_http_variable_header, offsetof(ngx_http_request_t, headers_in.via), 0, 0 },
 #endif
 
 #if (NGX_HTTP_X_FORWARDED_FOR)
-    { ngx_string("http_x_forwarded_for"), NULL, ngx_http_variable_headers,
-      offsetof(ngx_http_request_t, headers_in.x_forwarded_for), 0, 0 },
+	//表示当前HTTP请求中X-Forwarded-For头部的值。
+    { ngx_string("http_x_forwarded_for"), NULL, ngx_http_variable_headers, offsetof(ngx_http_request_t, headers_in.x_forwarded_for), 0, 0 },
 #endif
-
-    { ngx_string("http_cookie"), NULL, ngx_http_variable_cookies,
-      offsetof(ngx_http_request_t, headers_in.cookies), 0, 0 },
-
-    { ngx_string("content_length"), NULL, ngx_http_variable_content_length,
-      0, 0, 0 },
-
-    { ngx_string("content_type"), NULL, ngx_http_variable_header,
-      offsetof(ngx_http_request_t, headers_in.content_type), 0, 0 },
-
+	//表示当前HTTP请求中Cookie头部的值。
+    { ngx_string("http_cookie"), NULL, ngx_http_variable_cookies, offsetof(ngx_http_request_t, headers_in.cookies), 0, 0 },
+	//表示客户端请求头部中的Content-Length字段
+    { ngx_string("content_length"), NULL, ngx_http_variable_content_length, 0, 0, 0 },
+	//表示客户端请求头部中的Content-Type字段
+    { ngx_string("content_type"), NULL, ngx_http_variable_header, offsetof(ngx_http_request_t, headers_in.content_type), 0, 0 },
+	//表示客户端请求头部中的Host字段。若果Host字段不存在，则以实际处理的server(虚拟主机)名称代理。
+	//如果Host字段中带有端口，如IP:PORT，那么$host是去掉端口的，它的值为IP。$Host全是小写的。
+	//这些特性与$http_host不同，$http_host只是原样取出Host头部对应的值
     { ngx_string("host"), NULL, ngx_http_variable_host, 0, 0, 0 },
+	//二进制格式的客户端地址。例如: \x0A\xE0B\x0E
+    { ngx_string("binary_remote_addr"), NULL, ngx_http_variable_binary_remote_addr, 0, 0, 0 },
 
-    { ngx_string("binary_remote_addr"), NULL,
-      ngx_http_variable_binary_remote_addr, 0, 0, 0 },
-
+	//表示客户端的地址
     { ngx_string("remote_addr"), NULL, ngx_http_variable_remote_addr, 0, 0, 0 },
-
+	//表示客户端连接使用的端口
     { ngx_string("remote_port"), NULL, ngx_http_variable_remote_port, 0, 0, 0 },
 
-    { ngx_string("proxy_protocol_addr"), NULL,
-      ngx_http_variable_proxy_protocol_addr, 0, 0, 0 },
-
+    { ngx_string("proxy_protocol_addr"), NULL, ngx_http_variable_proxy_protocol_addr, 0, 0, 0 },
+	//表示服务器地址
     { ngx_string("server_addr"), NULL, ngx_http_variable_server_addr, 0, 0, 0 },
-
+	//表示服务器端口
     { ngx_string("server_port"), NULL, ngx_http_variable_server_port, 0, 0, 0 },
 
-    { ngx_string("server_protocol"), NULL, ngx_http_variable_request,
-      offsetof(ngx_http_request_t, http_protocol), 0, 0 },
-
+	//表示服务器端向客户端发送的响应的协议，如HTTP/1.1或HTTP/1.0
+    { ngx_string("server_protocol"), NULL, ngx_http_variable_request, offsetof(ngx_http_request_t, http_protocol), 0, 0 },
+	//表示HTTP scheme，如在https://nginx.com/中表示https
     { ngx_string("scheme"), NULL, ngx_http_variable_scheme, 0, 0, 0 },
 
     { ngx_string("https"), NULL, ngx_http_variable_https, 0, 0, 0 },
-
-    { ngx_string("request_uri"), NULL, ngx_http_variable_request,
-      offsetof(ngx_http_request_t, unparsed_uri), 0, 0 },
-
-    { ngx_string("uri"), NULL, ngx_http_variable_request,
-      offsetof(ngx_http_request_t, uri),
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("document_uri"), NULL, ngx_http_variable_request,
-      offsetof(ngx_http_request_t, uri),
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//表示客户端发过来的原始请求URI，带完整的参数。$uri和$document_uri未必是用户的原始请求，
+	//在内部重定向后可能是重定向后的URI，而$request_uri永远不会改变，始终是客户端的原始URI。
+    { ngx_string("request_uri"), NULL, ngx_http_variable_request, offsetof(ngx_http_request_t, unparsed_uri), 0, 0 },
+	//表示当前请求的uri，不带任何参数
+    { ngx_string("uri"), NULL, ngx_http_variable_request, offsetof(ngx_http_request_t, uri), NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//与$uri含义相同
+    { ngx_string("document_uri"), NULL, ngx_http_variable_request, offsetof(ngx_http_request_t, uri), NGX_HTTP_VAR_NOCACHEABLE, 0 },
 
     { ngx_string("request"), NULL, ngx_http_variable_request_line, 0, 0, 0 },
+	//表示当前请求所使用的root配置项的值
+    { ngx_string("document_root"), NULL, ngx_http_variable_document_root, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
 
-    { ngx_string("document_root"), NULL,
-      ngx_http_variable_document_root, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("realpath_root"), NULL,
-      ngx_http_variable_realpath_root, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("query_string"), NULL, ngx_http_variable_request,
-      offsetof(ngx_http_request_t, args),
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("args"),
-      ngx_http_variable_set_args,
-      ngx_http_variable_request,
-      offsetof(ngx_http_request_t, args),
-      NGX_HTTP_VAR_CHANGEABLE|NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("is_args"), NULL, ngx_http_variable_is_args,
-      0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("request_filename"), NULL,
-      ngx_http_variable_request_filename, 0,
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
+    { ngx_string("realpath_root"), NULL, ngx_http_variable_realpath_root, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
+      
+	//请求URI中的参数，与$args相同，然而$query_string是只读的不会改变
+    { ngx_string("query_string"), NULL, ngx_http_variable_request, offsetof(ngx_http_request_t, args), NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//HTTP请求中的完整参数。例如，在请求/index.html?_w=120&_h=120中，$arg表示字符串_w=120$_h=120
+    { ngx_string("args"), ngx_http_variable_set_args, ngx_http_variable_request, offsetof(ngx_http_request_t, args), NGX_HTTP_VAR_CHANGEABLE|NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//表示请求中的URI是否带参数，如果带参数，$is_args值为?，如果不带参数，则是空字符串
+    { ngx_string("is_args"), NULL, ngx_http_variable_is_args, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//表示用户请求中的URI经过root或alias转换后的文件路径
+    { ngx_string("request_filename"), NULL, ngx_http_variable_request_filename, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//表示服务器名称
     { ngx_string("server_name"), NULL, ngx_http_variable_server_name, 0, 0, 0 },
-
-    { ngx_string("request_method"), NULL,
-      ngx_http_variable_request_method, 0,
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
+	//表示HTTP请求的方法名，如GET、PUT、POST等
+    { ngx_string("request_method"), NULL, ngx_http_variable_request_method, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
+	//表示使用Auth Basic Module时定义的用户名
     { ngx_string("remote_user"), NULL, ngx_http_variable_remote_user, 0, 0, 0 },
 
-    { ngx_string("bytes_sent"), NULL, ngx_http_variable_bytes_sent,
-      0, 0, 0 },
-
-    { ngx_string("body_bytes_sent"), NULL, ngx_http_variable_body_bytes_sent,
-      0, 0, 0 },
+    { ngx_string("bytes_sent"), NULL, ngx_http_variable_bytes_sent, 0, 0, 0 },
+	//表示在向客户端发送的http响应中，包体部分的字节数
+    { ngx_string("body_bytes_sent"), NULL, ngx_http_variable_body_bytes_sent, 0, 0, 0 },
 
     { ngx_string("pipe"), NULL, ngx_http_variable_pipe,
       0, 0, 0 },
-
-    { ngx_string("request_completion"), NULL,
-      ngx_http_variable_request_completion,
-      0, 0, 0 },
-
-    { ngx_string("request_body"), NULL,
-      ngx_http_variable_request_body,
-      0, 0, 0 },
-
-    { ngx_string("request_body_file"), NULL,
-      ngx_http_variable_request_body_file,
-      0, 0, 0 },
+	//当请求已经全部完成时，其值为"ok"。若没有完成，就要返回客户端，则其值为空字符串;
+	//或者在断点续传等情况下使用HTTP range访问的并不是文件的最后一块，那么其值也是空字符串
+	
+    { ngx_string("request_completion"), NULL, ngx_http_variable_request_completion, 0, 0, 0 },
+	//表示HTTP请求中的包体，该参数只在proxy_pass或fastcgi_pass中有意义
+    { ngx_string("request_body"), NULL, ngx_http_variable_request_body, 0, 0, 0 },
+	//在HTTP请求中的包体存储的临时文件名
+    { ngx_string("request_body_file"), NULL, ngx_http_variable_request_body_file, 0, 0, 0 },
 
     { ngx_string("request_length"), NULL, ngx_http_variable_request_length,
       0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
@@ -275,53 +248,48 @@ static ngx_http_variable_t  ngx_http_core_variables[] =
     { ngx_string("request_time"), NULL, ngx_http_variable_request_time,
       0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
 
-    { ngx_string("status"), NULL,
-      ngx_http_variable_status, 0,
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
+    { ngx_string("status"), NULL, ngx_http_variable_status, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
+    
+	//表示返回客户端的HTTP响应中Content-Type头部的值。
+    { ngx_string("sent_http_content_type"), NULL, ngx_http_variable_sent_content_type, 0, 0, 0 },
+    
+	//表示返回客户端的HTTP响应中Content-Length头部的值。
+    { ngx_string("sent_http_content_length"), NULL, ngx_http_variable_sent_content_length, 0, 0, 0 },
+    
+	//表示返回客户端的HTTP响应中Location头部的值。
+    { ngx_string("sent_http_location"), NULL, ngx_http_variable_sent_location, 0, 0, 0 },
+    
+	//表示返回客户端的HTTP响应中Last-Modified头部的值。	
+    { ngx_string("sent_http_last_modified"), NULL, ngx_http_variable_sent_last_modified, 0, 0, 0 },
+    
+	//表示返回客户端的HTTP响应中Connection头部的值。
+    { ngx_string("sent_http_connection"), NULL, ngx_http_variable_sent_connection, 0, 0, 0 },
+      
+	//表示返回客户端的HTTP响应中Keep-Alive头部的值。
+    { ngx_string("sent_http_keep_alive"), NULL, ngx_http_variable_sent_keep_alive, 0, 0, 0 },
+      
+	//表示返回客户端的HTTP响应中Transfer-Encoding头部的值。
+    { ngx_string("sent_http_transfer_encoding"), NULL, ngx_http_variable_sent_transfer_encoding, 0, 0, 0 },
+    
+	//表示返回客户端的HTTP响应中Cache-Control头部的值。
+    { ngx_string("sent_http_cache_control"), NULL, ngx_http_variable_headers, offsetof(ngx_http_request_t, headers_out.cache_control), 0, 0 },
 
-    { ngx_string("sent_http_content_type"), NULL,
-      ngx_http_variable_sent_content_type, 0, 0, 0 },
+	//表示当前连接的限速是多少，0表示无限速
+    { ngx_string("limit_rate"), ngx_http_variable_request_set_size, ngx_http_variable_request_get_size,
+      	offsetof(ngx_http_request_t, limit_rate), NGX_HTTP_VAR_CHANGEABLE|NGX_HTTP_VAR_NOCACHEABLE, 0 },
 
-    { ngx_string("sent_http_content_length"), NULL,
-      ngx_http_variable_sent_content_length, 0, 0, 0 },
-
-    { ngx_string("sent_http_location"), NULL,
-      ngx_http_variable_sent_location, 0, 0, 0 },
-
-    { ngx_string("sent_http_last_modified"), NULL,
-      ngx_http_variable_sent_last_modified, 0, 0, 0 },
-
-    { ngx_string("sent_http_connection"), NULL,
-      ngx_http_variable_sent_connection, 0, 0, 0 },
-
-    { ngx_string("sent_http_keep_alive"), NULL,
-      ngx_http_variable_sent_keep_alive, 0, 0, 0 },
-
-    { ngx_string("sent_http_transfer_encoding"), NULL,
-      ngx_http_variable_sent_transfer_encoding, 0, 0, 0 },
-
-    { ngx_string("sent_http_cache_control"), NULL, ngx_http_variable_headers,
-      offsetof(ngx_http_request_t, headers_out.cache_control), 0, 0 },
-
-    { ngx_string("limit_rate"), ngx_http_variable_request_set_size,
-      ngx_http_variable_request_get_size,
-      offsetof(ngx_http_request_t, limit_rate),
-      NGX_HTTP_VAR_CHANGEABLE|NGX_HTTP_VAR_NOCACHEABLE, 0 },
-
-    { ngx_string("connection"), NULL,
-      ngx_http_variable_connection, 0, 0, 0 },
+    { ngx_string("connection"), NULL, ngx_http_variable_connection, 0, 0, 0 },
 
     { ngx_string("connection_requests"), NULL,
       ngx_http_variable_connection_requests, 0, 0, 0 },
+      
+	//表示当前Nginx的版本号，如1.0.14
+    { ngx_string("nginx_version"), NULL, ngx_http_variable_nginx_version, 0, 0, 0 },
+    
+	//表示Nginx所在机器的名称，与gethostbyname调用返回的值相同
+    { ngx_string("hostname"), NULL, ngx_http_variable_hostname, 0, 0, 0 },
 
-    { ngx_string("nginx_version"), NULL, ngx_http_variable_nginx_version,
-      0, 0, 0 },
-
-    { ngx_string("hostname"), NULL, ngx_http_variable_hostname,
-      0, 0, 0 },
-
-    { ngx_string("pid"), NULL, ngx_http_variable_pid,
-      0, 0, 0 },
+    { ngx_string("pid"), NULL, ngx_http_variable_pid, 0, 0, 0 },
 
     { ngx_string("msec"), NULL, ngx_http_variable_msec,
       0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
