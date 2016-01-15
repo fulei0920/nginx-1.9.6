@@ -346,6 +346,11 @@ static ngx_http_module_t  ngx_http_upstream_module_ctx =
 
 //upstream 模块不产生自己的内容，而是通过请求后端服务器得到内容。Nginx 内部封装了请求并取得响应内容的整个过程，
 //所以upstream 模块只需要开发若干回调函数，完成构造请求和解析响应等具体的工作。
+
+//当客户端发来HTTP请求时，Nginx并不会立刻转发到上游服务器，而是先把用户的请求(包括HTTP包体)完整地接收到Nginx
+//所在服务器的硬盘或内存中，然后再向上游服务器发起连接，把缓存的客户端请求转发到上游服务器
+//Nginx反向代理服务器可以根据多种方案从上游服务器的集群中选择一台。它的负载均衡方案包括按IP地址做散列等
+//如果上游服务器返回内容，则不会先完整的缓存到Nginx代理服务器再向客户端转发，而是边接受边转发到客户端
 ngx_module_t  ngx_http_upstream_module =
 {
     NGX_MODULE_V1,
@@ -366,9 +371,7 @@ ngx_module_t  ngx_http_upstream_module =
 static ngx_http_variable_t  ngx_http_upstream_vars[] = 
 {
 	//处理请求的上游服务器地址
-    { ngx_string("upstream_addr"), NULL,
-      ngx_http_upstream_addr_variable, 0,
-      NGX_HTTP_VAR_NOCACHEABLE, 0 },
+    { ngx_string("upstream_addr"), NULL, ngx_http_upstream_addr_variable, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },
 	//上游服务器返回的响应中的HTTP响应码
     { ngx_string("upstream_status"), NULL,
       ngx_http_upstream_status_variable, 0,
