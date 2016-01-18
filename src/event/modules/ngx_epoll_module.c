@@ -730,7 +730,8 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     err = (events == -1) ? ngx_errno : 0;
 
-    if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm) {
+    if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm)
+	{
         ngx_time_update();
     }
 
@@ -762,7 +763,8 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         return NGX_ERROR;
     }
 
-    for (i = 0; i < events; i++) {
+    for (i = 0; i < events; i++) 
+	{
         c = event_list[i].data.ptr;
 
         instance = (uintptr_t) c & 1;
@@ -770,28 +772,25 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
         rev = c->read;
 
-        if (c->fd == -1 || rev->instance != instance) {
+        if (c->fd == -1 || rev->instance != instance) 
+		{
 
             /*
              * the stale event from a file descriptor
              * that was just closed in this iteration
              */
 
-            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                           "epoll: stale event %p", c);
+            ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "epoll: stale event %p", c);
             continue;
         }
 
         revents = event_list[i].events;
 
-        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                       "epoll: fd:%d ev:%04XD d:%p",
-                       c->fd, revents, event_list[i].data.ptr);
+        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "epoll: fd:%d ev:%04XD d:%p", c->fd, revents, event_list[i].data.ptr);
 
-        if (revents & (EPOLLERR|EPOLLHUP)) {
-            ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                           "epoll_wait() error on fd:%d ev:%04XD",
-                           c->fd, revents);
+        if (revents & (EPOLLERR|EPOLLHUP))
+		{
+            ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "epoll_wait() error on fd:%d ev:%04XD", c->fd, revents);
         }
 
 #if 0
@@ -802,8 +801,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         }
 #endif
 
-        if ((revents & (EPOLLERR|EPOLLHUP))
-             && (revents & (EPOLLIN|EPOLLOUT)) == 0)
+        if ((revents & (EPOLLERR|EPOLLHUP)) && (revents & (EPOLLIN|EPOLLOUT)) == 0)
         {
             /*
              * if the error events were returned without EPOLLIN or EPOLLOUT,
@@ -814,10 +812,12 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
             revents |= EPOLLIN|EPOLLOUT;
         }
 
-        if ((revents & EPOLLIN) && rev->active) {
+        if ((revents & EPOLLIN) && rev->active)
+		{
 
 #if (NGX_HAVE_EPOLLRDHUP)
-            if (revents & EPOLLRDHUP) {
+            if (revents & EPOLLRDHUP)
+			{
                 rev->pending_eof = 1;
             }
 #endif

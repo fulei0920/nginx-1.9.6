@@ -27,9 +27,9 @@ typedef struct
 
 typedef struct
 {
-    ngx_http_upstream_keepalive_srv_conf_t  *conf;
+    ngx_http_upstream_keepalive_srv_conf_t  *conf;		//该节点所属的upstream
 
-    ngx_queue_t                        queue;		//队列结点元素
+    ngx_queue_t                        queue;			//队列结点元素
     ngx_connection_t                  *connection;
 
     socklen_t                          socklen;
@@ -45,7 +45,6 @@ typedef struct
     ngx_http_upstream_t               *upstream;
 
     void                              *data;
-
     ngx_event_get_peer_pt              original_get_peer;
     ngx_event_free_peer_pt             original_free_peer;
 

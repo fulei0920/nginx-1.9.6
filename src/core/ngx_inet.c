@@ -13,7 +13,7 @@ static ngx_int_t ngx_parse_unix_domain_url(ngx_pool_t *pool, ngx_url_t *u);
 static ngx_int_t ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u);
 static ngx_int_t ngx_parse_inet6_url(ngx_pool_t *pool, ngx_url_t *u);
 
-
+//将点分十进制转换为网络字节序的ip地址
 in_addr_t
 ngx_inet_addr(u_char *text, size_t len)
 {
@@ -25,20 +25,24 @@ ngx_inet_addr(u_char *text, size_t len)
     octet = 0;
     n = 0;
 
-    for (p = text; p < text + len; p++) {
+    for (p = text; p < text + len; p++) 
+	{
         c = *p;
 
-        if (c >= '0' && c <= '9') {
+        if (c >= '0' && c <= '9') 
+		{
             octet = octet * 10 + (c - '0');
 
-            if (octet > 255) {
+            if (octet > 255)
+			{
                 return INADDR_NONE;
             }
 
             continue;
         }
 
-        if (c == '.') {
+        if (c == '.') 
+		{
             addr = (addr << 8) + octet;
             octet = 0;
             n++;
@@ -48,7 +52,8 @@ ngx_inet_addr(u_char *text, size_t len)
         return INADDR_NONE;
     }
 
-    if (n == 3) {
+    if (n == 3)
+	{
         addr = (addr << 8) + octet;
         return htonl(addr);
     }
@@ -530,7 +535,7 @@ ngx_parse_addr(ngx_pool_t *pool, ngx_addr_t *addr, u_char *text, size_t len)
     return NGX_OK;
 }
 
-
+//解析URL，获取host,port,uri,等
 ngx_int_t
 ngx_parse_url(ngx_pool_t *pool, ngx_url_t *u)
 {
@@ -630,6 +635,7 @@ ngx_parse_unix_domain_url(ngx_pool_t *pool, ngx_url_t *u)
 }
 
 
+//
 static ngx_int_t
 ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 {
@@ -648,7 +654,7 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
     u->family = AF_INET;
 
 
-//定位host,port,uri,args的位置
+	//定位host,port,uri,args的位置
     host = u->url.data;
 
     last = host + u->url.len;
@@ -1137,9 +1143,11 @@ ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
 
     in_addr = ngx_inet_addr(u->host.data, u->host.len);
 
-    if (in_addr == INADDR_NONE) {
+    if (in_addr == INADDR_NONE)
+	{
         host = ngx_alloc(u->host.len + 1, pool->log);
-        if (host == NULL) {
+        if (host == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -1149,26 +1157,31 @@ ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
 
         ngx_free(host);
 
-        if (h == NULL || h->h_addr_list[0] == NULL) {
+        if (h == NULL || h->h_addr_list[0] == NULL) 
+		{
             u->err = "host not found";
             return NGX_ERROR;
         }
 
+		//统计域名解析到的ip地址的个数
         for (i = 0; h->h_addr_list[i] != NULL; i++) { /* void */ }
 
         /* MP: ngx_shared_palloc() */
 
         u->addrs = ngx_pcalloc(pool, i * sizeof(ngx_addr_t));
-        if (u->addrs == NULL) {
+        if (u->addrs == NULL) 
+		{
             return NGX_ERROR;
         }
 
         u->naddrs = i;
 
-        for (i = 0; i < u->naddrs; i++) {
+        for (i = 0; i < u->naddrs; i++) 
+		{
 
             sin = ngx_pcalloc(pool, sizeof(struct sockaddr_in));
-            if (sin == NULL) {
+            if (sin == NULL)
+			{
                 return NGX_ERROR;
             }
 
@@ -1182,18 +1195,20 @@ ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
             len = NGX_INET_ADDRSTRLEN + sizeof(":65535") - 1;
 
             p = ngx_pnalloc(pool, len);
-            if (p == NULL) {
+            if (p == NULL) 
+			{
                 return NGX_ERROR;
             }
 
-            len = ngx_sock_ntop((struct sockaddr *) sin,
-                                sizeof(struct sockaddr_in), p, len, 1);
+            len = ngx_sock_ntop((struct sockaddr *) sin, sizeof(struct sockaddr_in), p, len, 1);
 
             u->addrs[i].name.len = len;
             u->addrs[i].name.data = p;
         }
 
-    } else {
+    } 
+	else 
+	{
 
         /* MP: ngx_shared_palloc() */
 
@@ -1203,7 +1218,8 @@ ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
         }
 
         sin = ngx_pcalloc(pool, sizeof(struct sockaddr_in));
-        if (sin == NULL) {
+        if (sin == NULL)
+		{
             return NGX_ERROR;
         }
 
@@ -1221,8 +1237,7 @@ ngx_inet_resolve_host(ngx_pool_t *pool, ngx_url_t *u)
             return NGX_ERROR;
         }
 
-        u->addrs[0].name.len = ngx_sprintf(p, "%V:%d",
-                                           &u->host, ntohs(port)) - p;
+        u->addrs[0].name.len = ngx_sprintf(p, "%V:%d", &u->host, ntohs(port)) - p;
         u->addrs[0].name.data = p;
     }
 

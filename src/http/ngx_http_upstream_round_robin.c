@@ -477,9 +477,7 @@ ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data)
             goto failed;
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                       "get rr peer, current: %p %i",
-                       peer, peer->current_weight);
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0, "get rr peer, current: %p %i", peer, peer->current_weight);
     }
 
     pc->sockaddr = peer->sockaddr;
@@ -494,16 +492,17 @@ ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data)
 
 failed:
 
-    if (peers->next) {
+    if (peers->next)
+	{
 
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, pc->log, 0, "backup servers");
 
         rrp->peers = peers->next;
 
-        n = (rrp->peers->number + (8 * sizeof(uintptr_t) - 1))
-                / (8 * sizeof(uintptr_t));
+        n = (rrp->peers->number + (8 * sizeof(uintptr_t) - 1)) / (8 * sizeof(uintptr_t));
 
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < n; i++) 
+		{
              rrp->tried[i] = 0;
         }
 
@@ -511,7 +510,8 @@ failed:
 
         rc = ngx_http_upstream_get_round_robin_peer(pc, rrp);
 
-        if (rc != NGX_BUSY) {
+        if (rc != NGX_BUSY)
+		{
             return rc;
         }
 
@@ -520,7 +520,8 @@ failed:
 
     /* all peers failed, mark them as live for quick recovery */
 
-    for (peer = peers->peer; peer; peer = peer->next) {
+    for (peer = peers->peer; peer; peer = peer->next) 
+	{
         peer->fails = 0;
     }
 
@@ -610,16 +611,14 @@ ngx_http_upstream_get_peer(ngx_http_upstream_rr_peer_data_t *rrp)
 
 
 void
-ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data,
-    ngx_uint_t state)
+ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, ngx_uint_t state)
 {
     ngx_http_upstream_rr_peer_data_t  *rrp = data;
 
     time_t                       now;
     ngx_http_upstream_rr_peer_t  *peer;
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                   "free rr peer %ui %ui", pc->tries, state);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0, "free rr peer %ui %ui", pc->tries, state);
 
     /* TODO: NGX_PEER_KEEPALIVE */
 
@@ -628,7 +627,8 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data,
     ngx_http_upstream_rr_peers_rlock(rrp->peers);
     ngx_http_upstream_rr_peer_lock(rrp->peers, peer);
 
-    if (rrp->peers->single) {
+    if (rrp->peers->single) 
+	{
 
         peer->conns--;
 
@@ -639,35 +639,39 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data,
         return;
     }
 
-    if (state & NGX_PEER_FAILED) {
+    if (state & NGX_PEER_FAILED) 
+	{
         now = ngx_time();
 
         peer->fails++;
         peer->accessed = now;
         peer->checked = now;
 
-        if (peer->max_fails) {
+        if (peer->max_fails) 
+		{
             peer->effective_weight -= peer->weight / peer->max_fails;
 
-            if (peer->fails >= peer->max_fails) {
-                ngx_log_error(NGX_LOG_WARN, pc->log, 0,
-                              "upstream server temporarily disabled");
+            if (peer->fails >= peer->max_fails) 
+			{
+                ngx_log_error(NGX_LOG_WARN, pc->log, 0, "upstream server temporarily disabled");
             }
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                       "free rr peer failed: %p %i",
-                       peer, peer->effective_weight);
+        ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0, "free rr peer failed: %p %i", peer, peer->effective_weight);
 
-        if (peer->effective_weight < 0) {
+        if (peer->effective_weight < 0)
+		{
             peer->effective_weight = 0;
         }
 
-    } else {
+    }
+	else 
+	{
 
         /* mark peer live if check passed */
 
-        if (peer->accessed < peer->checked) {
+        if (peer->accessed < peer->checked)
+		{
             peer->fails = 0;
         }
     }
@@ -677,7 +681,8 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data,
     ngx_http_upstream_rr_peer_unlock(rrp->peers, peer);
     ngx_http_upstream_rr_peers_unlock(rrp->peers);
 
-    if (pc->tries) {
+    if (pc->tries)
+	{
         pc->tries--;
     }
 }

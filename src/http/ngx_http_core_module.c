@@ -767,12 +767,18 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
-    { ngx_string("port_in_redirect"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_core_loc_conf_t, port_in_redirect),
-      NULL },
+	//语法：port_in_redirect [ on|off ] 
+	//默认值：port_in_redirect on 
+	//指定是否在让nginx在重定向操作中对端口进行操作。
+	//如果设置为off，在重定向的请求中nginx不会在url中添加端口。
+    { 
+		ngx_string("port_in_redirect"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+		ngx_conf_set_flag_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_core_loc_conf_t, port_in_redirect),
+		NULL 
+    },
 
     { ngx_string("msie_padding"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -881,6 +887,19 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 
+	//语法: post_action [ uri|off ] 
+	//默认: post_action off 
+	//为当前完成请求的子请求定义一个URI。
+	//例如: location /protected_files { 
+	//			internal;
+	//			proxy_pass http://127.0.0.2;
+	//			post_action /protected_done;
+	//		}
+	//		#发送post_action 请求到FastCGI后端进行登录验证。
+	//		location /protected_done {
+	// 			internal;
+	// 			fastcgi_pass 127.0.0.1:9000;
+	//		}
     { 
     	ngx_string("post_action"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_TAKE1,

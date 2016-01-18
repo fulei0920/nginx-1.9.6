@@ -27,7 +27,7 @@ struct ngx_http_upstream_rr_peer_s
     ngx_int_t                       effective_weight;
     ngx_int_t                       weight;
 
-    ngx_uint_t                      conns;
+    ngx_uint_t                      conns;		//当前并发的连接数目
 
     ngx_uint_t                      fails;
     time_t                          accessed;
@@ -124,10 +124,10 @@ struct ngx_http_upstream_rr_peers_s
 
 typedef struct 
 {
-    ngx_http_upstream_rr_peers_t   *peers;   //所有的上游服务器信息
+    ngx_http_upstream_rr_peers_t   *peers;   	//指向所有的上游非备份服务器信息或者所有上游备份服务器信息
     ngx_http_upstream_rr_peer_t    *current;	//指向当前使用的上游服务器结点
-    uintptr_t                      *tried;	//位图，用于标明使用哪个上游服务器
-    uintptr_t                       data;	//当上游服务器数目(非备份服务器数目和备份服务器数目)不大于8*sizeof(uintptr_t)时，用tried指向data，作为位图，不需要重新分配内存
+    uintptr_t                      *tried;		//位图，用于标明使用哪个上游服务器
+    uintptr_t                       data;		//当上游服务器数目(非备份服务器数目和备份服务器数目)不大于8*sizeof(uintptr_t)时，用tried指向data，作为位图，不需要重新分配内存
 } ngx_http_upstream_rr_peer_data_t;
 
 

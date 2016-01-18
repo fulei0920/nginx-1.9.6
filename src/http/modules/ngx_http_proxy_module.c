@@ -643,12 +643,14 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 		NULL 
     },
 
-    { ngx_string("proxy_next_upstream_timeout"),
-      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
-      ngx_conf_set_msec_slot,
-      NGX_HTTP_LOC_CONF_OFFSET,
-      offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream_timeout),
-      NULL },
+    { 
+    	ngx_string("proxy_next_upstream_timeout"),
+		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+		ngx_conf_set_msec_slot,
+		NGX_HTTP_LOC_CONF_OFFSET,
+		offsetof(ngx_http_proxy_loc_conf_t, upstream.next_upstream_timeout),
+		NULL 
+    },
 	//语法: proxy_pass_header the_header;
 	//与proxy_hide_header功能相反，会将原来禁止转发的header设置为允许转发
 	//例如: proxy_pass_header X-Accel-Redirect;

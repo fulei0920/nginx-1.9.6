@@ -63,7 +63,8 @@ static char *ngx_http_upstream_hash(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
 
-static ngx_command_t  ngx_http_upstream_hash_commands[] = {
+static ngx_command_t  ngx_http_upstream_hash_commands[] = 
+{
 
     { ngx_string("hash"),
       NGX_HTTP_UPS_CONF|NGX_CONF_TAKE12,
@@ -634,7 +635,8 @@ ngx_http_upstream_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ccv.value = &value[1];
     ccv.complex_value = &hcf->key;
 
-    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
+    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 

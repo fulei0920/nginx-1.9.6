@@ -143,11 +143,9 @@ static ngx_int_t ngx_http_upstream_response_length_variable(
     ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
 
 static char *ngx_http_upstream(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy);
-static char *ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_upstream_server(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
-static ngx_addr_t *ngx_http_upstream_get_local(ngx_http_request_t *r,
-    ngx_http_upstream_local_t *local);
+static ngx_addr_t *ngx_http_upstream_get_local(ngx_http_request_t *r, ngx_http_upstream_local_t *local);
 
 static void *ngx_http_upstream_create_main_conf(ngx_conf_t *cf);
 static char *ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf);
@@ -1221,33 +1219,32 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
     if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) 
 	{
 
-        if (!ev->pending_eof) {
+        if (!ev->pending_eof) 
+		{
             return;
         }
 
         ev->eof = 1;
         c->error = 1;
 
-        if (ev->kq_errno) {
+        if (ev->kq_errno)
+		{
             ev->error = 1;
         }
 
-        if (!u->cacheable && u->peer.connection) {
-            ngx_log_error(NGX_LOG_INFO, ev->log, ev->kq_errno,
-                          "kevent() reported that client prematurely closed "
+        if (!u->cacheable && u->peer.connection) 
+		{
+            ngx_log_error(NGX_LOG_INFO, ev->log, ev->kq_errno, "kevent() reported that client prematurely closed "
                           "connection, so upstream connection is closed too");
-            ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_CLIENT_CLOSED_REQUEST);
+            ngx_http_upstream_finalize_request(r, u, NGX_HTTP_CLIENT_CLOSED_REQUEST);
             return;
         }
 
-        ngx_log_error(NGX_LOG_INFO, ev->log, ev->kq_errno,
-                      "kevent() reported that client prematurely closed "
-                      "connection");
+        ngx_log_error(NGX_LOG_INFO, ev->log, ev->kq_errno, "kevent() reported that client prematurely closed connection");
 
-        if (u->peer.connection == NULL) {
-            ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_CLIENT_CLOSED_REQUEST);
+        if (u->peer.connection == NULL) 
+		{
+            ngx_http_upstream_finalize_request(r, u, NGX_HTTP_CLIENT_CLOSED_REQUEST);
         }
 
         return;
@@ -1257,7 +1254,8 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
 
 #if (NGX_HAVE_EPOLLRDHUP)
 
-    if ((ngx_event_flags & NGX_USE_EPOLL_EVENT) && ev->pending_eof) {
+    if ((ngx_event_flags & NGX_USE_EPOLL_EVENT) && ev->pending_eof)
+	{
         socklen_t  len;
 
         ev->eof = 1;
@@ -1267,36 +1265,32 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
         len = sizeof(ngx_err_t);
 
         /*
-         * BSDs and Linux return 0 and set a pending error in err
-         * Solaris returns -1 and sets errno
+         * BSDs and Linux return 0 and set a pending error in err, Solaris returns -1 and sets errno
          */
 
-        if (getsockopt(c->fd, SOL_SOCKET, SO_ERROR, (void *) &err, &len)
-            == -1)
+        if (getsockopt(c->fd, SOL_SOCKET, SO_ERROR, (void *) &err, &len) == -1)
         {
             err = ngx_socket_errno;
         }
 
-        if (err) {
+        if (err) 
+		{
             ev->error = 1;
         }
 
-        if (!u->cacheable && u->peer.connection) {
-            ngx_log_error(NGX_LOG_INFO, ev->log, err,
-                        "epoll_wait() reported that client prematurely closed "
+        if (!u->cacheable && u->peer.connection)
+		{
+            ngx_log_error(NGX_LOG_INFO, ev->log, err, "epoll_wait() reported that client prematurely closed "
                         "connection, so upstream connection is closed too");
-            ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_CLIENT_CLOSED_REQUEST);
+            ngx_http_upstream_finalize_request(r, u, NGX_HTTP_CLIENT_CLOSED_REQUEST);
             return;
         }
 
-        ngx_log_error(NGX_LOG_INFO, ev->log, err,
-                      "epoll_wait() reported that client prematurely closed "
-                      "connection");
+        ngx_log_error(NGX_LOG_INFO, ev->log, err, "epoll_wait() reported that client prematurely closed connection");
 
-        if (u->peer.connection == NULL) {
-            ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_CLIENT_CLOSED_REQUEST);
+        if (u->peer.connection == NULL) 
+		{
+            ngx_http_upstream_finalize_request(r, u, NGX_HTTP_CLIENT_CLOSED_REQUEST);
         }
 
         return;
@@ -1310,12 +1304,14 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ev->log, err, "http upstream recv(): %d", n);
 
+	//n = 0时连接断开，为什么还直接返回
     if (ev->write && (n >= 0 || err == NGX_EAGAIN)) 
 	{
         return;
     }
 
 	/*如果是水平触发，且事件在事件驱动机制中，则将其移除*/
+	/*防止其重复不停的触发事件*/
     if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && ev->active)
 	{
         event = ev->write ? NGX_WRITE_EVENT : NGX_READ_EVENT;
@@ -4242,7 +4238,7 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
 
     if (u->peer.sockaddr)
 	{
-
+		//只要错误类型不是 NGX_HTTP_UPSTREAM_FT_HTTP_403或者NGX_HTTP_UPSTREAM_FT_HTTP_404，都认为上游服务器有问题
         if (ft_type == NGX_HTTP_UPSTREAM_FT_HTTP_403 || ft_type == NGX_HTTP_UPSTREAM_FT_HTTP_404)
         {
             state = NGX_PEER_NEXT;
@@ -4262,8 +4258,7 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         ngx_log_error(NGX_LOG_ERR, r->connection->log, NGX_ETIMEDOUT, "upstream timed out");
     }
 
-    if (u->peer.cached && ft_type == NGX_HTTP_UPSTREAM_FT_ERROR
-        && (!u->request_sent || !r->request_body_no_buffering))
+    if (u->peer.cached && ft_type == NGX_HTTP_UPSTREAM_FT_ERROR && (!u->request_sent || !r->request_body_no_buffering))
     {
         status = 0;
 
@@ -4271,8 +4266,11 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
 
         u->peer.tries++;
 
-    } else {
-        switch (ft_type) {
+    } 
+	else 
+	{
+        switch (ft_type)
+		{
 
         case NGX_HTTP_UPSTREAM_FT_TIMEOUT:
             status = NGX_HTTP_GATEWAY_TIME_OUT;
@@ -4300,7 +4298,8 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         }
     }
 
-    if (r->connection->error) {
+    if (r->connection->error) 
+	{
         ngx_http_upstream_finalize_request(r, u, NGX_HTTP_CLIENT_CLOSED_REQUEST);
         return;
     }
@@ -4310,8 +4309,7 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         u->state->status = status;
         timeout = u->conf->next_upstream_timeout;
 
-        if (u->peer.tries == 0
-            || !(u->conf->next_upstream & ft_type)
+        if (u->peer.tries == 0 || !(u->conf->next_upstream & ft_type)
             || (u->request_sent && r->request_body_no_buffering)
             || (timeout && ngx_current_msec - u->peer.start_time >= timeout))
         {
@@ -4324,7 +4322,8 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
 
                 rc = u->reinit_request(r);
 
-                if (rc == NGX_OK) {
+                if (rc == NGX_OK) 
+				{
                     u->cache_status = NGX_HTTP_CACHE_STALE;
                     rc = ngx_http_upstream_cache_send(r, u);
                 }
@@ -4344,7 +4343,8 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "close http upstream connection: %d", u->peer.connection->fd);
 #if (NGX_HTTP_SSL)
 
-        if (u->peer.connection->ssl) {
+        if (u->peer.connection->ssl) 
+		{
             u->peer.connection->ssl->no_wait_shutdown = 1;
             u->peer.connection->ssl->no_send_shutdown = 1;
 
@@ -6016,7 +6016,7 @@ ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
     umcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_upstream_module);
 
     uscfp = umcf->upstreams.elts;
-	/*查找全局上有服务器是否有相同ip和port的*/
+	/*查找全局上有服务器是否有相同ip(host)和port的*/
     for (i = 0; i < umcf->upstreams.nelts; i++)
 	{
         if (uscfp[i]->host.len != u->host.len || ngx_strncasecmp(uscfp[i]->host.data, u->host.data, u->host.len) != 0)

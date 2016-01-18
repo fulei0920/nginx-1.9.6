@@ -84,9 +84,9 @@ typedef ngx_int_t (*ngx_http_upstream_init_peer_pt)(ngx_http_request_t *r, ngx_h
 
 typedef struct 
 {
-    ngx_http_upstream_init_pt        init_upstream;
-    ngx_http_upstream_init_peer_pt   init;
-    void                            *data;
+    ngx_http_upstream_init_pt        init_upstream;		//用于初始化所有upstream sever
+    ngx_http_upstream_init_peer_pt   init;				//用于初始化请求(ngx_http_request_t)
+    void                            *data;				//存储init_upstream构造后的结果
 } ngx_http_upstream_peer_t;
 
 
@@ -414,7 +414,7 @@ struct ngx_http_upstream_s
 
     ngx_http_cleanup_pt             *cleanup;
 
-	//是否指定文件缓存路劲的标志位
+	//是否指定文件缓存路径的标志位
     unsigned                         store:1;
 	//是否启用文件缓存
     unsigned                         cacheable:1;
