@@ -3476,7 +3476,8 @@ ngx_http_fastcgi_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_core_loc_conf_t   *clcf;
     ngx_http_script_compile_t   sc;
 
-    if (flcf->upstream.upstream || flcf->fastcgi_lengths) {
+    if (flcf->upstream.upstream || flcf->fastcgi_lengths)
+	{
         return "is duplicate";
     }
 
@@ -3484,7 +3485,8 @@ ngx_http_fastcgi_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     clcf->handler = ngx_http_fastcgi_handler;
 
-    if (clcf->name.data[clcf->name.len - 1] == '/') {
+    if (clcf->name.data[clcf->name.len - 1] == '/') 
+	{
         clcf->auto_redirect = 1;
     }
 

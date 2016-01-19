@@ -1068,16 +1068,20 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     fp = (ngx_flag_t *) (p + cmd->offset);
 
-    if (*fp != NGX_CONF_UNSET) {
+    if (*fp != NGX_CONF_UNSET) 
+	{
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    if (ngx_strcasecmp(value[1].data, (u_char *) "on") == 0) {
+    if (ngx_strcasecmp(value[1].data, (u_char *) "on") == 0) 
+	{
         *fp = 1;
 
-    } else if (ngx_strcasecmp(value[1].data, (u_char *) "off") == 0) {
+    }
+	else if (ngx_strcasecmp(value[1].data, (u_char *) "off") == 0) 
+   	{
         *fp = 0;
 
     } else {

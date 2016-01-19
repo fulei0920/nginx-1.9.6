@@ -10,7 +10,8 @@
 #include <ngx_http.h>
 
 
-typedef struct {
+typedef struct 
+{
     /* the round robin data must be first */
     ngx_http_upstream_rr_peer_data_t   rrp;
 
@@ -172,14 +173,14 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
     ngx_uint_t                    i, n, p, hash;
     ngx_http_upstream_rr_peer_t  *peer;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                   "get ip hash peer, try: %ui", pc->tries);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "get ip hash peer, try: %ui", pc->tries);
 
     /* TODO: cached */
 
     ngx_http_upstream_rr_peers_wlock(iphp->rrp.peers);
 
-    if (iphp->tries > 20 || iphp->rrp.peers->single) {
+    if (iphp->tries > 20 || iphp->rrp.peers->single) 
+	{
         ngx_http_upstream_rr_peers_unlock(iphp->rrp.peers);
         return iphp->get_rr_peer(pc, &iphp->rrp);
     }
@@ -191,9 +192,11 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
 
     hash = iphp->hash;
 
-    for ( ;; ) {
+    for ( ;; )
+	{
 
-        for (i = 0; i < (ngx_uint_t) iphp->addrlen; i++) {
+        for (i = 0; i < (ngx_uint_t) iphp->addrlen; i++) 
+		{
             hash = (hash * 113 + iphp->addr[i]) % 6271;
         }
 
@@ -201,7 +204,8 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
         peer = iphp->rrp.peers->peer;
         p = 0;
 
-        while (w >= peer->weight) {
+        while (w >= peer->weight)
+		{
             w -= peer->weight;
             peer = peer->next;
             p++;

@@ -23,17 +23,17 @@ struct ngx_http_upstream_rr_peer_s
     ngx_str_t                       name;
     ngx_str_t                       server;
 
-    ngx_int_t                       current_weight;
+    ngx_int_t                       current_weight;	//当前权重，nginx会在运行过程中调整此权重
     ngx_int_t                       effective_weight;
-    ngx_int_t                       weight;
+    ngx_int_t                       weight;		//配置的权重  
 
     ngx_uint_t                      conns;		//当前并发的连接数目
 
-    ngx_uint_t                      fails;
+    ngx_uint_t                      fails;		//已尝试失败次数 
     time_t                          accessed;
     time_t                          checked;
 
-    ngx_uint_t                      max_fails;
+    ngx_uint_t                      max_fails;		//最大失败次数  
     time_t                          fail_timeout;
 
     ngx_uint_t                      down;          /* unsigned  down:1; */
@@ -138,11 +138,8 @@ ngx_int_t ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void
 void ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, ngx_uint_t state);
 
 #if (NGX_HTTP_SSL)
-ngx_int_t
-    ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc,
-    void *data);
-void ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc,
-    void *data);
+ngx_int_t ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc, void *data);
+void ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc, void *data);
 #endif
 
 

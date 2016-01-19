@@ -22,12 +22,19 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
     ngx_event_t       *rev, *wev;
     ngx_connection_t  *c;
 
+	//调用pc->get钩子。如前面所述，若是keepalive upstream，则该钩子是
+	//ngx_http_upstream_get_keepalive_peer，此时如果存在缓存长连接该函数调用返回的是
+	//NGX_DONE，直接返回上层调用而不会继续往下执行获取新的连接并创建socket，
+	//如果不存在缓存的长连接，则会返回NGX_OK.
+	//若是非keepalive upstream，该钩子是ngx_http_upstream_get_round_robin_peer。
+
     rc = pc->get(pc, pc->data);
     if (rc != NGX_OK) 
 	{
         return rc;
     }
 
+	// 非keepalive upstream或者keepalive upstream未找到缓存连接，则创建socket
     s = ngx_socket(pc->sockaddr->sa_family, SOCK_STREAM, 0);
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, 0, "socket %d", s);

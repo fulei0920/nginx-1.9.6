@@ -632,8 +632,8 @@ static ngx_command_t  ngx_http_core_commands[] =
 		NULL 
     },
 			
-	//语法: keepalive_timeout speed;
-	//默认: keepalive_timeout 0;
+	//语法: limit_rate speed;
+	//默认: limit_rate 0;
 	//对客户端请求限制每秒传输的字节数，0表示不限速
 	//针对不同的客户端，可以用$limit_rate参数执行不同的限速策略。
 	//例如:

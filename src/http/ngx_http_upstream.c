@@ -25,8 +25,7 @@ static void ngx_http_upstream_rd_check_broken_connection(ngx_http_request_t *r);
 static void ngx_http_upstream_wr_check_broken_connection(ngx_http_request_t *r);
 static void ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev);
 static void ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u);
-static ngx_int_t ngx_http_upstream_reinit(ngx_http_request_t *r,
-    ngx_http_upstream_t *u);
+static ngx_int_t ngx_http_upstream_reinit(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static void ngx_http_upstream_send_request(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t do_write);
 static ngx_int_t ngx_http_upstream_send_request_body(ngx_http_request_t *r,
     ngx_http_upstream_t *u, ngx_uint_t do_write);
@@ -578,13 +577,15 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
                 return;
             }
 
-            if (rc == NGX_HTTP_UPSTREAM_INVALID_HEADER) {
+            if (rc == NGX_HTTP_UPSTREAM_INVALID_HEADER)
+			{
                 rc = NGX_DECLINED;
                 r->cached = 0;
             }
         }
 
-        if (rc != NGX_DECLINED) {
+        if (rc != NGX_DECLINED) 
+		{
             ngx_http_finalize_request(r, rc);
             return;
         }
@@ -679,6 +680,8 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     cln->data = r;
     u->cleanup = &cln->handler;
 
+	//不需要解析地址的情况，包括配置upstream模式下的静态server，静态proxy_pass指令，
+	//即初始化过程中已经能将地址解析好的情况（静态IP后端或者可通过gethostbyname获取到地址的域名后端）
     if (u->resolved == NULL)
 	{
 		/* 若没有实现u->resolved标志位，则定义上游服务器的配置 */ 
@@ -695,6 +698,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
          * 直接调用ngx_http_upstream_connection方法向上游服务器发起连接；
          * 并return从当前函数返回；
          */
+        //需要解析地址，并且已经解析完毕的情况（已经有socket地址），直接连接后端
         if (u->resolved->sockaddr) 
 		{
             if (ngx_http_upstream_create_round_robin_peer(r, u->resolved) != NGX_OK)
@@ -707,11 +711,12 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 
             return;
         }
-
+		/*需要解析地址，但socket地址还未解析*/
         host = &u->resolved->host;
 
         umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);
 
+		//先找当前访问的host是否在配置的upstream数组中
         uscfp = umcf->upstreams.elts;
 
         for (i = 0; i < umcf->upstreams.nelts; i++) 
@@ -726,6 +731,10 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
             }
         }
 
+
+		//当访问的地址需要进行域名解析的情况下（比如proxy_pass中存在变量，变量的值为一个域名，任何静态域名均会在初始化时候被解析），
+		//是无法使用keepalive连接的，请看nginx在解析域名成功后是怎么处理的（即ngx_http_upstream_init_request函数中设置ctx->handler = ngx_http_upstream_resolve_handler）
+
         if (u->resolved->port == 0) 
 		{
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "no port in upstream \"%V\"", host);
@@ -735,6 +744,9 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 
         temp.name = *host;
 
+
+
+		// 开始进行域名解析
         ctx = ngx_resolve_start(clcf->resolver, &temp);
         if (ctx == NULL)
 		{
@@ -750,12 +762,14 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         }
 
         ctx->name = *host;
+		// 设置DNS解析钩子，解析DNS成功后会执行
         ctx->handler = ngx_http_upstream_resolve_handler;
         ctx->data = r;
         ctx->timeout = clcf->resolver_timeout;
 
         u->resolved->ctx = ctx;
 
+		 // 开始处理DNS解析域名
         if (ngx_resolve_name(ctx) != NGX_OK) 
 		{
             u->resolved->ctx = NULL;
@@ -766,6 +780,8 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         return;
     }
 
+	//只有不需要解析地址或者能找到upstream的情况才会走到这里
+	
 found:
 
     if (uscf == NULL) 
@@ -1100,7 +1116,7 @@ ngx_http_upstream_resolve_handler(ngx_resolver_ctx_t *ctx)
     }
     }
 #endif
-
+	// 创建轮询后端，设置获取peer和释放peer的钩子等（与ngx_http_upstream_init_round_robin_peer的功能有点类似）
     if (ngx_http_upstream_create_round_robin_peer(r, ur) != NGX_OK)
 	{
         ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -1185,7 +1201,8 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
 
     c = r->connection;
     u = r->upstream;
-
+	
+	//如果连接已经出现错误。
     if (c->error) 
 	{
         if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && ev->active)
@@ -1355,11 +1372,13 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
 
     ngx_log_error(NGX_LOG_INFO, ev->log, err, "client prematurely closed connection");
 
+	//如果有cache，并且后端的upstream还在处理，则此时继续处理upstream，忽略对端的错误.
     if (u->peer.connection == NULL) 
 	{
         ngx_http_upstream_finalize_request(r, u, NGX_HTTP_CLIENT_CLOSED_REQUEST);
     }
 }
+
 //建立连接。
 //upstream 机制与上游服务器建立 TCP 连接时，采用的是非阻塞模式的套接字，即发起连接请求之后立即返回，不管连接是否建立成功，
 //若没有立即建立成功，则需在 epoll 事件机制中监听该套接字，当它出现可写事件时，就说明连接已经建立成功了
@@ -1478,13 +1497,14 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     if (u->request_sent)
 	{
+		//重新初始化upstream
         if (ngx_http_upstream_reinit(r, u) != NGX_OK) 
 		{
             ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
         }
     }
-
+	//如果request_body存在的话，保存request_body
     if (r->request_body && r->request_body->buf && r->request_body->temp_file && r == r->main)
     {
         /*
@@ -1498,11 +1518,11 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
             ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
         }
-
+		//保存到output
         u->output.free->buf = r->request_body->buf;
         u->output.free->next = NULL;
         u->output.allocated = 1;
-
+		//重置request_body
         r->request_body->buf->pos = r->request_body->buf->start;
         r->request_body->buf->last = r->request_body->buf->start;
         r->request_body->buf->tag = u->output.tag;
@@ -1783,7 +1803,8 @@ ngx_http_upstream_reinit(ngx_http_request_t *r, ngx_http_upstream_t *u)
     off_t         file_pos;
     ngx_chain_t  *cl;
 
-    if (u->reinit_request(r) != NGX_OK) {
+    if (u->reinit_request(r) != NGX_OK) 
+	{
         return NGX_ERROR;
     }
 
@@ -1794,9 +1815,7 @@ ngx_http_upstream_reinit(ngx_http_request_t *r, ngx_http_upstream_t *u)
     u->headers_in.content_length_n = -1;
     u->headers_in.last_modified_time = -1;
 
-    if (ngx_list_init(&u->headers_in.headers, r->pool, 8,
-                      sizeof(ngx_table_elt_t))
-        != NGX_OK)
+    if (ngx_list_init(&u->headers_in.headers, r->pool, 8, sizeof(ngx_table_elt_t)) != NGX_OK)
     {
         return NGX_ERROR;
     }
@@ -1805,7 +1824,8 @@ ngx_http_upstream_reinit(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     file_pos = 0;
 
-    for (cl = u->request_bufs; cl; cl = cl->next) {
+    for (cl = u->request_bufs; cl; cl = cl->next) 
+	{
         cl->buf->pos = cl->buf->start;
 
         /* there is at most one file */
@@ -1818,11 +1838,11 @@ ngx_http_upstream_reinit(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     /* reinit the subrequest's ngx_output_chain() context */
 
-    if (r->request_body && r->request_body->temp_file
-        && r != r->main && u->output.buf)
+    if (r->request_body && r->request_body->temp_file && r != r->main && u->output.buf)
     {
         u->output.free = ngx_alloc_chain_link(r->pool);
-        if (u->output.free == NULL) {
+        if (u->output.free == NULL)
+		{
             return NGX_ERROR;
         }
 
@@ -4352,7 +4372,8 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         }
 #endif
 
-        if (u->peer.connection->pool) {
+        if (u->peer.connection->pool) 
+		{
             ngx_destroy_pool(u->peer.connection->pool);
         }
 
@@ -4374,7 +4395,8 @@ ngx_http_upstream_cleanup(void *data)
     ngx_http_upstream_finalize_request(r, r->upstream, NGX_DONE);
 }
 
-//结束 upstream 请求由函数 ngx_http_upstream_finalize_request 实现，该函数最终会调用 HTTP 框架的 ngx_http_finalize_request 方法来结束请求
+//结束 upstream 请求由函数 ngx_http_upstream_finalize_request 实现，
+//该函数最终会调用 HTTP 框架的 ngx_http_finalize_request 方法来结束请求
 static void
 ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_int_t rc)
 {
@@ -4415,14 +4437,17 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 	/* 调用该方法执行一些操作 */
     u->finalize_request(r, rc);
 
-	/* 调用 free 方法释放连接资源 */ 
+	//如果有设置peer.free钩子，则调用释放peer
+	//非keepalive的情况下该钩子是ngx_http_upstream_free_round_robin_peer
+	//keepalive的情况下该钩子是ngx_http_upstream_free_keepalive_peer，该钩子会将连接
+	//缓存到长连接cache池，并将u->peer.connection设置成空，防止下面代码关闭连接。
     if (u->peer.free && u->peer.sockaddr) 
 	{
         u->peer.free(&u->peer, u->peer.data, 0);
         u->peer.sockaddr = NULL;
     }
 
-	/* 若上游连接还未关闭，则调用 ngx_close_connection 方法关闭该连接 */ 
+	/* 若上游连接还未关闭(或未被缓存起来)，则调用 ngx_close_connection 方法关闭该连接 */ 
     if (u->peer.connection) 
 	{
 
@@ -4455,6 +4480,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         ngx_close_connection(u->peer.connection);
     }
 
+	//关闭连接后置空
     u->peer.connection = NULL;
 
     if (u->pipe && u->pipe->temp_file)
@@ -4465,12 +4491,10 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 	/* 若使用了文件缓存，则调用 ngx_delete_file 方法删除用于缓存响应的临时文件 */
     if (u->store && u->pipe && u->pipe->temp_file && u->pipe->temp_file->file.fd != NGX_INVALID_FILE)
     {
-        if (ngx_delete_file(u->pipe->temp_file->file.name.data)
-            == NGX_FILE_ERROR)
+        if (ngx_delete_file(u->pipe->temp_file->file.name.data) == NGX_FILE_ERROR)
         {
-            ngx_log_error(NGX_LOG_CRIT, r->connection->log, ngx_errno,
-                          ngx_delete_file_n " \"%s\" failed",
-                          u->pipe->temp_file->file.name.data);
+            ngx_log_error(NGX_LOG_CRIT, r->connection->log, ngx_errno, 
+				ngx_delete_file_n " \"%s\" failed", u->pipe->temp_file->file.name.data);
         }
     }
 
@@ -4510,9 +4534,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
     r->connection->log->action = "sending to client";
 
-    if (!u->header_sent
-        || rc == NGX_HTTP_REQUEST_TIME_OUT
-        || rc == NGX_HTTP_CLIENT_CLOSED_REQUEST)
+    if (!u->header_sent || rc == NGX_HTTP_REQUEST_TIME_OUT || rc == NGX_HTTP_CLIENT_CLOSED_REQUEST)
     {
         ngx_http_finalize_request(r, rc);
         return;
@@ -4520,7 +4542,8 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
     flush = 0;
 
-    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) 
+	{
         rc = NGX_ERROR;
         flush = 1;
     }
@@ -6422,7 +6445,10 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
     ngx_http_upstream_srv_conf_t  **uscfp;
 
     uscfp = umcf->upstreams.elts;
-
+	
+	//遍历upstream数组。upstream的来源包括显性的配置upstream模式（ngx_http_upstream）
+	//和隐性的proxy_pass指令（ngx_http_proxy_pass），upstream的添加是通过
+	//ngx_http_upstream_add函数，需要注意的是proxy_pass指令携带变量参数时不会添加upstream
     for (i = 0; i < umcf->upstreams.nelts; i++) 
 	{
         init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream: ngx_http_upstream_init_round_robin;

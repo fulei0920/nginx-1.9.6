@@ -45,8 +45,9 @@ struct ngx_cycle_s
     ngx_log_t                 new_log;			//由nginx.conf配置文件读取到日志文件路径后，将开始初始化error_log日志文件，由于log对象还在用于输出日志到屏幕，这时会用new_log对象暂时性的替代log日志，待初始化成功后，会用new_log的地址覆盖上面的log指针
 
     ngx_uint_t                log_use_stderr;  		/* unsigned  log_use_stderr:1; */
-
-    ngx_connection_t        **files;				//对于poll、rtsig这样的事件模块，会以有效文件句柄数来预先建立这些ngx_connection_t结构体，以加速事件的收集、分发。这时files就会保存所有ngx_connection_t的指针组成的数组，files_n就是指针的总数，而文件句柄的值用来访问files数组成员
+	//对于poll、rtsig这样的事件模块，会以有效文件句柄数来预先建立这些ngx_connection_t结构体，以加速事件的收集、分发。
+	//这时files就会保存所有ngx_connection_t的指针组成的数组，files_n就是指针的总数，而文件句柄的值用来访问files数组成员
+    ngx_connection_t        **files;				
     ngx_connection_t         *free_connections;				//可用连接池，与free_connection_n配合使用
     ngx_uint_t                free_connection_n;			//可用连接池中连接的总数
 
@@ -57,9 +58,10 @@ struct ngx_cycle_s
     ngx_array_t               config_dump;		/*ngx_conf_dump_t类型的数组*/
     ngx_list_t                open_files;		//ngx_open_file_t 类型的单链表，表示Nginx已经打开的所有文件。事实上，Nginx框架不会向open_files链表中添加文件，而是由感兴趣的模块向其中添加文件路径名，Nginx框架会在ngx_init_cycle方法中打开这些文件
     ngx_list_t                shared_memory;    //ngx_shm_zone_t 类型的单链表，存储所有模块分配的共享内存
-
-    ngx_uint_t                connection_n;		//当前进程中所有连接对象的总数，与connections成员配合使用
-    ngx_uint_t                files_n;			//与上面的files成员配合使用，指出files数组里元素的总数
+	//当前进程中所有连接对象的总数，与connections成员配合使用
+    ngx_uint_t                connection_n;		
+    //与上面的files成员配合使用，指出files数组里元素的总数
+    ngx_uint_t                files_n;			
 
     ngx_connection_t         *connections;     	//指向当前进程中的所有连接对象，与connection_n成员配合使用
     ngx_event_t              *read_events;		//指向当前进程中的所有读事件对象，connection_n同时表示所有写事件的总数

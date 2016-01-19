@@ -92,10 +92,10 @@ typedef struct
 
 typedef struct
 {
-	//server名称，即server指令后的表达式
+	//server名称，即server指令后的第一个参数url字串
     ngx_str_t                        name;
-    ngx_addr_t                      *addrs;
-    ngx_uint_t                       naddrs;
+    ngx_addr_t                      *addrs;	//指向存储IP地址的数组的指针，host信息(对应的是 ngx_url_t->addrs )  
+    ngx_uint_t                       naddrs;	//指向存储IP地址的数组的指针，host信息(对应的是 ngx_url_t->addrs )  
     ngx_uint_t                       weight;			/*权重*/
     ngx_uint_t                       max_fails;
     time_t                           fail_timeout;
@@ -120,10 +120,10 @@ struct ngx_http_upstream_srv_conf_s
 
     ngx_array_t                     *servers;  /* array of ngx_http_upstream_server_t */
 
-    ngx_uint_t                       flags;
+    ngx_uint_t                       flags;	//调用函数时ngx_http_upstream_add() 指定的标记
     ngx_str_t                        host;
-    u_char                          *file_name;
-    ngx_uint_t                       line;
+    u_char                          *file_name;	//"/usr/local/nginx/conf/nginx.conf"  
+    ngx_uint_t                       line;		//proxy在配置文件中的行号  
     in_port_t                        port;
     in_port_t                        default_port;
     ngx_uint_t                       no_port;  /* unsigned no_port:1 */
@@ -329,15 +329,19 @@ struct ngx_http_upstream_s
 {
 	//处理读事件的回调方法，每一个阶段都有不同的read_event_handler
     ngx_http_upstream_handler_pt     read_event_handler;
+	
 	//处理写事件的回调方法，每一个阶段都有不同的write_event_handler
     ngx_http_upstream_handler_pt     write_event_handler;
+
 	//表示主动向上游服务器发起的连接
     ngx_peer_connection_t            peer;
+	
 	//当向下游客户端转发响应时(ngx_http_request_t结构体中subrequest_in_memory标志位为0)，
 	//如果打开了缓存且认为上游网速更快(conf配置中buffering标志位为1)，这时会使用pipe成员
 	//来转发响应。在使用这种方式转发响应时，必须由HTTP模块在使用upstream机制前构造pipe
 	//结构体，否则会出现严重的coredump错误
     ngx_event_pipe_t                *pipe;
+	
 	//存储发往上游服务器的请求的缓冲区
     ngx_chain_t                     *request_bufs;
 

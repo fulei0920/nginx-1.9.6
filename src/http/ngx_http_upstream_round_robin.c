@@ -248,7 +248,7 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t 
     return NGX_OK;
 }
 
-
+//功能：针对每个请求选择后端服务器前做一些初始化工作  
 ngx_int_t
 ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream_srv_conf_t *us)
 {
@@ -280,7 +280,9 @@ ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream
     }
 
 	//分配位图
-    if (n <= 8 * sizeof(uintptr_t)) 
+	//如果n小于一个指针变量所能表示的范围, 直接使用已有的指针类型的data变量做位图（tried是位图，用来标识在一轮选择中，各个后端服务器是否已经被选择过）    
+	//否则从内存池中申请空间 
+	if (n <= 8 * sizeof(uintptr_t)) 
 	{
         rrp->tried = &rrp->data;
         rrp->data = 0;
@@ -297,6 +299,7 @@ ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r, ngx_http_upstream
         }
     }
 
+	//回调函数设置 
     r->upstream->peer.get = ngx_http_upstream_get_round_robin_peer;
     r->upstream->peer.free = ngx_http_upstream_free_round_robin_peer;
     r->upstream->peer.tries = ngx_http_upstream_tries(rrp->peers);
@@ -340,9 +343,9 @@ ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r, ngx_http_upstre
         return NGX_ERROR;
     }
 
-    peer = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_rr_peer_t)
-                                * ur->naddrs);
-    if (peer == NULL) {
+    peer = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_rr_peer_t) * ur->naddrs);
+    if (peer == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -350,7 +353,8 @@ ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r, ngx_http_upstre
     peers->number = ur->naddrs;
     peers->name = &ur->host;
 
-    if (ur->sockaddr) {
+    if (ur->sockaddr) 
+	{
         peer[0].sockaddr = ur->sockaddr;
         peer[0].socklen = ur->socklen;
         peer[0].name = ur->host;
@@ -361,21 +365,26 @@ ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r, ngx_http_upstre
         peer[0].fail_timeout = 10;
         peers->peer = peer;
 
-    } else {
+    } 
+	else 
+	{
         peerp = &peers->peer;
 
-        for (i = 0; i < ur->naddrs; i++) {
+        for (i = 0; i < ur->naddrs; i++) 
+		{
 
             socklen = ur->addrs[i].socklen;
 
             sockaddr = ngx_palloc(r->pool, socklen);
-            if (sockaddr == NULL) {
+            if (sockaddr == NULL)
+			{
                 return NGX_ERROR;
             }
 
             ngx_memcpy(sockaddr, ur->addrs[i].sockaddr, socklen);
 
-            switch (sockaddr->sa_family) {
+            switch (sockaddr->sa_family) 
+			{
 #if (NGX_HAVE_INET6)
             case AF_INET6:
                 ((struct sockaddr_in6 *) sockaddr)->sin6_port = htons(ur->port);
@@ -409,13 +418,15 @@ ngx_http_upstream_create_round_robin_peer(ngx_http_request_t *r, ngx_http_upstre
     rrp->peers = peers;
     rrp->current = NULL;
 
-    if (rrp->peers->number <= 8 * sizeof(uintptr_t)) {
+    if (rrp->peers->number <= 8 * sizeof(uintptr_t))
+	{
         rrp->tried = &rrp->data;
         rrp->data = 0;
 
-    } else {
-        n = (rrp->peers->number + (8 * sizeof(uintptr_t) - 1))
-                / (8 * sizeof(uintptr_t));
+    } 
+	else 
+	{
+        n = (rrp->peers->number + (8 * sizeof(uintptr_t) - 1)) / (8 * sizeof(uintptr_t));
 
         rrp->tried = ngx_pcalloc(r->pool, n * sizeof(uintptr_t));
         if (rrp->tried == NULL) {
@@ -453,6 +464,8 @@ ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data)
     peers = rrp->peers;
     ngx_http_upstream_rr_peers_wlock(peers);
 
+	 //如果只有一台后端服务器，Nginx直接选择并返回  
+	 //有多台后端服务器,按照各台服务器的当前权值进行选择  
     if (peers->single) 
 	{
         peer = peers->peer;
@@ -490,6 +503,7 @@ ngx_http_upstream_get_round_robin_peer(ngx_peer_connection_t *pc, void *data)
 
     return NGX_OK;
 
+	//选择失败，转向后备服务器  
 failed:
 
     if (peers->next)
@@ -532,7 +546,13 @@ failed:
     return NGX_BUSY;
 }
 
+//effective_weight都是初始化为配置项中的weight值。current_weight初始化为0.
+//遍历服务列表的过程中，每遍历到一个服务，会在该服务的current_weight上加上其对应的effective_weight。这个是累加。如果对统一的服务列表进行另一次轮询，那么会在前面计算的current_weight的基础之上再加上effective_weight。
+//total变量记录了针对一个服务列表的一次轮询过程中轮询到的所有服务的effective_weight总和。在每一次针对服务列表的轮询之前会置为为0.
 
+//每次取到后端服务（用best表示）后，都会把该对象peer的current_weight减去total的值。因为该服务刚被选中过，因此要降低权值。
+
+//轮询策略是取current_weight最大的服务器。权重高的会优先被选中，而且被选中的频率也更高。权重低的也会由于权重逐渐增长获得被选中的机会。
 static ngx_http_upstream_rr_peer_t *
 ngx_http_upstream_get_peer(ngx_http_upstream_rr_peer_data_t *rrp)
 {
@@ -575,6 +595,7 @@ ngx_http_upstream_get_peer(ngx_http_upstream_rr_peer_data_t *rrp)
         peer->current_weight += peer->effective_weight;
         total += peer->effective_weight;
 
+		//服务正常，effective_weight 逐渐恢复正常   
         if (peer->effective_weight < peer->weight)
 		{
             peer->effective_weight++;
@@ -627,6 +648,8 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, n
     ngx_http_upstream_rr_peers_rlock(rrp->peers);
     ngx_http_upstream_rr_peer_lock(rrp->peers, peer);
 
+
+	//后端服务只有一个
     if (rrp->peers->single) 
 	{
 
@@ -639,16 +662,20 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, n
         return;
     }
 
+	//在某一轮选择里，某次选择的服务器因连接失败或请求处理失败而需要重新进行选择  
     if (state & NGX_PEER_FAILED) 
 	{
         now = ngx_time();
-
+		
+		//已尝试失败次数加一  
         peer->fails++;
         peer->accessed = now;
         peer->checked = now;
 
+	
         if (peer->max_fails) 
 		{
+			 //服务发生异常时，调低effective_weight  
             peer->effective_weight -= peer->weight / peer->max_fails;
 
             if (peer->fails >= peer->max_fails) 
@@ -659,6 +686,7 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, n
 
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0, "free rr peer failed: %p %i", peer, peer->effective_weight);
 
+		//effective_weight总大于0 
         if (peer->effective_weight < 0)
 		{
             peer->effective_weight = 0;

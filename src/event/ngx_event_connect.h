@@ -23,6 +23,7 @@ typedef struct ngx_peer_connection_s  ngx_peer_connection_t;
 
 //当使用长连接与上游服务器通信时，可通过该方法由连接池中获取一个新连接
 typedef ngx_int_t (*ngx_event_get_peer_pt)(ngx_peer_connection_t *pc, void *data);
+
 //当使用长连接与上游服务器通信时，通过该方法将使用完毕的连接释放给连接池
 typedef void (*ngx_event_free_peer_pt)(ngx_peer_connection_t *pc, void *data, ngx_uint_t state); 
 

@@ -2372,6 +2372,10 @@ ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr)
 //开发HTTP模块最常使用的结束请求的方法
 //r -- 待关闭的请求对象，它可能是派生出来的子请求，也可能是客户端发来的原始请求
 //rc -- 关闭的程度状态值
+
+//NGX_OK --是在当前请求的处理都已经可以结束时使用。
+//NGX_DONE -- 一般只是说当前的事件处理程序已经结束（但请求还没结束），带来的效果一般是让当前主请求的引用计数（r->main->count）减一
+//NGX_DECLINED -- 
 void
 ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 {
