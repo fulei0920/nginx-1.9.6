@@ -1602,7 +1602,8 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
             ngx_memcpy(b, body->buf, sizeof(ngx_buf_t));
 
             cl->next = ngx_alloc_chain_link(r->pool);
-            if (cl->next == NULL) {
+            if (cl->next == NULL) 
+			{
                 return NGX_ERROR;
             }
 
@@ -2064,7 +2065,8 @@ ngx_http_proxy_input_filter_init(void *data)
     u = r->upstream;
     ctx = ngx_http_get_module_ctx(r, ngx_http_proxy_module);
 
-    if (ctx == NULL) {
+    if (ctx == NULL) 
+	{
         return NGX_ERROR;
     }
 
@@ -2086,7 +2088,9 @@ ngx_http_proxy_input_filter_init(void *data)
         u->length = 0;
         u->keepalive = !u->headers_in.connection_close;
 
-    } else if (u->headers_in.chunked) {
+    } 
+	else if (u->headers_in.chunked)
+	{
         /* chunked */
 
         u->pipe->input_filter = ngx_http_proxy_chunked_filter;
@@ -2095,16 +2099,19 @@ ngx_http_proxy_input_filter_init(void *data)
         u->input_filter = ngx_http_proxy_non_buffered_chunked_filter;
         u->length = 1;
 
-    } else if (u->headers_in.content_length_n == 0) {
+    }
+	else if (u->headers_in.content_length_n == 0) 
+    {
         /* empty body: special case as filter won't be called */
 
         u->pipe->length = 0;
         u->length = 0;
         u->keepalive = !u->headers_in.connection_close;
 
-    } else {
+    }
+	else 
+	{
         /* content length or connection close */
-
         u->pipe->length = u->headers_in.content_length_n;
         u->length = u->headers_in.content_length_n;
     }
@@ -2338,7 +2345,8 @@ ngx_http_proxy_non_buffered_copy_filter(void *data, ssize_t bytes)
 
     u->length -= bytes;
 
-    if (u->length == 0) {
+    if (u->length == 0)
+	{
         u->keepalive = !u->headers_in.connection_close;
     }
 
@@ -3081,31 +3089,23 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_uint_value(conf->upstream.next_upstream_tries, prev->upstream.next_upstream_tries, 0);
 
-    ngx_conf_merge_value(conf->upstream.buffering,
-                              prev->upstream.buffering, 1);
+    ngx_conf_merge_value(conf->upstream.buffering, prev->upstream.buffering, 1);
 
-    ngx_conf_merge_value(conf->upstream.request_buffering,
-                              prev->upstream.request_buffering, 1);
+    ngx_conf_merge_value(conf->upstream.request_buffering, prev->upstream.request_buffering, 1);
 
     ngx_conf_merge_value(conf->upstream.ignore_client_abort, prev->upstream.ignore_client_abort, 0);
 
-    ngx_conf_merge_value(conf->upstream.force_ranges,
-                              prev->upstream.force_ranges, 0);
+    ngx_conf_merge_value(conf->upstream.force_ranges, prev->upstream.force_ranges, 0);
 
-    ngx_conf_merge_ptr_value(conf->upstream.local,
-                              prev->upstream.local, NULL);
+    ngx_conf_merge_ptr_value(conf->upstream.local, prev->upstream.local, NULL);
 
-    ngx_conf_merge_msec_value(conf->upstream.connect_timeout,
-                              prev->upstream.connect_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->upstream.connect_timeout, prev->upstream.connect_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->upstream.send_timeout,
-                              prev->upstream.send_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->upstream.send_timeout, prev->upstream.send_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->upstream.read_timeout,
-                              prev->upstream.read_timeout, 60000);
+    ngx_conf_merge_msec_value(conf->upstream.read_timeout, prev->upstream.read_timeout, 60000);
 
-    ngx_conf_merge_msec_value(conf->upstream.next_upstream_timeout,
-                              prev->upstream.next_upstream_timeout, 0);
+    ngx_conf_merge_msec_value(conf->upstream.next_upstream_timeout, prev->upstream.next_upstream_timeout, 0);
 
     ngx_conf_merge_size_value(conf->upstream.send_lowat,
                               prev->upstream.send_lowat, 0);
@@ -3134,14 +3134,17 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
                               prev->upstream.busy_buffers_size_conf,
                               NGX_CONF_UNSET_SIZE);
 
-    if (conf->upstream.busy_buffers_size_conf == NGX_CONF_UNSET_SIZE) {
+    if (conf->upstream.busy_buffers_size_conf == NGX_CONF_UNSET_SIZE) 
+	{
         conf->upstream.busy_buffers_size = 2 * size;
-    } else {
-        conf->upstream.busy_buffers_size =
-                                         conf->upstream.busy_buffers_size_conf;
+    } 
+	else
+	{
+        conf->upstream.busy_buffers_size = conf->upstream.busy_buffers_size_conf;
     }
 
-    if (conf->upstream.busy_buffers_size < size) {
+    if (conf->upstream.busy_buffers_size < size)
+	{
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
              "\"proxy_busy_buffers_size\" must be equal to or greater than "
              "the maximum of the value of \"proxy_buffer_size\" and "
@@ -3150,8 +3153,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    if (conf->upstream.busy_buffers_size
-        > (conf->upstream.bufs.num - 1) * conf->upstream.bufs.size)
+    if (conf->upstream.busy_buffers_size > (conf->upstream.bufs.num - 1) * conf->upstream.bufs.size)
     {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
              "\"proxy_busy_buffers_size\" must be less than "
@@ -3161,18 +3163,19 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     }
 
 
-    ngx_conf_merge_size_value(conf->upstream.temp_file_write_size_conf,
-                              prev->upstream.temp_file_write_size_conf,
-                              NGX_CONF_UNSET_SIZE);
+    ngx_conf_merge_size_value(conf->upstream.temp_file_write_size_conf, prev->upstream.temp_file_write_size_conf, NGX_CONF_UNSET_SIZE);
 
-    if (conf->upstream.temp_file_write_size_conf == NGX_CONF_UNSET_SIZE) {
+    if (conf->upstream.temp_file_write_size_conf == NGX_CONF_UNSET_SIZE)
+	{
         conf->upstream.temp_file_write_size = 2 * size;
-    } else {
-        conf->upstream.temp_file_write_size =
-                                      conf->upstream.temp_file_write_size_conf;
+    }
+	else
+	{
+        conf->upstream.temp_file_write_size = conf->upstream.temp_file_write_size_conf;
     }
 
-    if (conf->upstream.temp_file_write_size < size) {
+    if (conf->upstream.temp_file_write_size < size)
+	{
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
              "\"proxy_temp_file_write_size\" must be equal to or greater "
              "than the maximum of the value of \"proxy_buffer_size\" and "
@@ -3181,9 +3184,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    ngx_conf_merge_size_value(conf->upstream.max_temp_file_size_conf,
-                              prev->upstream.max_temp_file_size_conf,
-                              NGX_CONF_UNSET_SIZE);
+    ngx_conf_merge_size_value(conf->upstream.max_temp_file_size_conf, prev->upstream.max_temp_file_size_conf, NGX_CONF_UNSET_SIZE);
 
     if (conf->upstream.max_temp_file_size_conf == NGX_CONF_UNSET_SIZE) {
         conf->upstream.max_temp_file_size = 1024 * 1024 * 1024;

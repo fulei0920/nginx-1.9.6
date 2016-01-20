@@ -396,11 +396,9 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
     {
         /* optimization for a typical case */
 
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                       "stream proxy send PROXY protocol header");
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0, "stream proxy send PROXY protocol header");
 
-        p = ngx_proxy_protocol_write(c, u->downstream_buf.last,
-                                     u->downstream_buf.end);
+        p = ngx_proxy_protocol_write(c, u->downstream_buf.last, u->downstream_buf.end);
         if (p == NULL) {
             ngx_stream_proxy_finalize(s, NGX_ERROR);
             return;
@@ -410,7 +408,8 @@ ngx_stream_proxy_handler(ngx_stream_session_t *s)
         u->proxy_protocol = 0;
     }
 
-    if (ngx_stream_proxy_process(s, 0, 0) != NGX_OK) {
+    if (ngx_stream_proxy_process(s, 0, 0) != NGX_OK)
+	{
         return;
     }
 
@@ -899,25 +898,30 @@ ngx_stream_proxy_process_connection(ngx_event_t *ev, ngx_uint_t from_upstream)
     s = c->data;
     u = s->upstream;
 
-    if (ev->timedout) {
+    if (ev->timedout) 
+	{
 
-        if (ev->delayed) {
+        if (ev->delayed)
+		{
 
             ev->timedout = 0;
             ev->delayed = 0;
 
-            if (!ev->ready) {
-                if (ngx_handle_read_event(ev, 0) != NGX_OK) {
+            if (!ev->ready) 
+			{
+                if (ngx_handle_read_event(ev, 0) != NGX_OK) 
+				{
                     ngx_stream_proxy_finalize(s, NGX_ERROR);
                     return;
                 }
 
-                if (u->connected) {
+                if (u->connected)
+				{
                     pc = u->peer.connection;
 
-                    if (!c->read->delayed && !pc->read->delayed) {
-                        pscf = ngx_stream_get_module_srv_conf(s,
-                                                       ngx_stream_proxy_module);
+                    if (!c->read->delayed && !pc->read->delayed) 
+					{
+                        pscf = ngx_stream_get_module_srv_conf(s, ngx_stream_proxy_module);
                         ngx_add_timer(c->write, pscf->timeout);
                     }
                 }
@@ -925,25 +929,30 @@ ngx_stream_proxy_process_connection(ngx_event_t *ev, ngx_uint_t from_upstream)
                 return;
             }
 
-        } else {
+        } 
+		else
+		{
             ngx_connection_error(c, NGX_ETIMEDOUT, "connection timed out");
             ngx_stream_proxy_finalize(s, NGX_DECLINED);
             return;
         }
 
-    } else if (ev->delayed) {
+    } 
+	else if (ev->delayed) 
+    {
 
-        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0,
-                       "stream connection delayed");
+        ngx_log_debug0(NGX_LOG_DEBUG_STREAM, c->log, 0, "stream connection delayed");
 
-        if (ngx_handle_read_event(ev, 0) != NGX_OK) {
+        if (ngx_handle_read_event(ev, 0) != NGX_OK) 
+		{
             ngx_stream_proxy_finalize(s, NGX_ERROR);
         }
 
         return;
     }
 
-    if (from_upstream && !u->connected) {
+    if (from_upstream && !u->connected)
+	{
         return;
     }
 
@@ -1025,8 +1034,7 @@ ngx_stream_proxy_test_connect(ngx_connection_t *c)
 
 
 static ngx_int_t
-ngx_stream_proxy_process(ngx_stream_session_t *s, ngx_uint_t from_upstream,
-    ngx_uint_t do_write)
+ngx_stream_proxy_process(ngx_stream_session_t *s, ngx_uint_t from_upstream, ngx_uint_t do_write)
 {
     off_t                        *received, limit;
     size_t                        size, limit_rate;
@@ -1521,7 +1529,8 @@ ngx_stream_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_str_t                   *value, *url;
     ngx_stream_core_srv_conf_t  *cscf;
 
-    if (pscf->upstream) {
+    if (pscf->upstream)
+	{
         return "is duplicate";
     }
 

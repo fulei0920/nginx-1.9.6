@@ -2117,7 +2117,8 @@ ngx_http_upstream_send_request_body(ngx_http_request_t *r, ngx_http_upstream_t *
 
         /* stop if there is nothing to send */
 
-        if (out == NULL) {
+        if (out == NULL) 
+		{
             rc = NGX_AGAIN;
             break;
         }
@@ -2384,7 +2385,6 @@ ngx_http_upstream_process_header(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     if (u->headers_in.status_n >= NGX_HTTP_SPECIAL_RESPONSE)
 	{
-
         if (ngx_http_upstream_test_next(r, u) == NGX_OK)
 		{
             return;
@@ -2487,9 +2487,11 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     status = u->headers_in.status_n;
 
-    for (un = ngx_http_upstream_next_errors; un->status; un++) {
+    for (un = ngx_http_upstream_next_errors; un->status; un++) 
+	{
 
-        if (status != un->status) {
+        if (status != un->status) 
+		{
             continue;
         }
 
@@ -2574,8 +2576,7 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
 
 static ngx_int_t
-ngx_http_upstream_intercept_errors(ngx_http_request_t *r,
-    ngx_http_upstream_t *u)
+ngx_http_upstream_intercept_errors(ngx_http_request_t *r, ngx_http_upstream_t *u)
 {
     ngx_int_t                  status;
     ngx_uint_t                 i;
@@ -3898,7 +3899,8 @@ ngx_http_upstream_non_buffered_filter(void *data, ssize_t bytes)
     cl->buf->last = b->last;
     cl->buf->tag = u->output.tag;
 
-    if (u->length == -1) {
+    if (u->length == -1) 
+	{
         return NGX_OK;
     }
 
@@ -4548,15 +4550,19 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
         flush = 1;
     }
 
-    if (r->header_only) {
+    if (r->header_only) 
+	{
         ngx_http_finalize_request(r, rc);
         return;
     }
 
-    if (rc == 0) {
+    if (rc == 0) 
+	{
         rc = ngx_http_send_special(r, NGX_HTTP_LAST);
 
-    } else if (flush) {
+    } 
+	else if (flush)
+	{
         r->keepalive = 0;
         rc = ngx_http_send_special(r, NGX_HTTP_FLUSH);
     }

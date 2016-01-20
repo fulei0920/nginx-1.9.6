@@ -325,8 +325,10 @@ ngx_http_memcached_process_header(ngx_http_request_t *r)
 
     u = r->upstream;
 
-    for (p = u->buffer.pos; p < u->buffer.last; p++) {
-        if (*p == LF) {
+    for (p = u->buffer.pos; p < u->buffer.last; p++)
+	{
+        if (*p == LF) 
+		{
             goto found;
         }
     }
@@ -338,37 +340,39 @@ found:
     line.data = u->buffer.pos;
     line.len = p - u->buffer.pos;
 
-    if (line.len == 0 || *(p - 1) != CR) {
+    if (line.len == 0 || *(p - 1) != CR)
+	{
         goto no_valid;
     }
 
     *p = '\0';
     line.len--;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "memcached: \"%V\"", &line);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "memcached: \"%V\"", &line);
 
     p = u->buffer.pos;
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_memcached_module);
     mlcf = ngx_http_get_module_loc_conf(r, ngx_http_memcached_module);
 
-    if (ngx_strncmp(p, "VALUE ", sizeof("VALUE ") - 1) == 0) {
+    if (ngx_strncmp(p, "VALUE ", sizeof("VALUE ") - 1) == 0) 
+	{
 
         p += sizeof("VALUE ") - 1;
 
-        if (ngx_strncmp(p, ctx->key.data, ctx->key.len) != 0) {
+        if (ngx_strncmp(p, ctx->key.data, ctx->key.len) != 0)
+		{
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                           "memcached sent invalid key in response \"%V\" "
-                          "for key \"%V\"",
-                          &line, &ctx->key);
+                          "for key \"%V\"", &line, &ctx->key);
 
             return NGX_HTTP_UPSTREAM_INVALID_HEADER;
         }
 
         p += ctx->key.len;
 
-        if (*p++ != ' ') {
+        if (*p++ != ' ') 
+		{
             goto no_valid;
         }
 
@@ -376,11 +380,16 @@ found:
 
         start = p;
 
-        while (*p) {
-            if (*p++ == ' ') {
-                if (mlcf->gzip_flag) {
+        while (*p) 
+		{
+            if (*p++ == ' ') 
+			{
+                if (mlcf->gzip_flag)
+				{
                     goto flags;
-                } else {
+                } 
+				else 
+				{
                     goto length;
                 }
             }
@@ -402,7 +411,8 @@ found:
 
         if (flags & mlcf->gzip_flag) {
             h = ngx_list_push(&r->headers_out.headers);
-            if (h == NULL) {
+            if (h == NULL) 
+			{
                 return NGX_ERROR;
             }
 
@@ -418,7 +428,8 @@ found:
         p = line.data + line.len;
 
         u->headers_in.content_length_n = ngx_atoof(start, p - start);
-        if (u->headers_in.content_length_n == NGX_ERROR) {
+        if (u->headers_in.content_length_n == NGX_ERROR) 
+		{
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
                           "memcached sent invalid length in response \"%V\" "
                           "for key \"%V\"",
@@ -489,15 +500,12 @@ ngx_http_memcached_filter(void *data, ssize_t bytes)
     u = ctx->request->upstream;
     b = &u->buffer;
 
-    if (u->length == (ssize_t) ctx->rest) {
+    if (u->length == (ssize_t) ctx->rest)
+	{
 
-        if (ngx_strncmp(b->last,
-                   ngx_http_memcached_end + NGX_HTTP_MEMCACHED_END - ctx->rest,
-                   bytes)
-            != 0)
+        if (ngx_strncmp(b->last, ngx_http_memcached_end + NGX_HTTP_MEMCACHED_END - ctx->rest, bytes) != 0)
         {
-            ngx_log_error(NGX_LOG_ERR, ctx->request->connection->log, 0,
-                          "memcached sent invalid trailer");
+            ngx_log_error(NGX_LOG_ERR, ctx->request->connection->log, 0, "memcached sent invalid trailer");
 
             u->length = 0;
             ctx->rest = 0;
@@ -508,14 +516,16 @@ ngx_http_memcached_filter(void *data, ssize_t bytes)
         u->length -= bytes;
         ctx->rest -= bytes;
 
-        if (u->length == 0) {
+        if (u->length == 0) 
+		{
             u->keepalive = 1;
         }
 
         return NGX_OK;
     }
 
-    for (cl = u->out_bufs, ll = &u->out_bufs; cl; cl = cl->next) {
+    for (cl = u->out_bufs, ll = &u->out_bufs; cl; cl = cl->next) 
+	{
         ll = &cl->next;
     }
 
@@ -583,8 +593,7 @@ ngx_http_memcached_abort_request(ngx_http_request_t *r)
 static void
 ngx_http_memcached_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 {
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "finalize http memcached request");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "finalize http memcached request");
     return;
 }
 
