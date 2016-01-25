@@ -1698,8 +1698,7 @@ failed:
 
 
 static ngx_int_t
-ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
-    ngx_connection_t *c)
+ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_connection_t *c)
 {
     u_char     *p, *last;
     ngx_str_t   name;
@@ -1730,7 +1729,8 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u,
     p = name.data;
     last = name.data + name.len;
 
-    if (*p == '[') {
+    if (*p == '[') 
+{
         p = ngx_strlchr(p, last, ']');
 
         if (p == NULL) {

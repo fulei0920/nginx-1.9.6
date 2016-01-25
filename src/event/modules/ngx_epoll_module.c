@@ -735,10 +735,12 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         ngx_time_update();
     }
 
-    if (err) {
-        if (err == NGX_EINTR) {
-
-            if (ngx_event_timer_alarm) {
+    if (err) 
+	{
+        if (err == NGX_EINTR)
+		{
+            if (ngx_event_timer_alarm) 
+			{
                 ngx_event_timer_alarm = 0;
                 return NGX_OK;
             }

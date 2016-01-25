@@ -423,8 +423,7 @@ ngx_resolve_name_done(ngx_resolver_ctx_t *ctx)
 
     r = ctx->resolver;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_CORE, r->log, 0,
-                   "resolve name done: %i", ctx->state);
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, r->log, 0, "resolve name done: %i", ctx->state);
 
     if (ctx->quick) {
         return;
@@ -693,7 +692,8 @@ ngx_resolve_name_locked(ngx_resolver_t *r, ngx_resolver_ctx_t *ctx)
     if (ctx->event == NULL) 
 	{
         ctx->event = ngx_resolver_calloc(r, sizeof(ngx_event_t));
-        if (ctx->event == NULL) {
+        if (ctx->event == NULL)
+		{
             goto failed;
         }
 
@@ -3109,7 +3109,8 @@ ngx_udp_connect(ngx_udp_connection_t *uc)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, &uc->log, 0, "UDP socket %d", s);
 
-    if (s == (ngx_socket_t) -1) {
+    if (s == (ngx_socket_t) -1)
+	{
         ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno,
                       ngx_socket_n " failed");
         return NGX_ERROR;
@@ -3121,8 +3122,7 @@ ngx_udp_connect(ngx_udp_connection_t *uc)
 	{
         if (ngx_close_socket(s) == -1) 
 		{
-            ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno,
-                          ngx_close_socket_n "failed");
+            ngx_log_error(NGX_LOG_ALERT, &uc->log, ngx_socket_errno, ngx_close_socket_n "failed");
         }
 
         return NGX_ERROR;
