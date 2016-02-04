@@ -144,7 +144,7 @@ typedef enum
 //try_files指令的处理阶段，如果没有配置try_files指令，则该阶段被跳过
     NGX_HTTP_TRY_FILES_PHASE,	
 //内容生成阶段，该阶段产生响应，并发送到客户端；
-NGX_HTTP_CONTENT_PHASE,			//内容处理模块，我们一般的handle都是处于这个模块  
+	NGX_HTTP_CONTENT_PHASE,			//内容处理模块，我们一般的handle都是处于这个模块  
 //日志记录阶段，该阶段记录访问日志；
     NGX_HTTP_LOG_PHASE				
 } ngx_http_phases;

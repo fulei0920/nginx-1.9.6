@@ -12,16 +12,17 @@
 
 typedef struct 
 {
-    in_addr_t         mask;
-    in_addr_t         addr;
+    in_addr_t         mask;			//ipv4×ÓÍøºÅ(ÍøÂç×Ö½ÚÐò)
+    in_addr_t         addr;			//ipv6×ÓÍøÑÚÂë(ÍøÂç×Ö½ÚÐò)
     ngx_uint_t        deny;      /* unsigned  deny:1; */
 } ngx_http_access_rule_t;
 
 #if (NGX_HAVE_INET6)
 
-typedef struct {
-    struct in6_addr   addr;
-    struct in6_addr   mask;
+typedef struct 
+{
+    struct in6_addr   addr;			//ipv6×ÓÍøºÅ(ÍøÂç×Ö½ÚÐò)
+    struct in6_addr   mask;			//ipv6×ÓÍøÑÚÂë(ÍøÂç×Ö½ÚÐò)
     ngx_uint_t        deny;      /* unsigned  deny:1; */
 } ngx_http_access_rule6_t;
 
@@ -29,7 +30,8 @@ typedef struct {
 
 #if (NGX_HAVE_UNIX_DOMAIN)
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t        deny;      /* unsigned  deny:1; */
 } ngx_http_access_rule_un_t;
 
@@ -48,21 +50,17 @@ typedef struct
 
 
 static ngx_int_t ngx_http_access_handler(ngx_http_request_t *r);
-static ngx_int_t ngx_http_access_inet(ngx_http_request_t *r,
-    ngx_http_access_loc_conf_t *alcf, in_addr_t addr);
+static ngx_int_t ngx_http_access_inet(ngx_http_request_t *r, ngx_http_access_loc_conf_t *alcf, in_addr_t addr);
 #if (NGX_HAVE_INET6)
-static ngx_int_t ngx_http_access_inet6(ngx_http_request_t *r,
-    ngx_http_access_loc_conf_t *alcf, u_char *p);
+static ngx_int_t ngx_http_access_inet6(ngx_http_request_t *r, ngx_http_access_loc_conf_t *alcf, u_char *p);
 #endif
 #if (NGX_HAVE_UNIX_DOMAIN)
-static ngx_int_t ngx_http_access_unix(ngx_http_request_t *r,
-    ngx_http_access_loc_conf_t *alcf);
+static ngx_int_t ngx_http_access_unix(ngx_http_request_t *r, ngx_http_access_loc_conf_t *alcf);
 #endif
 static ngx_int_t ngx_http_access_found(ngx_http_request_t *r, ngx_uint_t deny);
 static char *ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static void *ngx_http_access_create_loc_conf(ngx_conf_t *cf);
-static char *ngx_http_access_merge_loc_conf(ngx_conf_t *cf,
-    void *parent, void *child);
+static char *ngx_http_access_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static ngx_int_t ngx_http_access_init(ngx_conf_t *cf);
 
 
@@ -107,7 +105,8 @@ static ngx_http_module_t  ngx_http_access_module_ctx =
 };
 
 
-ngx_module_t  ngx_http_access_module = {
+ngx_module_t  ngx_http_access_module = 
+{
     NGX_MODULE_V1,
     &ngx_http_access_module_ctx,           /* module context */
     ngx_http_access_commands,              /* module directives */
@@ -321,15 +320,18 @@ ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     all = (value[1].len == 3 && ngx_strcmp(value[1].data, "all") == 0);
 
-    if (!all) {
+    if (!all)
+	{
 
 #if (NGX_HAVE_UNIX_DOMAIN)
 
-        if (value[1].len == 5 && ngx_strcmp(value[1].data, "unix:") == 0) {
+        if (value[1].len == 5 && ngx_strcmp(value[1].data, "unix:") == 0) 
+		{
             cidr.family = AF_UNIX;
             rc = NGX_OK;
-
-        } else {
+        } 
+		else 
+		{
             rc = ngx_ptocidr(&value[1], &cidr);
         }
 
@@ -337,30 +339,33 @@ ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         rc = ngx_ptocidr(&value[1], &cidr);
 #endif
 
-        if (rc == NGX_ERROR) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                         "invalid parameter \"%V\"", &value[1]);
+        if (rc == NGX_ERROR) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid parameter \"%V\"", &value[1]);
             return NGX_CONF_ERROR;
         }
 
-        if (rc == NGX_DONE) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                         "low address bits of %V are meaningless", &value[1]);
+        if (rc == NGX_DONE)
+		{
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "low address bits of %V are meaningless", &value[1]);
         }
     }
 
-    if (cidr.family == AF_INET || all) {
+    if (cidr.family == AF_INET || all) 
+	{
 
-        if (alcf->rules == NULL) {
-            alcf->rules = ngx_array_create(cf->pool, 4,
-                                           sizeof(ngx_http_access_rule_t));
-            if (alcf->rules == NULL) {
+        if (alcf->rules == NULL) 
+		{
+            alcf->rules = ngx_array_create(cf->pool, 4, sizeof(ngx_http_access_rule_t));
+            if (alcf->rules == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
         }
 
         rule = ngx_array_push(alcf->rules);
-        if (rule == NULL) {
+        if (rule == NULL)
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -370,18 +375,21 @@ ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
 #if (NGX_HAVE_INET6)
-    if (cidr.family == AF_INET6 || all) {
+    if (cidr.family == AF_INET6 || all)
+	{
 
-        if (alcf->rules6 == NULL) {
-            alcf->rules6 = ngx_array_create(cf->pool, 4,
-                                            sizeof(ngx_http_access_rule6_t));
-            if (alcf->rules6 == NULL) {
+        if (alcf->rules6 == NULL) 
+		{
+            alcf->rules6 = ngx_array_create(cf->pool, 4, sizeof(ngx_http_access_rule6_t));
+            if (alcf->rules6 == NULL)
+			{
                 return NGX_CONF_ERROR;
             }
         }
 
         rule6 = ngx_array_push(alcf->rules6);
-        if (rule6 == NULL) {
+        if (rule6 == NULL)
+		{
             return NGX_CONF_ERROR;
         }
 
@@ -392,12 +400,14 @@ ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
 
 #if (NGX_HAVE_UNIX_DOMAIN)
-    if (cidr.family == AF_UNIX || all) {
+    if (cidr.family == AF_UNIX || all) 
+	{
 
-        if (alcf->rules_un == NULL) {
-            alcf->rules_un = ngx_array_create(cf->pool, 1,
-                                            sizeof(ngx_http_access_rule_un_t));
-            if (alcf->rules_un == NULL) {
+        if (alcf->rules_un == NULL) 
+		{
+            alcf->rules_un = ngx_array_create(cf->pool, 1, sizeof(ngx_http_access_rule_un_t));
+            if (alcf->rules_un == NULL) 
+			{
                 return NGX_CONF_ERROR;
             }
         }
@@ -421,7 +431,8 @@ ngx_http_access_create_loc_conf(ngx_conf_t *cf)
     ngx_http_access_loc_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_access_loc_conf_t));
-    if (conf == NULL) {
+    if (conf == NULL) 
+	{
         return NULL;
     }
 
@@ -442,7 +453,8 @@ ngx_http_access_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 #if (NGX_HAVE_UNIX_DOMAIN)
         && conf->rules_un == NULL
 #endif
-    ) {
+    )
+    {
         conf->rules = prev->rules;
 #if (NGX_HAVE_INET6)
         conf->rules6 = prev->rules6;

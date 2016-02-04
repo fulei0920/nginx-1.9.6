@@ -52,21 +52,24 @@ typedef u_char *(*ngx_http_log_handler_pt)(ngx_http_request_t *r,
 #endif
 
 
-struct ngx_http_log_ctx_s {
+struct ngx_http_log_ctx_s 
+{
     ngx_connection_t    *connection;
     ngx_http_request_t  *request;
     ngx_http_request_t  *current_request;
 };
 
 
-struct ngx_http_chunked_s {
+struct ngx_http_chunked_s
+{
     ngx_uint_t           state;
     off_t                size;
     off_t                length;
 };
 
 
-typedef struct {
+typedef struct 
+{
     ngx_uint_t           http_version;
     ngx_uint_t           code;
     ngx_uint_t           count;

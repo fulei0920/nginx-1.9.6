@@ -13,7 +13,9 @@ static ngx_int_t ngx_parse_unix_domain_url(ngx_pool_t *pool, ngx_url_t *u);
 static ngx_int_t ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u);
 static ngx_int_t ngx_parse_inet6_url(ngx_pool_t *pool, ngx_url_t *u);
 
-//将点分十进制转换为网络字节序的ip地址
+//将ipv4字符串地址转换为ip地址(网络字节序)
+//成功 -- 对应ipv4地址
+//失败 -- INADDR_NONE
 in_addr_t
 ngx_inet_addr(u_char *text, size_t len)
 {
@@ -64,6 +66,7 @@ ngx_inet_addr(u_char *text, size_t len)
 
 #if (NGX_HAVE_INET6)
 
+//将ipv6字符串地址转换为ipv6地址(网络字节序)
 ngx_int_t
 ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
 {
@@ -71,7 +74,8 @@ ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
     size_t      len4;
     ngx_uint_t  n, nibbles, word;
 
-    if (len == 0) {
+    if (len == 0)
+	{
         return NGX_ERROR;
     }
 
@@ -82,7 +86,8 @@ ngx_inet6_addr(u_char *p, size_t len, u_char *addr)
     word = 0;
     n = 8;
 
-    if (p[0] == ':') {
+    if (p[0] == ':') 
+	{
         p++;
         len--;
     }
@@ -395,40 +400,50 @@ ngx_ptocidr(ngx_str_t *text, ngx_cidr_t *cidr)
 
     cidr->u.in.addr = ngx_inet_addr(addr, len);
 
-    if (cidr->u.in.addr != INADDR_NONE) {
+    if (cidr->u.in.addr != INADDR_NONE) 
+	{
         cidr->family = AF_INET;
 
-        if (mask == NULL) {
+        if (mask == NULL) 
+		{
             cidr->u.in.mask = 0xffffffff;
             return NGX_OK;
         }
 
 #if (NGX_HAVE_INET6)
-    } else if (ngx_inet6_addr(addr, len, cidr->u.in6.addr.s6_addr) == NGX_OK) {
+    }
+	else if (ngx_inet6_addr(addr, len, cidr->u.in6.addr.s6_addr) == NGX_OK) 
+    {
         cidr->family = AF_INET6;
 
-        if (mask == NULL) {
+        if (mask == NULL) 
+		{
             ngx_memset(cidr->u.in6.mask.s6_addr, 0xff, 16);
             return NGX_OK;
         }
 
 #endif
-    } else {
+    } 
+	else 
+	{
         return NGX_ERROR;
     }
 
     mask++;
 
     shift = ngx_atoi(mask, last - mask);
-    if (shift == NGX_ERROR) {
+    if (shift == NGX_ERROR)
+	{
         return NGX_ERROR;
     }
 
-    switch (cidr->family) {
+    switch (cidr->family) 
+	{
 
 #if (NGX_HAVE_INET6)
     case AF_INET6:
-        if (shift > 128) {
+        if (shift > 128)
+		{
             return NGX_ERROR;
         }
 
@@ -436,14 +451,16 @@ ngx_ptocidr(ngx_str_t *text, ngx_cidr_t *cidr)
         mask = cidr->u.in6.mask.s6_addr;
         rc = NGX_OK;
 
-        for (i = 0; i < 16; i++) {
+        for (i = 0; i < 16; i++) 
+		{
 
             s = (shift > 8) ? 8 : shift;
             shift -= s;
 
             mask[i] = (u_char) (0xffu << (8 - s));
 
-            if (addr[i] != (addr[i] & mask[i])) {
+            if (addr[i] != (addr[i] & mask[i])) 
+			{
                 rc = NGX_DONE;
                 addr[i] &= mask[i];
             }
@@ -453,19 +470,23 @@ ngx_ptocidr(ngx_str_t *text, ngx_cidr_t *cidr)
 #endif
 
     default: /* AF_INET */
-        if (shift > 32) {
+        if (shift > 32)
+		{
             return NGX_ERROR;
         }
 
-        if (shift) {
+        if (shift) 
+		{
             cidr->u.in.mask = htonl((uint32_t) (0xffffffffu << (32 - shift)));
-
-        } else {
+        }
+		else 
+        {
             /* x86 compilers use a shl instruction that shifts by modulo 32 */
             cidr->u.in.mask = 0;
         }
 
-        if (cidr->u.in.addr == (cidr->u.in.addr & cidr->u.in.mask)) {
+        if (cidr->u.in.addr == (cidr->u.in.addr & cidr->u.in.mask)) 
+		{
             return NGX_OK;
         }
 

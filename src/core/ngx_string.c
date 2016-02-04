@@ -908,19 +908,23 @@ ngx_atoi(u_char *line, size_t n)
 {
     ngx_int_t  value, cutoff, cutlim;
 
-    if (n == 0) {
+    if (n == 0)
+	{
         return NGX_ERROR;
     }
 
     cutoff = NGX_MAX_INT_T_VALUE / 10;
     cutlim = NGX_MAX_INT_T_VALUE % 10;
 
-    for (value = 0; n--; line++) {
-        if (*line < '0' || *line > '9') {
+    for (value = 0; n--; line++)
+	{
+        if (*line < '0' || *line > '9')
+		{
             return NGX_ERROR;
         }
-
-        if (value >= cutoff && (value > cutoff || *line - '0' > cutlim)) {
+		//Ô½½ç¼ì²é
+        if (value >= cutoff && (value > cutoff || *line - '0' > cutlim))
+		{
             return NGX_ERROR;
         }
 

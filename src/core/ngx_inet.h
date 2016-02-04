@@ -40,16 +40,17 @@
 
 typedef struct 
 {
-    in_addr_t                 addr;
-    in_addr_t                 mask;
+    in_addr_t                 addr;		//ipv4×ÓÍøºÅ(ÍøÂç×Ö½ÚĞò)
+    in_addr_t                 mask;		//ipv4×ÓÍøÑÚÂë(ÍøÂç×Ö½ÚĞò)
 } ngx_in_cidr_t;
 
 
 #if (NGX_HAVE_INET6)
 
-typedef struct {
-    struct in6_addr           addr;
-    struct in6_addr           mask;
+typedef struct 
+{
+    struct in6_addr           addr;	 	//ipv6×ÓÍøºÅ(ÍøÂç×Ö½ÚĞò)
+    struct in6_addr           mask;		//ipv6×ÓÍøÑÚÂë(ÍøÂç×Ö½ÚĞò)
 } ngx_in6_cidr_t;
 
 #endif
