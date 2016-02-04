@@ -719,8 +719,7 @@ ngx_http_upstream_free_round_robin_peer(ngx_peer_connection_t *pc, void *data, n
 #if (NGX_HTTP_SSL)
 
 ngx_int_t
-ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc,
-    void *data)
+ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc, void *data)
 {
     ngx_http_upstream_rr_peer_data_t  *rrp = data;
 
@@ -742,11 +741,13 @@ ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc,
 #if (NGX_HTTP_UPSTREAM_ZONE)
     peers = rrp->peers;
 
-    if (peers->shpool) {
+    if (peers->shpool)
+	{
         ngx_http_upstream_rr_peers_rlock(peers);
         ngx_http_upstream_rr_peer_lock(peers, peer);
 
-        if (peer->ssl_session == NULL) {
+        if (peer->ssl_session == NULL) 
+		{
             ngx_http_upstream_rr_peer_unlock(peers, peer);
             ngx_http_upstream_rr_peers_unlock(peers);
             return NGX_OK;
@@ -764,8 +765,7 @@ ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc,
 
         rc = ngx_ssl_set_session(pc->connection, ssl_session);
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                       "set session: %p", ssl_session);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "set session: %p", ssl_session);
 
         ngx_ssl_free_session(ssl_session);
 
@@ -777,16 +777,14 @@ ngx_http_upstream_set_round_robin_peer_session(ngx_peer_connection_t *pc,
 
     rc = ngx_ssl_set_session(pc->connection, ssl_session);
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                   "set session: %p", ssl_session);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "set session: %p", ssl_session);
 
     return rc;
 }
 
 
 void
-ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc,
-    void *data)
+ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc, void *data)
 {
     ngx_http_upstream_rr_peer_data_t  *rrp = data;
 
@@ -802,7 +800,8 @@ ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc,
 #if (NGX_HTTP_UPSTREAM_ZONE)
     peers = rrp->peers;
 
-    if (peers->shpool) {
+    if (peers->shpool)
+	{
 
         ssl_session = SSL_get0_session(pc->connection->ssl->connection);
 
@@ -862,22 +861,22 @@ ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc,
 
     ssl_session = ngx_ssl_get_session(pc->connection);
 
-    if (ssl_session == NULL) {
+    if (ssl_session == NULL)
+	{
         return;
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                   "save session: %p", ssl_session);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "save session: %p", ssl_session);
 
     peer = rrp->current;
 
     old_ssl_session = peer->ssl_session;
     peer->ssl_session = ssl_session;
 
-    if (old_ssl_session) {
+    if (old_ssl_session)
+	{
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                       "old session: %p", old_ssl_session);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "old session: %p", old_ssl_session);
 
         /* TODO: may block */
 

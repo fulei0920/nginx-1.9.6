@@ -58,8 +58,8 @@ typedef struct
 
     ngx_event_handler_pt        saved_read_handler;
     ngx_event_handler_pt        saved_write_handler;
-
-    unsigned                    handshaked:1;		/*表示SSL握手是否成功结束*/
+	//标志位，为1表示SSL握手是否成功结束
+    unsigned                    handshaked:1;		
     unsigned                    renegotiation:1;
     unsigned                    buffer:1;
     unsigned                    no_wait_shutdown:1;

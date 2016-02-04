@@ -585,8 +585,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->session_timeout, prev->session_timeout, 300);
 
-    ngx_conf_merge_value(conf->prefer_server_ciphers,
-                         prev->prefer_server_ciphers, 0);
+    ngx_conf_merge_value(conf->prefer_server_ciphers, prev->prefer_server_ciphers, 0);
 
     ngx_conf_merge_bitmask_value(conf->protocols, prev->protocols, (NGX_CONF_BITMASK_SET|NGX_SSL_TLSv1 |NGX_SSL_TLSv1_1|NGX_SSL_TLSv1_2));
 
@@ -620,19 +619,17 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     if (conf->enable) 
 	{
 
-        if (conf->certificate.len == 0) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no \"ssl_certificate\" is defined for "
-                          "the \"ssl\" directive in %s:%ui",
-                          conf->file, conf->line);
+        if (conf->certificate.len == 0) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no \"ssl_certificate\" is defined for "
+                          "the \"ssl\" directive in %s:%ui", conf->file, conf->line);
             return NGX_CONF_ERROR;
         }
 
-        if (conf->certificate_key.len == 0) {
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no \"ssl_certificate_key\" is defined for "
-                          "the \"ssl\" directive in %s:%ui",
-                          conf->file, conf->line);
+        if (conf->certificate_key.len == 0) 
+		{
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "no \"ssl_certificate_key\" is defined for "
+                          "the \"ssl\" directive in %s:%ui", conf->file, conf->line);
             return NGX_CONF_ERROR;
         }
 
@@ -640,11 +637,13 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 	else 
 	{
 
-        if (conf->certificate.len == 0) {
+        if (conf->certificate.len == 0) 
+		{
             return NGX_CONF_OK;
         }
 
-        if (conf->certificate_key.len == 0) {
+        if (conf->certificate_key.len == 0)
+		{
             ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
                           "no \"ssl_certificate_key\" is defined "
                           "for certificate \"%V\"", &conf->certificate);
@@ -716,7 +715,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_ssl_crl(cf, &conf->ssl, &conf->crl) != NGX_OK) {
+    if (ngx_ssl_crl(cf, &conf->ssl, &conf->crl) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -730,7 +730,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     SSL_CTX_set_tmp_rsa_callback(conf->ssl.ctx, ngx_ssl_rsa512_key_callback);
 #endif
 
-    if (ngx_ssl_dhparam(cf, &conf->ssl, &conf->dhparam) != NGX_OK) {
+    if (ngx_ssl_dhparam(cf, &conf->ssl, &conf->dhparam) != NGX_OK) 
+	{
         return NGX_CONF_ERROR;
     }
 
@@ -746,10 +747,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->shm_zone = prev->shm_zone;
     }
 
-    if (ngx_ssl_session_cache(&conf->ssl, &ngx_http_ssl_sess_id_ctx,
-                              conf->builtin_session_cache,
-                              conf->shm_zone, conf->session_timeout)
-        != NGX_OK)
+    if (ngx_ssl_session_cache(&conf->ssl, &ngx_http_ssl_sess_id_ctx, conf->builtin_session_cache, conf->shm_zone, conf->session_timeout) != NGX_OK)
     {
         return NGX_CONF_ERROR;
     }
@@ -757,7 +755,8 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_value(conf->session_tickets, prev->session_tickets, 1);
 
 #ifdef SSL_OP_NO_TICKET
-    if (!conf->session_tickets) {
+    if (!conf->session_tickets) 
+	{
         SSL_CTX_set_options(conf->ssl.ctx, SSL_OP_NO_TICKET);
     }
 #endif
@@ -790,7 +789,8 @@ ngx_http_ssl_enable(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     rv = ngx_conf_set_flag_slot(cf, cmd, conf);
 
-    if (rv != NGX_CONF_OK) {
+    if (rv != NGX_CONF_OK) 
+	{
         return rv;
     }
 
@@ -838,29 +838,30 @@ ngx_http_ssl_session_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    for (i = 1; i < cf->args->nelts; i++) {
+    for (i = 1; i < cf->args->nelts; i++)
+	{
 
-        if (ngx_strcmp(value[i].data, "off") == 0) {
+        if (ngx_strcmp(value[i].data, "off") == 0)
+		{
             sscf->builtin_session_cache = NGX_SSL_NO_SCACHE;
             continue;
         }
 
-        if (ngx_strcmp(value[i].data, "none") == 0) {
+        if (ngx_strcmp(value[i].data, "none") == 0) 
+		{
             sscf->builtin_session_cache = NGX_SSL_NONE_SCACHE;
             continue;
         }
 
-        if (ngx_strcmp(value[i].data, "builtin") == 0) {
+        if (ngx_strcmp(value[i].data, "builtin") == 0) 
+		{
             sscf->builtin_session_cache = NGX_SSL_DFLT_BUILTIN_SCACHE;
             continue;
         }
 
-        if (value[i].len > sizeof("builtin:") - 1
-            && ngx_strncmp(value[i].data, "builtin:", sizeof("builtin:") - 1)
-               == 0)
+        if (value[i].len > sizeof("builtin:") - 1 && ngx_strncmp(value[i].data, "builtin:", sizeof("builtin:") - 1) == 0)
         {
-            n = ngx_atoi(value[i].data + sizeof("builtin:") - 1,
-                         value[i].len - (sizeof("builtin:") - 1));
+            n = ngx_atoi(value[i].data + sizeof("builtin:") - 1, value[i].len - (sizeof("builtin:") - 1));
 
             if (n == NGX_ERROR) {
                 goto invalid;
@@ -922,7 +923,8 @@ ngx_http_ssl_session_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         goto invalid;
     }
 
-    if (sscf->shm_zone && sscf->builtin_session_cache == NGX_CONF_UNSET) {
+    if (sscf->shm_zone && sscf->builtin_session_cache == NGX_CONF_UNSET) 
+	{
         sscf->builtin_session_cache = NGX_SSL_NO_BUILTIN_SCACHE;
     }
 

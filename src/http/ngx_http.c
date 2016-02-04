@@ -617,6 +617,7 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http
 	{
         /* merge the server{}s' srv_conf's */
 		//将http{}块下main级别的server与server{}块下的server相关的结构体合并
+		
 		/*srv_conf将指向所有的HTTP模块产生的server相关的srv级别配置结构体*/
         ctx->srv_conf = cscfp[s]->ctx->srv_conf;	
         if (module->merge_srv_conf) 

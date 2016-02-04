@@ -1664,10 +1664,9 @@ ngx_http_upstream_ssl_handshake(ngx_connection_t *c)
                 goto failed;
             }
 
-            if (ngx_ssl_check_host(c, &u->ssl_name) != NGX_OK) {
-                ngx_log_error(NGX_LOG_ERR, c->log, 0,
-                              "upstream SSL certificate does not match \"%V\"",
-                              &u->ssl_name);
+            if (ngx_ssl_check_host(c, &u->ssl_name) != NGX_OK) 
+			{
+                ngx_log_error(NGX_LOG_ERR, c->log, 0, "upstream SSL certificate does not match \"%V\"", &u->ssl_name);
                 goto failed;
             }
         }
@@ -1730,10 +1729,11 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_co
     last = name.data + name.len;
 
     if (*p == '[') 
-{
+	{
         p = ngx_strlchr(p, last, ']');
 
-        if (p == NULL) {
+        if (p == NULL) 
+		{
             p = name.data;
         }
     }
@@ -1776,8 +1776,7 @@ ngx_http_upstream_ssl_name(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_co
 
     name.data = p;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "upstream SSL server name: \"%s\"", name.data);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "upstream SSL server name: \"%s\"", name.data);
 
     if (SSL_set_tlsext_host_name(c->ssl->connection, name.data) == 0)
 	{
@@ -4399,6 +4398,7 @@ ngx_http_upstream_cleanup(void *data)
 
 //结束 upstream 请求由函数 ngx_http_upstream_finalize_request 实现，
 //该函数最终会调用 HTTP 框架的 ngx_http_finalize_request 方法来结束请求
+//NGX_DECLINED -- 关闭上游连接，不关闭下游连接
 static void
 ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_int_t rc)
 {
