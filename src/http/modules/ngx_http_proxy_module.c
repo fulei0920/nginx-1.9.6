@@ -1501,7 +1501,9 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
 
             e.skip = (len == sizeof(CRLF) - 1) ? 1 : 0;
 
-        } else {
+        }
+		else 
+		{
             e.skip = 0;
         }
 

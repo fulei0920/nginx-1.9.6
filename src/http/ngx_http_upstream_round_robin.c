@@ -805,18 +805,19 @@ ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc, void 
 
         ssl_session = SSL_get0_session(pc->connection->ssl->connection);
 
-        if (ssl_session == NULL) {
+        if (ssl_session == NULL)
+		{
             return;
         }
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0,
-                       "save session: %p", ssl_session);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, pc->log, 0, "save session: %p", ssl_session);
 
         len = i2d_SSL_SESSION(ssl_session, NULL);
 
         /* do not cache too big session */
 
-        if (len > NGX_SSL_MAX_SESSION_SIZE) {
+        if (len > NGX_SSL_MAX_SESSION_SIZE) 
+		{
             return;
         }
 
@@ -828,7 +829,8 @@ ngx_http_upstream_save_round_robin_peer_session(ngx_peer_connection_t *pc, void 
         ngx_http_upstream_rr_peers_rlock(peers);
         ngx_http_upstream_rr_peer_lock(peers, peer);
 
-        if (len > peer->ssl_session_len) {
+        if (len > peer->ssl_session_len)
+		{
             ngx_shmtx_lock(&peers->shpool->mutex);
 
             if (peer->ssl_session) {

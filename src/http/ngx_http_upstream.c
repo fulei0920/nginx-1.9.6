@@ -1652,7 +1652,8 @@ ngx_http_upstream_ssl_handshake(ngx_connection_t *c)
 
     ngx_http_set_log_request(c->log, r);
 
-    if (c->ssl->handshaked) {
+    if (c->ssl->handshaked) 
+	{
 
         if (u->conf->ssl_verify) {
             rc = SSL_get_verify_result(c->ssl->connection);
@@ -1671,7 +1672,8 @@ ngx_http_upstream_ssl_handshake(ngx_connection_t *c)
             }
         }
 
-        if (u->conf->ssl_session_reuse) {
+        if (u->conf->ssl_session_reuse)
+		{
             u->peer.save_session(&u->peer, u->peer.data);
         }
 

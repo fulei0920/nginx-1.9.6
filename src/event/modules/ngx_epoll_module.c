@@ -723,8 +723,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     /* NGX_TIMER_INFINITE == INFTIM */
 
-    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
-                   "epoll timer: %M", timer);
+    ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "epoll timer: %M", timer);
 
     events = epoll_wait(ep, event_list, (int) nevents, timer);
 
@@ -746,8 +745,9 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
             }
 
             level = NGX_LOG_INFO;
-
-        } else {
+        }
+		else 
+		{
             level = NGX_LOG_ALERT;
         }
 
@@ -755,13 +755,14 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         return NGX_ERROR;
     }
 
-    if (events == 0) {
-        if (timer != NGX_TIMER_INFINITE) {
+    if (events == 0) 
+	{
+        if (timer != NGX_TIMER_INFINITE) 
+		{
             return NGX_OK;
         }
 
-        ngx_log_error(NGX_LOG_ALERT, cycle->log, 0,
-                      "epoll_wait() returned no events without timeout");
+        ngx_log_error(NGX_LOG_ALERT, cycle->log, 0, "epoll_wait() returned no events without timeout");
         return NGX_ERROR;
     }
 
@@ -774,7 +775,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
         rev = c->read;
 
-        if (c->fd == -1 || rev->instance != instance) 
+        if (c->fd == -1 || rev->instance != instance)   //什么时候c->fd会为-1，  rev->instance != instance
 		{
 
             /*
@@ -796,7 +797,8 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         }
 
 #if 0
-        if (revents & ~(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLHUP)) {
+        if (revents & ~(EPOLLIN|EPOLLOUT|EPOLLERR|EPOLLHUP)) 
+		{
             ngx_log_error(NGX_LOG_ALERT, cycle->log, 0,
                           "strange epoll_wait() events fd:%d ev:%04XD",
                           c->fd, revents);
@@ -826,13 +828,15 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
             rev->ready = 1;
 
-            if (flags & NGX_POST_EVENTS) {
-                queue = rev->accept ? &ngx_posted_accept_events
-                                    : &ngx_posted_events;
+            if (flags & NGX_POST_EVENTS)
+			{
+                queue = rev->accept ? &ngx_posted_accept_events : &ngx_posted_events;
 
                 ngx_post_event(rev, queue);
 
-            } else {
+            } 
+			else
+			{
                 rev->handler(rev);
             }
         }
