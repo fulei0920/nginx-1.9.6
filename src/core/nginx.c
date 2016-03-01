@@ -258,11 +258,11 @@ static ngx_uint_t   ngx_show_version;
 static ngx_uint_t   ngx_show_configure;
 //-p 启动参数设置
 static u_char      *ngx_prefix;	
-//-c 启动参数设置
+//-c 启动参数设置,配置文件nginx.conf的路径
 static u_char      *ngx_conf_file;	
-//-g 启动参数设置
+//-g 启动参数设置,配置文件nginx.conf的全局指令
 static u_char      *ngx_conf_params; 
-//-s 启动参数设置
+//-s 启动参数设置，发送的信号
 static char        *ngx_signal;			
 
 
@@ -524,7 +524,8 @@ ngx_show_version_info()
 #endif
 
 #if (NGX_SSL)
-        if (SSLeay() == SSLEAY_VERSION_NUMBER) {
+        if (SSLeay() == SSLEAY_VERSION_NUMBER) 
+		{
             ngx_write_stderr("built with " OPENSSL_VERSION_TEXT NGX_LINEFEED);
         } else {
             ngx_write_stderr("built with " OPENSSL_VERSION_TEXT
@@ -805,7 +806,7 @@ ngx_exec_new_binary(ngx_cycle_t *cycle, char *const *argv)
 /* -p 指明nginx启动时的配置目录，这对于重新配置nginx目录时有用 */
 /* -c 指明启动配置文件nginx.conf的路径，当该文件存储在非标准目录的时候有用 */
 /* -g 指明设置配置文件的全局指令，如：nginx -g "pid /var/run/nginx.pid; worker_processes 'sysctl -n hw.ncpu';"，多个选项之间以分号分开 */
-/* -s 是信号处理选项，主要可以处理stop, quit, reopen, reload 这几个作用的信号，其中，stop为停止运行，quit为退出，reopen为重新打开，reload为重新读配置文件。信号都是有master进程处理的 */
+/* -s 是信号处理选项，主要可以处理stop, quit, reopen, reload 这几个作用的信号，其中，stop为停止运行，quit为退出，reopen为重新打开，reload为重新读配置文件。信号都是由master进程处理的 */
 static ngx_int_t
 ngx_get_options(int argc, char *const *argv)
 {
@@ -814,7 +815,6 @@ ngx_get_options(int argc, char *const *argv)
 
     for (i = 1; i < argc; i++)
 	{
-
         p = (u_char *) argv[i];
 
         if (*p++ != '-') 
@@ -909,12 +909,10 @@ ngx_get_options(int argc, char *const *argv)
                 if (*p) 
 				{
                     ngx_signal = (char *) p;
-
                 } 
 				else if (argv[++i]) 
 				{
                     ngx_signal = argv[i];
-
                 }
 				else 
 				{

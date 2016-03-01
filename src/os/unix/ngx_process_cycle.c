@@ -26,10 +26,11 @@ static void ngx_cache_manager_process_cycle(ngx_cycle_t *cycle, void *data);
 static void ngx_cache_manager_process_handler(ngx_event_t *ev);
 static void ngx_cache_loader_process_handler(ngx_event_t *ev);
 
-
-ngx_uint_t    ngx_process;  //进程类型
+//进程类型
+ngx_uint_t    ngx_process;  
 ngx_uint_t    ngx_worker;	
-ngx_pid_t     ngx_pid;		//当前进程的pid
+//当前进程的pid
+ngx_pid_t     ngx_pid;		
 
 sig_atomic_t  ngx_reap;
 sig_atomic_t  ngx_sigio;

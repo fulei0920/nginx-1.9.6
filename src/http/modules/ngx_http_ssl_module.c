@@ -863,7 +863,8 @@ ngx_http_ssl_session_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         {
             n = ngx_atoi(value[i].data + sizeof("builtin:") - 1, value[i].len - (sizeof("builtin:") - 1));
 
-            if (n == NGX_ERROR) {
+            if (n == NGX_ERROR) 
+			{
                 goto invalid;
             }
 
@@ -872,14 +873,14 @@ ngx_http_ssl_session_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (value[i].len > sizeof("shared:") - 1
-            && ngx_strncmp(value[i].data, "shared:", sizeof("shared:") - 1)
-               == 0)
+        if (value[i].len > sizeof("shared:") - 1 && ngx_strncmp(value[i].data, "shared:", sizeof("shared:") - 1) == 0)
         {
             len = 0;
 
-            for (j = sizeof("shared:") - 1; j < value[i].len; j++) {
-                if (value[i].data[j] == ':') {
+            for (j = sizeof("shared:") - 1; j < value[i].len; j++)
+			{
+                if (value[i].data[j] == ':')
+				{
                     break;
                 }
 

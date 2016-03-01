@@ -1970,7 +1970,8 @@ ngx_sort(void *base, size_t n, size_t size, ngx_int_t (*cmp)(const void *, const
 void *
 ngx_memcpy(void *dst, const void *src, size_t n)
 {
-    if (n > NGX_MEMCPY_LIMIT) {
+    if (n > NGX_MEMCPY_LIMIT) 
+	{
         ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0, "memcpy %uz bytes", n);
         ngx_debug_point();
     }

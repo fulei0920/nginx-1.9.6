@@ -24,8 +24,8 @@
  *    causing false bug reports.
  */
 
-
-static ngx_str_t  *ngx_sys_errlist;  	//errno及其对应字符串描述的数组
+//errno及其对应字符串描述的数组
+static ngx_str_t  *ngx_sys_errlist;  	
 static ngx_str_t   ngx_unknown_error = ngx_string("Unknown error");
 
 
