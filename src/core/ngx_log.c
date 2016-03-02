@@ -363,7 +363,6 @@ ngx_log_init(u_char *prefix)
         if (prefix)
 		{
             plen = ngx_strlen(prefix);
-
         }
 		else
 		{

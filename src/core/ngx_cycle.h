@@ -38,7 +38,8 @@ struct ngx_shm_zone_s
 
 struct ngx_cycle_s 
 {
-    void                  ****conf_ctx;   		//保存着所有核心模块存配置结构体的指针
+	//保存着所有核心模块存配置结构体的指针
+    void                  ****conf_ctx;   		
     ngx_pool_t               *pool;				//内存池
 												
     ngx_log_t                *log;				//日志模块中提供了生成基本ngx_log_t日志对象的功能，这里的log实际上是在还没有执行ngx_init_cycle方法前，也就是还没有解析配置前，如果有信需要输出到日志，就会暂时使用log对象，它会输出到屏幕。在ngx_init_cycle方法执行后，将会根据nginx.conf配置文件中的配置项，构造出正确的日志文件，此时会对log重新赋值

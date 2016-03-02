@@ -256,7 +256,7 @@ ngx_uint_t          ngx_max_module;
 static ngx_uint_t   ngx_show_help;
 static ngx_uint_t   ngx_show_version;
 static ngx_uint_t   ngx_show_configure;
-//-p 启动参数设置
+//-p 启动参数设置,配置文件(nginx.conf)的目录
 static u_char      *ngx_prefix;	
 //-c 启动参数设置,配置文件nginx.conf的路径
 static u_char      *ngx_conf_file;	
@@ -1025,11 +1025,13 @@ ngx_process_options(ngx_cycle_t *cycle)
 #ifndef NGX_PREFIX
 
         p = ngx_pnalloc(cycle->pool, NGX_MAX_PATH);
-        if (p == NULL) {
+        if (p == NULL) 
+		{
             return NGX_ERROR;
         }
 
-        if (ngx_getcwd(p, NGX_MAX_PATH) == 0) {
+        if (ngx_getcwd(p, NGX_MAX_PATH) == 0)
+		{
             ngx_log_stderr(ngx_errno, "[emerg]: " ngx_getcwd_n " failed");
             return NGX_ERROR;
         }

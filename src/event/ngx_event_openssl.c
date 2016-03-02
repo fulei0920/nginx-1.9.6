@@ -146,7 +146,6 @@ ngx_ssl_init(ngx_log_t *log)
 #endif
 
     ngx_ssl_connection_index = SSL_get_ex_new_index(0, NULL, NULL, NULL, NULL);
-
     if (ngx_ssl_connection_index == -1) 
 	{
         ngx_ssl_error(NGX_LOG_ALERT, log, 0, "SSL_get_ex_new_index() failed");
@@ -167,16 +166,14 @@ ngx_ssl_init(ngx_log_t *log)
         return NGX_ERROR;
     }
 
-    ngx_ssl_session_ticket_keys_index = SSL_CTX_get_ex_new_index(0, NULL, NULL,
-                                                                 NULL, NULL);
+    ngx_ssl_session_ticket_keys_index = SSL_CTX_get_ex_new_index(0, NULL, NULL, NULL, NULL);
     if (ngx_ssl_session_ticket_keys_index == -1) 
 	{
         ngx_ssl_error(NGX_LOG_ALERT, log, 0, "SSL_CTX_get_ex_new_index() failed");
         return NGX_ERROR;
     }
 
-    ngx_ssl_certificate_index = SSL_CTX_get_ex_new_index(0, NULL, NULL, NULL,
-                                                         NULL);
+    ngx_ssl_certificate_index = SSL_CTX_get_ex_new_index(0, NULL, NULL, NULL, NULL);
     if (ngx_ssl_certificate_index == -1)
 	{
         ngx_ssl_error(NGX_LOG_ALERT, log, 0, "SSL_CTX_get_ex_new_index() failed");
@@ -2764,16 +2761,17 @@ ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_array_t *paths)
         return NGX_OK;
     }
 
-    keys = ngx_array_create(cf->pool, paths->nelts,
-                            sizeof(ngx_ssl_session_ticket_key_t));
-    if (keys == NULL) {
+    keys = ngx_array_create(cf->pool, paths->nelts, sizeof(ngx_ssl_session_ticket_key_t));
+    if (keys == NULL) 
+	{
         return NGX_ERROR;
     }
 
     path = paths->elts;
-    for (i = 0; i < paths->nelts; i++) {
-
-        if (ngx_conf_full_name(cf->cycle, &path[i], 1) != NGX_OK) {
+    for (i = 0; i < paths->nelts; i++)
+	{
+        if (ngx_conf_full_name(cf->cycle, &path[i], 1) != NGX_OK)
+		{
             return NGX_ERROR;
         }
 
@@ -2782,41 +2780,41 @@ ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_array_t *paths)
         file.log = cf->log;
 
         file.fd = ngx_open_file(file.name.data, NGX_FILE_RDONLY, 0, 0);
-        if (file.fd == NGX_INVALID_FILE) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
-                               ngx_open_file_n " \"%V\" failed", &file.name);
+        if (file.fd == NGX_INVALID_FILE) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno, ngx_open_file_n " \"%V\" failed", &file.name);
             return NGX_ERROR;
         }
 
-        if (ngx_fd_info(file.fd, &fi) == NGX_FILE_ERROR) {
-            ngx_conf_log_error(NGX_LOG_CRIT, cf, ngx_errno,
-                               ngx_fd_info_n " \"%V\" failed", &file.name);
+        if (ngx_fd_info(file.fd, &fi) == NGX_FILE_ERROR)
+		{
+            ngx_conf_log_error(NGX_LOG_CRIT, cf, ngx_errno, ngx_fd_info_n " \"%V\" failed", &file.name);
             goto failed;
         }
 
-        if (ngx_file_size(&fi) != 48) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "\"%V\" must be 48 bytes", &file.name);
+        if (ngx_file_size(&fi) != 48) 
+		{
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"%V\" must be 48 bytes", &file.name);
             goto failed;
         }
 
         n = ngx_read_file(&file, buf, 48, 0);
 
-        if (n == NGX_ERROR) {
-            ngx_conf_log_error(NGX_LOG_CRIT, cf, ngx_errno,
-                               ngx_read_file_n " \"%V\" failed", &file.name);
+        if (n == NGX_ERROR)
+		{
+            ngx_conf_log_error(NGX_LOG_CRIT, cf, ngx_errno, ngx_read_file_n " \"%V\" failed", &file.name);
             goto failed;
         }
 
-        if (n != 48) {
-            ngx_conf_log_error(NGX_LOG_CRIT, cf, 0,
-                               ngx_read_file_n " \"%V\" returned only "
-                               "%z bytes instead of 48", &file.name, n);
+        if (n != 48) 
+		{
+            ngx_conf_log_error(NGX_LOG_CRIT, cf, 0, ngx_read_file_n " \"%V\" returned only %z bytes instead of 48", &file.name, n);
             goto failed;
         }
 
         key = ngx_array_push(keys);
-        if (key == NULL) {
+        if (key == NULL) 
+		{
             goto failed;
         }
 
@@ -2824,29 +2822,22 @@ ngx_ssl_session_ticket_keys(ngx_conf_t *cf, ngx_ssl_t *ssl, ngx_array_t *paths)
         ngx_memcpy(key->aes_key, buf + 16, 16);
         ngx_memcpy(key->hmac_key, buf + 32, 16);
 
-        if (ngx_close_file(file.fd) == NGX_FILE_ERROR) {
-            ngx_log_error(NGX_LOG_ALERT, cf->log, ngx_errno,
-                          ngx_close_file_n " \"%V\" failed", &file.name);
+        if (ngx_close_file(file.fd) == NGX_FILE_ERROR) 
+		{
+            ngx_log_error(NGX_LOG_ALERT, cf->log, ngx_errno, ngx_close_file_n " \"%V\" failed", &file.name);
         }
     }
 
-    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_ssl_session_ticket_keys_index, keys)
-        == 0)
+    if (SSL_CTX_set_ex_data(ssl->ctx, ngx_ssl_session_ticket_keys_index, keys) == 0)
     {
-        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0,
-                      "SSL_CTX_set_ex_data() failed");
+        ngx_ssl_error(NGX_LOG_EMERG, ssl->log, 0, "SSL_CTX_set_ex_data() failed");
         return NGX_ERROR;
     }
 
-    if (SSL_CTX_set_tlsext_ticket_key_cb(ssl->ctx,
-                                         ngx_ssl_session_ticket_key_callback)
-        == 0)
+    if (SSL_CTX_set_tlsext_ticket_key_cb(ssl->ctx, ngx_ssl_session_ticket_key_callback) == 0)
     {
-        ngx_log_error(NGX_LOG_WARN, cf->log, 0,
-                      "nginx was built with Session Tickets support, however, "
-                      "now it is linked dynamically to an OpenSSL library "
-                      "which has no tlsext support, therefore Session Tickets "
-                      "are not available");
+        ngx_log_error(NGX_LOG_WARN, cf->log, 0, "nginx was built with Session Tickets support, however, "
+			"now it is linked dynamically to an OpenSSL library which has no tlsext support, therefore Session Tickets are not available");
     }
 
     return NGX_OK;
@@ -2910,30 +2901,29 @@ ngx_ssl_session_ticket_key_callback(ngx_ssl_conn_t *ssl_conn, unsigned char *nam
 
         return 0;
 
-    } else {
+    } 
+	else
+	{
         /* decrypt session ticket */
 
-        for (i = 0; i < keys->nelts; i++) {
+        for (i = 0; i < keys->nelts; i++)
+		{
             if (ngx_memcmp(name, key[i].name, 16) == 0) {
                 goto found;
             }
         }
 
-        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                       "ssl session ticket decrypt, key: \"%*s\" not found",
-                       ngx_hex_dump(buf, name, 16) - buf, buf);
+        ngx_log_debug2(NGX_LOG_DEBUG_EVENT, c->log, 0, "ssl session ticket decrypt, key: \"%*s\" not found", 
+			ngx_hex_dump(buf, name, 16) - buf, buf);
 
         return 0;
 
     found:
 
-        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0,
-                       "ssl session ticket decrypt, key: \"%*s\"%s",
-                       ngx_hex_dump(buf, key[i].name, 16) - buf, buf,
-                       (i == 0) ? " (default)" : "");
+        ngx_log_debug3(NGX_LOG_DEBUG_EVENT, c->log, 0, "ssl session ticket decrypt, key: \"%*s\"%s", 
+			ngx_hex_dump(buf, key[i].name, 16) - buf, buf, (i == 0) ? " (default)" : "");
 
-        HMAC_Init_ex(hctx, key[i].hmac_key, 16,
-                     ngx_ssl_session_ticket_md(), NULL);
+        HMAC_Init_ex(hctx, key[i].hmac_key, 16, ngx_ssl_session_ticket_md(), NULL);
         EVP_DecryptInit_ex(ectx, EVP_aes_128_cbc(), NULL, key[i].aes_key, iv);
 
         return (i == 0) ? 1 : 2 /* renew */;

@@ -50,8 +50,10 @@ typedef void (*ngx_log_writer_pt) (ngx_log_t *log, ngx_uint_t level,
 
 struct ngx_log_s 
 {
-    ngx_uint_t           log_level;  		//日志级别
-    ngx_open_file_t     *file;				//log日志的记录文件标识符
+	//日志级别
+    ngx_uint_t           log_level;  	
+	//log日志的记录文件标识符
+    ngx_open_file_t     *file;				
 
     ngx_atomic_uint_t    connection;
 

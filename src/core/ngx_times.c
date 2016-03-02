@@ -19,12 +19,13 @@
  */
 
 #define NGX_TIME_SLOTS   64
-
-static ngx_uint_t        slot;	//指定cached_time数组当前有效项的索引
+//指定cached_time数组当前有效项的索引
+static ngx_uint_t        slot;	
 static ngx_atomic_t      ngx_time_lock;
 
 volatile ngx_msec_t      ngx_current_msec;
-volatile ngx_time_t     *ngx_cached_time;  		//始终指向cached_time数组中slot指定的那一项
+//始终指向cached_time数组中slot指定的那一项
+volatile ngx_time_t     *ngx_cached_time;  		
 volatile ngx_str_t       ngx_cached_err_log_time;
 volatile ngx_str_t       ngx_cached_http_time;
 volatile ngx_str_t       ngx_cached_http_log_time;
