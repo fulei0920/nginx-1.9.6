@@ -71,7 +71,8 @@ struct ngx_cycle_s
     ngx_cycle_t              *old_cycle;		//旧的ngx_cycle_t对象用于引用上一个ngx_cycle_t对象中的成员。例如，ngx_init_cycle方法，在启动初期，需要建立一个临时的ngx_cycle_t对象保存一些变量，再调用ngx_init_cycle方法时就可以把旧的ngx_cycle_t对象传递进去，而这时old_cycle对象就会保存这个前期的ngx_cycle_t对象
 
     ngx_str_t                 conf_file;		//配置文件(一般是nginx.conf)相对于安装目录的路径名称
-    ngx_str_t                 conf_param;		//Nginx处理配置文件时需要特殊处理的命名携带的参数，一般是-g选项携带的参数
+    //Nginx处理配置文件时需要特殊处理的命名携带的参数，一般是-g选项携带的参数
+    ngx_str_t                 conf_param;		
     ngx_str_t                 conf_prefix;		//Nginx配置文件所在目录的路径
     ngx_str_t                 prefix;			//Nginx安装目录的路径
     ngx_str_t                 lock_file;		//用于进程间同步的文件锁名称

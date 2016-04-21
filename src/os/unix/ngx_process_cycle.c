@@ -59,7 +59,8 @@ static ngx_cache_manager_ctx_t  ngx_cache_manager_ctx = {
     ngx_cache_manager_process_handler, "cache manager process", 0
 };
 
-static ngx_cache_manager_ctx_t  ngx_cache_loader_ctx = {
+static ngx_cache_manager_ctx_t  ngx_cache_loader_ctx = 
+{
     ngx_cache_loader_process_handler, "cache loader process", 60000
 };
 
