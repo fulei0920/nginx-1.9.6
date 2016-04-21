@@ -1839,14 +1839,16 @@ ngx_ssl_shutdown(ngx_connection_t *c)
                        "SSL_get_error: %d", sslerr);
     }
 
-    if (n == 1 || sslerr == 0 || sslerr == SSL_ERROR_ZERO_RETURN) {
+    if (n == 1 || sslerr == 0 || sslerr == SSL_ERROR_ZERO_RETURN) 
+	{
         SSL_free(c->ssl->connection);
         c->ssl = NULL;
 
         return NGX_OK;
     }
 
-    if (sslerr == SSL_ERROR_WANT_READ || sslerr == SSL_ERROR_WANT_WRITE) {
+    if (sslerr == SSL_ERROR_WANT_READ || sslerr == SSL_ERROR_WANT_WRITE) 
+	{
         c->read->handler = ngx_ssl_shutdown_handler;
         c->write->handler = ngx_ssl_shutdown_handler;
 

@@ -432,8 +432,10 @@ main(int argc, char *const *argv)
         return 1;
     }
 
-    if (!ngx_inherited && ccf->daemon) {
-        if (ngx_daemon(cycle->log) != NGX_OK) {
+    if (!ngx_inherited && ccf->daemon) 
+	{
+        if (ngx_daemon(cycle->log) != NGX_OK) 
+		{
             return 1;
         }
 
@@ -995,7 +997,9 @@ ngx_process_options(ngx_cycle_t *cycle)
 {
     u_char  *p;
     size_t   len;
-
+	
+	//获取安装目录
+		//执行程序时指定prefix
     if (ngx_prefix) 
 	{
         len = ngx_strlen(ngx_prefix);
@@ -1021,7 +1025,7 @@ ngx_process_options(ngx_cycle_t *cycle)
     }
 	else 
 	{
-
+		//编译程序时未指定prefix， 将当前目录作为prefix
 #ifndef NGX_PREFIX
 
         p = ngx_pnalloc(cycle->pool, NGX_MAX_PATH);
@@ -1046,7 +1050,7 @@ ngx_process_options(ngx_cycle_t *cycle)
         cycle->prefix.data = p;
 
 #else
-
+		//编译程序时指定prefix
 #ifdef NGX_CONF_PREFIX
         ngx_str_set(&cycle->conf_prefix, NGX_CONF_PREFIX);
 #else
@@ -1057,6 +1061,7 @@ ngx_process_options(ngx_cycle_t *cycle)
 #endif
     }
 
+	//设置配置文件绝对路径(conf_file)
     if (ngx_conf_file) 
 	{
         cycle->conf_file.len = ngx_strlen(ngx_conf_file);
@@ -1073,6 +1078,7 @@ ngx_process_options(ngx_cycle_t *cycle)
         return NGX_ERROR;
     }
 
+	//设置配置文件所在目录的路径(conf_prefix)
     for (p = cycle->conf_file.data + cycle->conf_file.len - 1; p > cycle->conf_file.data; p--)
     {
         if (ngx_path_separator(*p)) 

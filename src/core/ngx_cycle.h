@@ -51,14 +51,20 @@ struct ngx_cycle_s
     ngx_connection_t        **files;				
     ngx_connection_t         *free_connections;				//可用连接池，与free_connection_n配合使用
     ngx_uint_t                free_connection_n;			//可用连接池中连接的总数
-
-    ngx_queue_t               reusable_connections_queue; 	//ngx_connection_t类型的双向链表容器，表示可重复使用的连接的队列
-
-    ngx_array_t               listening;		//ngx_listening_t类型的动态数组，表示监听端口及相关参数
-    ngx_array_t               paths;			//ngx_path_t*类型的动态数组，保存着Nginx所有要操作的目录。如果有目录不存在，而创建目录失败会导致Nginx启动失败。例如，上传文件的临时目录也在pathes中，如果没有权限创建，则会导致Nginx无法启动
+	//ngx_connection_t类型的双向链表容器，表示可重复使用的连接的队列
+    ngx_queue_t               reusable_connections_queue; 	
+	//ngx_listening_t类型的动态数组，表示监听端口及相关参数
+    ngx_array_t               listening;	
+	//ngx_path_t*类型的动态数组，保存着Nginx所有要操作的目录。如果有目录不存在，而创建目录失败会导致Nginx启动失败。
+	//例如，上传文件的临时目录也在pathes中，如果没有权限创建，则会导致Nginx无法启动
+    ngx_array_t               paths;			
     ngx_array_t               config_dump;		/*ngx_conf_dump_t类型的数组*/
-    ngx_list_t                open_files;		//ngx_open_file_t 类型的单链表，表示Nginx已经打开的所有文件。事实上，Nginx框架不会向open_files链表中添加文件，而是由感兴趣的模块向其中添加文件路径名，Nginx框架会在ngx_init_cycle方法中打开这些文件
-    ngx_list_t                shared_memory;    //ngx_shm_zone_t 类型的单链表，存储所有模块分配的共享内存
+	//ngx_open_file_t 类型的单链表，表示Nginx已经打开的所有文件。
+	//事实上，Nginx框架不会向open_files链表中添加文件，而是由感兴趣的模块向其中添加文件路径名，
+	//Nginx框架会在ngx_init_cycle方法中打开这些文件
+    ngx_list_t                open_files;		
+	//ngx_shm_zone_t 类型的单链表，存储所有模块分配的共享内存
+    ngx_list_t                shared_memory;    
 	//当前进程中所有连接对象的总数，与connections成员配合使用
     ngx_uint_t                connection_n;		
     //与上面的files成员配合使用，指出files数组里元素的总数
@@ -67,12 +73,14 @@ struct ngx_cycle_s
     ngx_connection_t         *connections;     	//指向当前进程中的所有连接对象，与connection_n成员配合使用
     ngx_event_t              *read_events;		//指向当前进程中的所有读事件对象，connection_n同时表示所有写事件的总数
     ngx_event_t              *write_events;		//指向当前进程中的所有写事件对象，connection_n同时表示所有写事件的总数
+	//旧的ngx_cycle_t对象用于引用上一个ngx_cycle_t对象中的成员。
+	//例如，ngx_init_cycle方法，在启动初期，需要建立一个临时的ngx_cycle_t对象保存一些变量，
+	//再调用ngx_init_cycle方法时就可以把旧的ngx_cycle_t对象传递进去，
+	//而这时old_cycle对象就会保存这个前期的ngx_cycle_t对象
+    ngx_cycle_t              *old_cycle;		
 
-    ngx_cycle_t              *old_cycle;		//旧的ngx_cycle_t对象用于引用上一个ngx_cycle_t对象中的成员。例如，ngx_init_cycle方法，在启动初期，需要建立一个临时的ngx_cycle_t对象保存一些变量，再调用ngx_init_cycle方法时就可以把旧的ngx_cycle_t对象传递进去，而这时old_cycle对象就会保存这个前期的ngx_cycle_t对象
-
-    ngx_str_t                 conf_file;		//配置文件(一般是nginx.conf)相对于安装目录的路径名称
-    //Nginx处理配置文件时需要特殊处理的命名携带的参数，一般是-g选项携带的参数
-    ngx_str_t                 conf_param;		
+    ngx_str_t                 conf_file;		//配置文件(一般是nginx.conf)相对于安装目录的路径名称  //配置文件(一般是nginx.conf)的绝对路径
+    ngx_str_t                 conf_param;		//Nginx处理配置文件时需要特殊处理的命名携带的参数，一般是-g选项携带的参数
     ngx_str_t                 conf_prefix;		//Nginx配置文件所在目录的路径
     ngx_str_t                 prefix;			//Nginx安装目录的路径
     ngx_str_t                 lock_file;		//用于进程间同步的文件锁名称

@@ -103,6 +103,7 @@ ngx_time_update(void)
         return;
     }
 
+	//循环获取下一个slot
     if (slot == NGX_TIME_SLOTS - 1) 
 	{
         slot = 0;

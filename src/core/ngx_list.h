@@ -25,10 +25,10 @@ struct ngx_list_part_s
 
 typedef struct
 {
-    ngx_list_part_t  *last;
+    ngx_list_part_t  *last;		/*指向链表的尾节点*/
     ngx_list_part_t   part;  	/*链表的第一个节点(至少有一个节点)*/
     size_t            size;		/*每个元素的大小*/
-    ngx_uint_t        nalloc;
+    ngx_uint_t        nalloc;	/*每一个节点拥有的最大元素个数?*/
     ngx_pool_t       *pool;
 } ngx_list_t;
 

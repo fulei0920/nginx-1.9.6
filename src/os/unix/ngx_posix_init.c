@@ -99,9 +99,7 @@ ngx_os_status(ngx_log_t *log)
     ngx_os_specific_status(log);
 #endif
 
-    ngx_log_error(NGX_LOG_NOTICE, log, 0,
-                  "getrlimit(RLIMIT_NOFILE): %r:%r",
-                  rlmt.rlim_cur, rlmt.rlim_max);
+    ngx_log_error(NGX_LOG_NOTICE, log, 0, "getrlimit(RLIMIT_NOFILE): %r:%r", rlmt.rlim_cur, rlmt.rlim_max);
 }
 
 

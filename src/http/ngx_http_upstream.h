@@ -415,7 +415,7 @@ struct ngx_http_upstream_s
 #if (NGX_HTTP_SSL)
     ngx_str_t                        ssl_name;
 #endif
-
+	//函数指针的指针
     ngx_http_cleanup_pt             *cleanup;
 
 	//是否指定文件缓存路径的标志位
