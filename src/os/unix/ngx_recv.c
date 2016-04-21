@@ -136,6 +136,10 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
 
 #else /* ! NGX_HAVE_KQUEUE */
 
+/*
+·µ»ØÖµ--
+×¢Òâ:
+*/
 ssize_t
 ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
 {
@@ -160,7 +164,6 @@ ngx_unix_recv(ngx_connection_t *c, u_char *buf, size_t size)
         } 
 		else if (n > 0) 
 		{
-
             if ((size_t) n < size && !(ngx_event_flags & NGX_USE_GREEDY_EVENT))
             {
                 rev->ready = 0;

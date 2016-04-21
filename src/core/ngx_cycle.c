@@ -16,8 +16,8 @@ static ngx_int_t ngx_init_zone_pool(ngx_cycle_t *cycle,
 static ngx_int_t ngx_test_lockfile(u_char *file, ngx_log_t *log);
 static void ngx_clean_old_cycles(ngx_event_t *ev);
 
-
-volatile ngx_cycle_t  *ngx_cycle;    		/*指向全局当前有效的cycle变量*/
+/*指向全局当前有效的cycle变量*/
+volatile ngx_cycle_t  *ngx_cycle;    		
 ngx_array_t            ngx_old_cycles;
 
 static ngx_pool_t     *ngx_temp_pool;
@@ -53,8 +53,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     char                 hostname[NGX_MAXHOSTNAMELEN];
 
 	/*更新服务器时间和时区*/
+	/* force localtime update with a new timezone */
     ngx_timezone_update();
-    /* force localtime update with a new timezone */
     tp = ngx_timeofday();
     tp->sec = 0;
     ngx_time_update();
@@ -141,7 +141,6 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 		{
             n += part->nelts;
         }
-
     }
 	else 
 	{

@@ -285,7 +285,8 @@ ngx_log_stderr(ngx_err_t err, const char *fmt, ...)
         p = ngx_log_errno(p, last, err);
     }
 
-    if (p > last - NGX_LINEFEED_SIZE) {
+    if (p > last - NGX_LINEFEED_SIZE)
+	{
         p = last - NGX_LINEFEED_SIZE;
     }
 
@@ -468,8 +469,10 @@ ngx_log_redirect_stderr(ngx_cycle_t *cycle)
     /* file log always exists when we are called */
     fd = ngx_log_get_file_log(cycle->log)->file->fd;
 
-    if (fd != ngx_stderr) {
-        if (ngx_set_stderr(fd) == NGX_FILE_ERROR) {
+    if (fd != ngx_stderr) 
+	{
+        if (ngx_set_stderr(fd) == NGX_FILE_ERROR) 
+		{
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           ngx_set_stderr_n " failed");
 

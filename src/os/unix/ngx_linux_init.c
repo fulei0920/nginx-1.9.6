@@ -53,6 +53,5 @@ ngx_os_specific_init(ngx_log_t *log)
 void
 ngx_os_specific_status(ngx_log_t *log)
 {
-    ngx_log_error(NGX_LOG_NOTICE, log, 0, "OS: %s %s",
-                  ngx_linux_kern_ostype, ngx_linux_kern_osrelease);
+    ngx_log_error(NGX_LOG_NOTICE, log, 0, "OS: %s %s", ngx_linux_kern_ostype, ngx_linux_kern_osrelease);
 }

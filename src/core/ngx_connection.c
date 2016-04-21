@@ -1263,7 +1263,8 @@ ngx_connection_error(ngx_connection_t *c, ngx_err_t err, char *text)
         || err == NGX_EHOSTDOWN
         || err == NGX_EHOSTUNREACH)
     {
-        switch (c->log_error) {
+        switch (c->log_error) 
+		{
 
         case NGX_ERROR_IGNORE_EINVAL:
         case NGX_ERROR_IGNORE_ECONNRESET:
@@ -1275,7 +1276,9 @@ ngx_connection_error(ngx_connection_t *c, ngx_err_t err, char *text)
             level = NGX_LOG_ERR;
         }
 
-    } else {
+    } 
+	else
+	{
         level = NGX_LOG_ALERT;
     }
 
