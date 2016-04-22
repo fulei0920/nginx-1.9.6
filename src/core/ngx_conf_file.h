@@ -170,12 +170,16 @@ typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf, ngx_command_t *dummy, void 
 struct ngx_conf_s 
 {
     char                 *name;
-    ngx_array_t          *args;  			//ngx_str_t类型的数组，存储解析到的命令及参数列表
+	//ngx_str_t类型的数组，存储解析到的命令及参数列表
+    ngx_array_t          *args;  			
 
-    ngx_cycle_t          *cycle;			
-    ngx_pool_t           *pool;				/*指向cycle的pool*/
-    ngx_pool_t           *temp_pool;		/*临时变量分配池*/
-    ngx_conf_file_t      *conf_file;		/*配置文件*/
+    ngx_cycle_t          *cycle;	
+	/*指向cycle的pool*/
+    ngx_pool_t           *pool;		
+	/*临时变量分配池*/
+    ngx_pool_t           *temp_pool;	
+	/*配置文件*/
+    ngx_conf_file_t      *conf_file;		
     ngx_log_t            *log;				/*指向日志*/
 
     void                 *ctx;				/*指向上下文???*/

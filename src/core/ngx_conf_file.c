@@ -108,7 +108,9 @@ ngx_conf_param(ngx_conf_t *cf)
     return rv;
 }
 
-
+//filename²»Îª¿Õ, ¿ªÊ¼½âÎöÒ»¸öÅäÖÃÎÄ¼þ
+//filenameÎª¿Õ && cf->conf_file->file.fd != NGX_INVALID_FILE, ¿ªÊ¼½âÎöÒ»¸öÅäÖÃÎÄ¼þÖÐµÄÄ³¸öÅäÖÃ¿é
+//ÆäËû(filenameÎª¿Õ && cf->conf_file->file.fd == NGX_INVALID_FILE), ½âÎöÒ»¸öÃüÁîÐÐ²ÎÊýÅäÖÃÏîÖµ
 char *
 ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 {
@@ -123,7 +125,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
     enum 
 	{
         parse_file = 0,		/*·ÖÎöÄ³¸öÎÄ¼þ*/
-        parse_block,
+        parse_block,		/*·ÖÎöÎÄ¼þÖÐÄ³¸ö¿éÅäÖÃÏî*/
         parse_param   		/*·ÖÎöÆô¶¯-g²ÎÊý*/
     } type;
 
@@ -516,7 +518,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
 
     found = 0;
     need_space = 0;
-    last_space = 1;   //Ç°Ò»¸ö×Ö·ûÎª¿Õ°××Ö·û
+    last_space = 1;   //Ç°(ÉÏ)Ò»¸ö×Ö·ûÎª¿Õ°××Ö·û
     sharp_comment = 0;
     variable = 0;
     quoted = 0;
@@ -533,12 +535,13 @@ ngx_conf_read_token(ngx_conf_t *cf)
 
     for ( ;; )
 	{
-
-        if (b->pos >= b->last)
+		//ÅÐ¶ÏbufferÖÐÊÇ·ñ»¹ÓÐÊý¾ÝÃ»ÓÐ´¦Àí
+        if (b->pos >= b->last)   
 		{
-
-            if (cf->conf_file->file.offset >= file_size)
+			//ÅÐ¶ÏÊÇ·ñÒÑ¾­¶Áµ½ÎÄ¼þÄ©Î²
+            if (cf->conf_file->file.offset >= file_size)  
 			{
+				//ÅÐ¶ÏÊÇ·ñÕý³£½áÊøå
                 if (cf->args->nelts > 0 || !last_space)
 				{
 
@@ -555,8 +558,10 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 return NGX_CONF_FILE_DONE;
             }
 
+			/*¶ÁÈ¡Êý¾Ýµ½bufferÖÐ*/
+			
             len = b->pos - start;
-
+			//Èç¹ûbufferÖÐÒÑ´¦Àíµ«ÊÇ²»ÊÇÒ»¸öÍêÕûµÄtokenµÄ³¤¶ÈÊÇ·ñÕ¼¾ÝÁËÕû¸öbuffer´óÐ¡£¬Ôò´íÎó
             if (len == NGX_CONF_BUFFER)
 			{
                 cf->conf_file->line = start_line;
@@ -579,13 +584,13 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "too long parameter, probably missing terminating \"%c\" character", ch);
                 return NGX_ERROR;
             }
-
+			//½«ÒÔ´¦Àíµ«²»ÍêÕûµÄtokenÒÆµ½bufferÆðÊ¼Î»ÖÃ
             if (len) 
 			{
                 ngx_memmove(b->start, start, len);
             }
 
-			//ÎÄ¼þÎ´¶ÁÊ£Óà´óÐ¡
+			//¼ÆËã¿ÉÒÔ³åÎÄ¼þÖÐ¶Áµ½bufferµÄ´óÐ¡
             size = (ssize_t) (file_size - cf->conf_file->file.offset);
 
             if (size > b->end - (b->start + len)) 
@@ -754,15 +759,20 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 continue;
             }
 
-            if (d_quoted) {
-                if (ch == '"') {
+            if (d_quoted)
+			{
+                if (ch == '"') 
+				{
                     d_quoted = 0;
                     need_space = 1;
                     found = 1;
                 }
 
-            } else if (s_quoted) {
-                if (ch == '\'') {
+            } 
+			else if (s_quoted) 
+			{
+                if (ch == '\'') 
+				{
                     s_quoted = 0;
                     need_space = 1;
                     found = 1;
