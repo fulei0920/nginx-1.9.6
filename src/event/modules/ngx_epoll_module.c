@@ -964,7 +964,8 @@ ngx_epoll_create_conf(ngx_cycle_t *cycle)
     ngx_epoll_conf_t  *epcf;
 
     epcf = ngx_palloc(cycle->pool, sizeof(ngx_epoll_conf_t));
-    if (epcf == NULL) {
+    if (epcf == NULL) 
+	{
         return NULL;
     }
 

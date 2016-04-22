@@ -150,17 +150,17 @@ typedef struct
 /*表示一个配置文件*/
 typedef struct 
 {
-    ngx_file_t            file;
-    ngx_buf_t            *buffer;
-    ngx_buf_t            *dump;
-    ngx_uint_t            line;  
+    ngx_file_t            file;		
+    ngx_buf_t            *buffer;	//缓存从file中读取的内容，然后对buffer内容进行配置分析
+    ngx_buf_t            *dump;		//对从file中读取的内容进行备份，用于显示配置文件
+    ngx_uint_t            line;  	//记录分析文件时当前所在的文件行号
 } ngx_conf_file_t;
 
 
 typedef struct 
 {
-    ngx_str_t             name;
-    ngx_buf_t            *buffer;
+    ngx_str_t             name;		//配置文件名
+    ngx_buf_t            *buffer;	//配置文件内容
 } ngx_conf_dump_t;
 
 
@@ -326,8 +326,7 @@ char *ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename);
 char *ngx_conf_include(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
-ngx_int_t ngx_conf_full_name(ngx_cycle_t *cycle, ngx_str_t *name,
-    ngx_uint_t conf_prefix);
+ngx_int_t ngx_conf_full_name(ngx_cycle_t *cycle, ngx_str_t *name, ngx_uint_t conf_prefix);
 ngx_open_file_t *ngx_conf_open_file(ngx_cycle_t *cycle, ngx_str_t *name);
 void ngx_cdecl ngx_conf_log_error(ngx_uint_t level, ngx_conf_t *cf,
     ngx_err_t err, const char *fmt, ...);

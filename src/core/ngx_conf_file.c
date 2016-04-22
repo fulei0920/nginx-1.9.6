@@ -56,7 +56,8 @@ ngx_module_t  ngx_conf_module =
 
 /* The eight fixed arguments */
 
-static ngx_uint_t argument_number[] = {
+static ngx_uint_t argument_number[] = 
+{
     NGX_CONF_NOARGS,
     NGX_CONF_TAKE1,
     NGX_CONF_TAKE2,
@@ -360,18 +361,17 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 
     found = 0;
 
+	//遍历每个模块
     for (i = 0; ngx_modules[i]; i++)
 	{
-
         cmd = ngx_modules[i]->commands;
         if (cmd == NULL)
 		{
             continue;
         }
-
+		//遍历某个模块的所有cmd
         for ( /* void */ ; cmd->name.len; cmd++) 
 		{
-
             if (name->len != cmd->name.len) 
 			{
                 continue;
@@ -409,13 +409,10 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             }
 
             /* is the directive's argument count right ? */
-
             if (!(cmd->type & NGX_CONF_ANY)) 
 			{
-
                 if (cmd->type & NGX_CONF_FLAG) 
 				{
-
                     if (cf->args->nelts != 2)
 					{
                         goto invalid;
@@ -424,7 +421,6 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                 }
 				else if (cmd->type & NGX_CONF_1MORE) 
                 {
-
                     if (cf->args->nelts < 2) 
 					{
                         goto invalid;
@@ -433,17 +429,14 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                 } 
 				else if (cmd->type & NGX_CONF_2MORE) 
 				{
-
                     if (cf->args->nelts < 3) 
 					{
                         goto invalid;
                     }
-
                 } 
 				else if (cf->args->nelts > NGX_CONF_MAX_ARGS)
 				{
                     goto invalid;
-
                 }
 				else if (!(cmd->type & argument_number[cf->args->nelts - 1]))
                 {
@@ -458,12 +451,10 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             if (cmd->type & NGX_DIRECT_CONF)
 			{
                 conf = ((void **) cf->ctx)[ngx_modules[i]->index];
-
             }
 			else if (cmd->type & NGX_MAIN_CONF)
            	{
                 conf = &(((void **) cf->ctx)[ngx_modules[i]->index]);
-
             }
 			else if (cf->ctx) 
 			{
@@ -594,6 +585,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 ngx_memmove(b->start, start, len);
             }
 
+			//文件未读剩余大小
             size = (ssize_t) (file_size - cf->conf_file->file.offset);
 
             if (size > b->end - (b->start + len)) 
@@ -686,8 +678,8 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 continue;
             }
 
-            start = b->pos - 1;
-            start_line = cf->conf_file->line;
+            start = b->pos - 1;   				//记录token的起始位置
+            start_line = cf->conf_file->line; 	//记录token的行号
 
             switch (ch)
 			{
@@ -1078,13 +1070,13 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     if (ngx_strcasecmp(value[1].data, (u_char *) "on") == 0) 
 	{
         *fp = 1;
-
     }
 	else if (ngx_strcasecmp(value[1].data, (u_char *) "off") == 0) 
    	{
         *fp = 0;
-
-    } else {
+    } 
+	else 
+	{
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                      "invalid value \"%s\" in \"%s\" directive, "
                      "it must be \"on\" or \"off\"",
@@ -1092,7 +1084,8 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (cmd->post) {
+    if (cmd->post) 
+	{
         post = cmd->post;
         return post->post_handler(cf, post, fp);
     }

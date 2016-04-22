@@ -39,7 +39,8 @@ static char *ngx_http_auth_basic_user_file(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
 
-static ngx_command_t  ngx_http_auth_basic_commands[] = {
+static ngx_command_t  ngx_http_auth_basic_commands[] = 
+{
 
     { ngx_string("auth_basic"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LMT_CONF

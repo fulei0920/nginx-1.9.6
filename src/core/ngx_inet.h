@@ -88,7 +88,7 @@ typedef struct
     in_port_t                 default_port;
     int                       family;
 
-    unsigned                  listen:1;
+    unsigned                  listen:1;		//监听url
     unsigned                  uri_part:1;
 	//存储URL解析参数: 不进行域名解析
     unsigned                  no_resolve:1;		

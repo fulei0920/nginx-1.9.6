@@ -221,6 +221,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     pcf = *cf;
     cf->ctx = ctx;
 
+	//调用每个HTTP模块的preconfiguration
     for (m = 0; ngx_modules[m]; m++) 
 	{
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
@@ -1392,7 +1393,6 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
     }
 
     /* add the address to the addresses list that bound to this port */
-
     return ngx_http_add_address(cf, cscf, port, lsopt);
 }
 

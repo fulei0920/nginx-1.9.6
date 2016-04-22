@@ -1160,14 +1160,10 @@ ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
                 if (ngx_process == NGX_PROCESS_SINGLE && old_ecf && old_ecf->use != ecf->use)
                 {
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "when the server runs without a master process "
-                               "the \"%V\" event type must be the same as "
-                               "in previous configuration - \"%s\" "
-                               "and it cannot be changed on the fly, "
-                               "to change it you need to stop server "
-                               "and start it again",
-                               &value[1], old_ecf->name);
+                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "when the server runs without a master process "
+                               "the \"%V\" event type must be the same as in previous configuration - \"%s\" "
+                               "and it cannot be changed on the fly, to change it you need to stop server "
+                               "and start it again", &value[1], old_ecf->name);
 
                     return NGX_CONF_ERROR;
                 }

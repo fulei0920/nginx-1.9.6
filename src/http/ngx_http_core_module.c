@@ -35,22 +35,17 @@ static void *ngx_http_core_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_core_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 
-static char *ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *dummy);
-static char *ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *dummy);
+static char *ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy);
+static char *ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy);
 static ngx_int_t ngx_http_core_regex_location(ngx_conf_t *cf,
     ngx_http_core_loc_conf_t *clcf, ngx_str_t *regex, ngx_uint_t caseless);
 
-static char *ngx_http_core_types(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_core_types(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_core_type(ngx_conf_t *cf, ngx_command_t *dummy,
     void *conf);
 
-static char *ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
-static char *ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_core_root(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_core_limit_except(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
@@ -66,8 +61,7 @@ static char *ngx_http_core_open_file_cache(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_http_core_error_log(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char *ngx_http_core_keepalive(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_core_keepalive(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_core_internal(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_http_core_resolver(ngx_conf_t *cf, ngx_command_t *cmd,
@@ -2268,7 +2262,8 @@ ngx_http_send_response(ngx_http_request_t *r, ngx_uint_t status, ngx_str_t *ct, 
         }
     }
 
-    if (r->method == NGX_HTTP_HEAD || (r != r->main && val.len == 0)) {
+    if (r->method == NGX_HTTP_HEAD || (r != r->main && val.len == 0))
+	{
         return ngx_http_send_header(r);
     }
 
@@ -2384,7 +2379,8 @@ ngx_http_map_uri_to_path(ngx_http_request_t *r, ngx_str_t *path, size_t *root_le
         path->len = clcf->root.len + reserved + r->uri.len - alias + 1;
 
         path->data = ngx_pnalloc(r->pool, path->len);
-        if (path->data == NULL) {
+        if (path->data == NULL) 
+		{
             return NULL;
         }
 
@@ -3441,7 +3437,6 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     //解析当前server{}块内的所有配置项
-
     pcf = *cf;
     cf->ctx = ctx;
     cf->cmd_type = NGX_HTTP_SRV_CONF;
@@ -4499,9 +4494,9 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             lsopt.set = 1;
             lsopt.bind = 1;
 
-            if (lsopt.fastopen == NGX_ERROR) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid fastopen \"%V\"", &value[n]);
+            if (lsopt.fastopen == NGX_ERROR) 
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid fastopen \"%V\"", &value[n]);
                 return NGX_CONF_ERROR;
             }
 
@@ -4524,7 +4519,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             continue;
         }
 
-        if (ngx_strncmp(value[n].data, "rcvbuf=", 7) == 0) {
+        if (ngx_strncmp(value[n].data, "rcvbuf=", 7) == 0) 
+		{
             size.len = value[n].len - 7;
             size.data = value[n].data + 7;
 
@@ -4532,9 +4528,9 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             lsopt.set = 1;
             lsopt.bind = 1;
 
-            if (lsopt.rcvbuf == NGX_ERROR) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid rcvbuf \"%V\"", &value[n]);
+            if (lsopt.rcvbuf == NGX_ERROR)
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid rcvbuf \"%V\"", &value[n]);
                 return NGX_CONF_ERROR;
             }
 
@@ -4550,9 +4546,9 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             lsopt.set = 1;
             lsopt.bind = 1;
 
-            if (lsopt.sndbuf == NGX_ERROR) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "invalid sndbuf \"%V\"", &value[n]);
+            if (lsopt.sndbuf == NGX_ERROR)
+			{
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid sndbuf \"%V\"", &value[n]);
                 return NGX_CONF_ERROR;
             }
 
@@ -4566,10 +4562,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             lsopt.set = 1;
             lsopt.bind = 1;
 #else
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "accept filters \"%V\" are not supported "
-                               "on this platform, ignored",
-                               &value[n]);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "accept filters \"%V\" are not supported "
+				"on this platform, ignored", &value[n]);
 #endif
             continue;
         }
@@ -4581,9 +4575,7 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             lsopt.set = 1;
             lsopt.bind = 1;
 #else
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "the deferred accept is not supported "
-                               "on this platform, ignored");
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the deferred accept is not supported on this platform, ignored");
 #endif
             continue;
         }
@@ -4595,7 +4587,8 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
             sa = &lsopt.u.sockaddr;
 
-            if (sa->sa_family == AF_INET6) {
+            if (sa->sa_family == AF_INET6) 
+			{
 
                 if (ngx_strcmp(&value[n].data[10], "n") == 0) {
                     lsopt.ipv6only = 1;
@@ -4621,22 +4614,19 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
             continue;
 #else
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "ipv6only is not supported "
-                               "on this platform");
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "ipv6only is not supported on this platform");
             return NGX_CONF_ERROR;
 #endif
         }
 
-        if (ngx_strcmp(value[n].data, "reuseport") == 0) {
+        if (ngx_strcmp(value[n].data, "reuseport") == 0) 
+		{
 #if (NGX_HAVE_REUSEPORT)
             lsopt.reuseport = 1;
             lsopt.set = 1;
             lsopt.bind = 1;
 #else
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "reuseport is not supported "
-                               "on this platform, ignored");
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "reuseport is not supported on this platform, ignored");
 #endif
             continue;
         }
@@ -4652,23 +4642,21 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
         }
 
-        if (ngx_strcmp(value[n].data, "http2") == 0) {
+        if (ngx_strcmp(value[n].data, "http2") == 0) 
+		{
 #if (NGX_HTTP_V2)
             lsopt.http2 = 1;
             continue;
 #else
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "the \"http2\" parameter requires "
-                               "ngx_http_v2_module");
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the \"http2\" parameter requires ngx_http_v2_module");
             return NGX_CONF_ERROR;
 #endif
         }
 
-        if (ngx_strcmp(value[n].data, "spdy") == 0) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                               "invalid parameter \"spdy\": "
-                               "ngx_http_spdy_module was superseded "
-                               "by ngx_http_v2_module");
+        if (ngx_strcmp(value[n].data, "spdy") == 0)
+		{
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "invalid parameter \"spdy\": "
+				"ngx_http_spdy_module was superseded by ngx_http_v2_module");
             continue;
         }
 
@@ -4756,9 +4744,7 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
         invalid_so_keepalive:
 
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid so_keepalive value: \"%s\"",
-                               &value[n].data[13]);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid so_keepalive value: \"%s\"", &value[n].data[13]);
             return NGX_CONF_ERROR;
 #endif
         }
@@ -4866,7 +4852,8 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         sn->regex = ngx_http_regex_compile(cf, &rc);
-        if (sn->regex == NULL) {
+        if (sn->regex == NULL) 
+		{
             return NGX_CONF_ERROR;
         }
 

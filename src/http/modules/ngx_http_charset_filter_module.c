@@ -178,7 +178,8 @@ static ngx_command_t  ngx_http_charset_filter_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_charset_filter_module_ctx = {
+static ngx_http_module_t  ngx_http_charset_filter_module_ctx = 
+{
     NULL,                                  /* preconfiguration */
     ngx_http_charset_postconfiguration,    /* postconfiguration */
 

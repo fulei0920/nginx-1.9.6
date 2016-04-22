@@ -27,7 +27,8 @@ typedef struct {
 } ngx_file_mapping_t;
 
 
-typedef struct {
+typedef struct 
+{
     DIR                         *dir;
     struct dirent               *de;
     struct stat                  info;
@@ -37,7 +38,8 @@ typedef struct {
 } ngx_dir_t;
 
 
-typedef struct {
+typedef struct 
+{
     size_t                       n;
     glob_t                       pglob;
     u_char                      *pattern;

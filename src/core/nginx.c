@@ -159,8 +159,6 @@ static ngx_command_t  ngx_core_commands[] =
 	//例如: 如果有4个CPU核，就可以进行如下配置
     //	worker_processes 4
     //	worker_cpu_affinity 1000 0100 0010 0001
-
-
     { 
 		ngx_string("worker_cpu_affinity"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_1MORE,
@@ -1061,7 +1059,7 @@ ngx_process_options(ngx_cycle_t *cycle)
 #endif
     }
 
-	//设置配置文件绝对路径(conf_file)
+	//获取配置文件绝对路径(conf_file)
     if (ngx_conf_file) 
 	{
         cycle->conf_file.len = ngx_strlen(ngx_conf_file);
@@ -1078,7 +1076,7 @@ ngx_process_options(ngx_cycle_t *cycle)
         return NGX_ERROR;
     }
 
-	//设置配置文件所在目录的路径(conf_prefix)
+	//获取配置文件所在目录的路径(conf_prefix)
     for (p = cycle->conf_file.data + cycle->conf_file.len - 1; p > cycle->conf_file.data; p--)
     {
         if (ngx_path_separator(*p)) 

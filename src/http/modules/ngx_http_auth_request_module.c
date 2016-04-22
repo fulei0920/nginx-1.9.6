@@ -67,7 +67,8 @@ static ngx_command_t  ngx_http_auth_request_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_auth_request_module_ctx = {
+static ngx_http_module_t  ngx_http_auth_request_module_ctx = 
+{
     NULL,                                  /* preconfiguration */
     ngx_http_auth_request_init,            /* postconfiguration */
 

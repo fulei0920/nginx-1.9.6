@@ -113,7 +113,8 @@ static ngx_command_t  ngx_http_browser_commands[] = {
 };
 
 
-static ngx_http_module_t  ngx_http_browser_module_ctx = {
+static ngx_http_module_t  ngx_http_browser_module_ctx = 
+{
     ngx_http_browser_add_variable,         /* preconfiguration */
     NULL,                                  /* postconfiguration */
 
@@ -218,12 +219,11 @@ static ngx_http_modern_browser_mask_t  ngx_http_modern_browser_masks[] = {
 };
 
 
-static ngx_http_browser_variable_t  ngx_http_browsers[] = {
+static ngx_http_browser_variable_t  ngx_http_browsers[] = 
+{
     { ngx_string("msie"), ngx_http_msie_variable, 0 },
-    { ngx_string("modern_browser"), ngx_http_browser_variable,
-          NGX_HTTP_MODERN_BROWSER },
-    { ngx_string("ancient_browser"), ngx_http_browser_variable,
-          NGX_HTTP_ANCIENT_BROWSER },
+    { ngx_string("modern_browser"), ngx_http_browser_variable, NGX_HTTP_MODERN_BROWSER },
+    { ngx_string("ancient_browser"), ngx_http_browser_variable, NGX_HTTP_ANCIENT_BROWSER },
     { ngx_null_string, NULL, 0 }
 };
 
@@ -402,10 +402,11 @@ ngx_http_browser_add_variable(ngx_conf_t *cf)
     ngx_http_browser_variable_t   *var;
     ngx_http_variable_t           *v;
 
-    for (var = ngx_http_browsers; var->name.len; var++) {
-
+    for (var = ngx_http_browsers; var->name.len; var++) 
+	{
         v = ngx_http_add_variable(cf, &var->name, NGX_HTTP_VAR_CHANGEABLE);
-        if (v == NULL) {
+        if (v == NULL) 
+		{
             return NGX_ERROR;
         }
 

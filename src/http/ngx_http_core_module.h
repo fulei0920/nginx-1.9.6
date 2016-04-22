@@ -265,8 +265,8 @@ typedef struct
 	//例如: //test///a.txt，在配置为on时，会将其匹配为 location /test/a.txt;
 	//	如果配置为off，则不会匹配，URI仍将是//test///a.txt
     ngx_flag_t                  merge_slashes;
-	//是否允许HTTP头部的名称中带'_'(下划线)
-    ngx_flag_t                  underscores_in_headers;
+	
+    ngx_flag_t                  underscores_in_headers; //是否允许HTTP头部的名称中带'_'(下划线)
 
     unsigned                    listen:1;			//表示是否配置listen 指令
 #if (NGX_PCRE)

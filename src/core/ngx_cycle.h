@@ -123,7 +123,7 @@ typedef struct
 
 	char                    *username;  	/*用户名*/
 	ngx_uid_t                user;			/*用户uid*/
-	ngx_gid_t                group;		/*用户gid*/
+	ngx_gid_t                group;			/*用户gid*/
 	//指定进程当前工作目录
 	ngx_str_t                working_directory;  
 	//lock文件的路径
