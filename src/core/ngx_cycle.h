@@ -35,7 +35,7 @@ struct ngx_shm_zone_s
     ngx_uint_t                noreuse;  /* unsigned  noreuse:1; */
 };
 
-
+//An event cycle object
 struct ngx_cycle_s 
 {
 	//保存着所有核心模块存配置结构体的指针
@@ -81,8 +81,8 @@ struct ngx_cycle_s
 
     ngx_str_t                 conf_file;		//配置文件(一般是nginx.conf)相对于安装目录的路径名称  //配置文件(一般是nginx.conf)的绝对路径
     ngx_str_t                 conf_param;		//Nginx处理配置文件时需要特殊处理的命名携带的参数，一般是-g选项携带的参数
-    ngx_str_t                 conf_prefix;		//Nginx配置文件所在目录的路径
-    ngx_str_t                 prefix;			//Nginx安装目录的路径
+    ngx_str_t                 conf_prefix;		//Nginx配置文件路径的前缀
+    ngx_str_t                 prefix;			//Nginx安装目录的路径的前缀
     ngx_str_t                 lock_file;		//用于进程间同步的文件锁名称
     //使用gethostname系统调用得到的主机名
     ngx_str_t                 hostname;			
@@ -118,7 +118,7 @@ typedef struct
 	//指定Nginx worker进程的nice优先级
 	int                      priority;
 
-	ngx_uint_t               cpu_affinity_n;	/*cpu_affinity数组个数*/
+	ngx_uint_t               cpu_affinity_n;	/*cpu_affinity数组元素个数*/
 	uint64_t                *cpu_affinity;  	/*uint64_t类型的数组，每个元素表示一个工作进程的CPU亲和性掩码*/
 
 	char                    *username;  	/*用户名*/

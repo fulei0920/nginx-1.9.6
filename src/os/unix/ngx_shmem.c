@@ -16,8 +16,7 @@ ngx_shm_alloc(ngx_shm_t *shm)
 {
     shm->addr = (u_char *) mmap(NULL, shm->size, PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, -1, 0);
 
-    if (shm->addr == MAP_FAILED) 
-	{
+    if (shm->addr == MAP_FAILED) {
         ngx_log_error(NGX_LOG_ALERT, shm->log, ngx_errno, "mmap(MAP_ANON|MAP_SHARED, %uz) failed", shm->size);
         return NGX_ERROR;
     }

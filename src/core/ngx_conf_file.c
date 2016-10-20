@@ -79,8 +79,7 @@ ngx_conf_param(ngx_conf_t *cf)
 
     param = &cf->cycle->conf_param;
 	
-    if (param->len == 0)
-	{
+    if (param->len == 0) {
         return NGX_CONF_OK;
     }
 
@@ -1026,8 +1025,7 @@ ngx_conf_flush_files(ngx_cycle_t *cycle)
 
 
 void ngx_cdecl
-ngx_conf_log_error(ngx_uint_t level, ngx_conf_t *cf, ngx_err_t err,
-    const char *fmt, ...)
+ngx_conf_log_error(ngx_uint_t level, ngx_conf_t *cf, ngx_err_t err, const char *fmt, ...)
 {
     u_char   errstr[NGX_MAX_CONF_ERRSTR], *p, *last;
     va_list  args;

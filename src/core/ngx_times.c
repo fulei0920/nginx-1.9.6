@@ -80,8 +80,7 @@ ngx_time_update(void)
     ngx_time_t      *tp;
     struct timeval   tv;
 
-    if (!ngx_trylock(&ngx_time_lock)) 
-	{
+    if (!ngx_trylock(&ngx_time_lock)) {
         return;
     }
 
@@ -96,20 +95,16 @@ ngx_time_update(void)
 
 	//如果系统缓存的时间秒和当前更新的秒值未发生变化，则只需更新毫秒值，然后返回，
 	//否则认为系统长时间未更新时间，继续往后执行 
-    if (tp->sec == sec) 
-	{
+    if (tp->sec == sec) {
         tp->msec = msec;
         ngx_unlock(&ngx_time_lock);
         return;
     }
 
 	//循环获取下一个slot
-    if (slot == NGX_TIME_SLOTS - 1) 
-	{
+    if (slot == NGX_TIME_SLOTS - 1) {
         slot = 0;
-    } 
-	else 
-	{
+    } else {
         slot++;
     }
 
@@ -162,6 +157,7 @@ ngx_time_update(void)
     (void) ngx_sprintf(p4, "%s %2d %02d:%02d:%02d", months[tm.ngx_tm_mon - 1], tm.ngx_tm_mday, tm.ngx_tm_hour, tm.ngx_tm_min, tm.ngx_tm_sec);
 
 	//一个应用层设置内存屏障的函数，表示上述片段已经计算完毕，需要完成内存的同步
+	///它告诉编译器不要将其后面的语句进行优化，不要打乱其执行顺序
     ngx_memory_barrier();
 
     ngx_cached_time = tp;

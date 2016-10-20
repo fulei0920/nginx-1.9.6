@@ -28,7 +28,7 @@
 static ngx_str_t  *ngx_sys_errlist;  	
 static ngx_str_t   ngx_unknown_error = ngx_string("Unknown error");
 
-
+//根据err数字获取对应的字符串描述写入到errstr指定的空间中
 u_char *
 ngx_strerror(ngx_err_t err, u_char *errstr, size_t size)
 {
@@ -61,19 +61,16 @@ ngx_strerror_init(void)
     len = NGX_SYS_NERR * sizeof(ngx_str_t);
 
     ngx_sys_errlist = malloc(len);
-    if (ngx_sys_errlist == NULL) 
-	{
+    if (ngx_sys_errlist == NULL) {
         goto failed;
     }
 
-    for (err = 0; err < NGX_SYS_NERR; err++) 
-	{
+    for (err = 0; err < NGX_SYS_NERR; err++) {
         msg = strerror(err);
         len = ngx_strlen(msg);
 
         p = malloc(len);
-        if (p == NULL) 
-		{
+        if (p == NULL) {
             goto failed;
         }
 

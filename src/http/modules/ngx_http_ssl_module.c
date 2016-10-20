@@ -396,8 +396,7 @@ ngx_http_ssl_alpn_select(ngx_ssl_conn_t *ssl_conn, const unsigned char **out,
 #ifdef TLSEXT_TYPE_next_proto_neg
 
 static int
-ngx_http_ssl_npn_advertised(ngx_ssl_conn_t *ssl_conn,
-    const unsigned char **out, unsigned int *outlen, void *arg)
+ngx_http_ssl_npn_advertised(ngx_ssl_conn_t *ssl_conn, const unsigned char **out, unsigned int *outlen, void *arg)
 {
 #if (NGX_HTTP_V2 || NGX_DEBUG)
     ngx_connection_t  *c;
@@ -408,17 +407,17 @@ ngx_http_ssl_npn_advertised(ngx_ssl_conn_t *ssl_conn,
 
 #if (NGX_HTTP_V2)
     {
-    ngx_http_connection_t  *hc;
+	    ngx_http_connection_t  *hc;
 
-    hc = c->data;
+	    hc = c->data;
 
-    if (hc->addr_conf->http2) {
-        *out =
-            (unsigned char *) NGX_HTTP_V2_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
-        *outlen = sizeof(NGX_HTTP_V2_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE) - 1;
+	    if (hc->addr_conf->http2) 
+		{
+	        *out = (unsigned char *) NGX_HTTP_V2_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
+	        *outlen = sizeof(NGX_HTTP_V2_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE) - 1;
 
-        return SSL_TLSEXT_ERR_OK;
-    }
+	        return SSL_TLSEXT_ERR_OK;
+	    }
     }
 #endif
 

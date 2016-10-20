@@ -79,6 +79,7 @@ typedef struct
 
 typedef struct 
 {
+	//存储URL解析参数: 被解析的url
     ngx_str_t                 url;
     ngx_str_t                 host;
     ngx_str_t                 port_text;  	/*端口字符串表示*/
@@ -88,9 +89,11 @@ typedef struct
     in_port_t                 default_port;
     int                       family;
 
-    unsigned                  listen:1;		//监听url
+	//存储URL解析参数: 为监听url
+    unsigned                  listen:1;	
+	//存储URL解析参数: 是否有uri字段部分
     unsigned                  uri_part:1;
-	//存储URL解析参数: 不进行域名解析
+	//存储URL解析参数: 是否进行域名解析
     unsigned                  no_resolve:1;		
     unsigned                  one_addr:1;  /* compatibility */
 	//存储URL解析结果: url字符串中是否没有端口
@@ -98,7 +101,9 @@ typedef struct
 	//存储URL解析结果: url字符串中是否IP地址为通配地址
     unsigned                  wildcard:1;	
 
+	//套接字地址结构大小
     socklen_t                 socklen;
+	//复用各种可能的套接字地址结构
     u_char                    sockaddr[NGX_SOCKADDRLEN];
 
     ngx_addr_t               *addrs;

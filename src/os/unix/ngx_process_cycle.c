@@ -44,6 +44,7 @@ sig_atomic_t  ngx_reopen;
 
 sig_atomic_t  ngx_change_binary;
 ngx_pid_t     ngx_new_binary;
+///表示是否得到要继承的socket  
 ngx_uint_t    ngx_inherited;
 ngx_uint_t    ngx_daemonized;
 
@@ -59,8 +60,7 @@ static ngx_cache_manager_ctx_t  ngx_cache_manager_ctx = {
     ngx_cache_manager_process_handler, "cache manager process", 0
 };
 
-static ngx_cache_manager_ctx_t  ngx_cache_loader_ctx = 
-{
+static ngx_cache_manager_ctx_t  ngx_cache_loader_ctx = {
     ngx_cache_loader_process_handler, "cache loader process", 60000
 };
 
@@ -97,31 +97,27 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     sigaddset(&set, ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
     sigaddset(&set, ngx_signal_value(NGX_CHANGEBIN_SIGNAL));
 
-    if (sigprocmask(SIG_BLOCK, &set, NULL) == -1) 
-	{
+    if (sigprocmask(SIG_BLOCK, &set, NULL) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "sigprocmask() failed");
     }
 
     sigemptyset(&set);
 
-
+	///修改进程名
     size = sizeof(master_process);
 
-    for (i = 0; i < ngx_argc; i++) 
-	{
+    for (i = 0; i < ngx_argc; i++) {
         size += ngx_strlen(ngx_argv[i]) + 1;
     }
 
     title = ngx_pnalloc(cycle->pool, size);
-    if (title == NULL)
-	{
+    if (title == NULL) {
         /* fatal */
         exit(2);
     }
 
     p = ngx_cpymem(title, master_process, sizeof(master_process) - 1);
-    for (i = 0; i < ngx_argc; i++) 
-	{
+    for (i = 0; i < ngx_argc; i++) {
         *p++ = ' ';
         p = ngx_cpystrn(p, (u_char *) ngx_argv[i], size);
     }
@@ -368,7 +364,7 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 
     for (i = 0; i < n; i++) 
 	{
-
+		//创建工作进程，然后通知所有进程。
         ngx_spawn_process(cycle, ngx_worker_process_cycle, (void *) (intptr_t) i, "worker process", type);
 
         ch.pid = ngx_processes[ngx_process_slot].pid;
@@ -406,8 +402,7 @@ ngx_start_cache_manager_processes(ngx_cycle_t *cycle, ngx_uint_t respawn)
         return;
     }
 
-    ngx_spawn_process(cycle, ngx_cache_manager_process_cycle,
-                      &ngx_cache_manager_ctx, "cache manager process",
+    ngx_spawn_process(cycle, ngx_cache_manager_process_cycle, &ngx_cache_manager_ctx, "cache manager process",
                       respawn ? NGX_PROCESS_JUST_RESPAWN : NGX_PROCESS_RESPAWN);
 
     ngx_memzero(&ch, sizeof(ngx_channel_t));
@@ -423,8 +418,7 @@ ngx_start_cache_manager_processes(ngx_cycle_t *cycle, ngx_uint_t respawn)
         return;
     }
 
-    ngx_spawn_process(cycle, ngx_cache_manager_process_cycle,
-                      &ngx_cache_loader_ctx, "cache loader process",
+    ngx_spawn_process(cycle, ngx_cache_manager_process_cycle, &ngx_cache_loader_ctx, "cache loader process",
                       respawn ? NGX_PROCESS_JUST_SPAWN : NGX_PROCESS_NORESPAWN);
 
     ch.command = NGX_CMD_OPEN_CHANNEL;
@@ -441,11 +435,9 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
 {
     ngx_int_t  i;
 
-    for (i = 0; i < ngx_last_process; i++)
-	{
+    for (i = 0; i < ngx_last_process; i++) {
 
-        if (i == ngx_process_slot || ngx_processes[i].pid == -1 || ngx_processes[i].channel[0] == -1)
-        {
+        if (i == ngx_process_slot || ngx_processes[i].pid == -1 || ngx_processes[i].channel[0] == -1) {
             continue;
         }
 
@@ -761,15 +753,13 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
         ngx_process_events_and_timers(cycle);
 
-        if (ngx_terminate) 
-		{
+        if (ngx_terminate) {
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
 
             ngx_worker_process_exit(cycle);
         }
 
-        if (ngx_quit) 
-		{
+        if (ngx_quit) {
             ngx_quit = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "gracefully shutting down");
             ngx_setproctitle("worker process is shutting down");
@@ -927,32 +917,26 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
     }
 
 	/*关闭之前子进程的channel[1]*/
-    for (n = 0; n < ngx_last_process; n++) 
-	{
-        if (ngx_processes[n].pid == -1) 
-		{
+    for (n = 0; n < ngx_last_process; n++) {
+        if (ngx_processes[n].pid == -1) {
             continue;
         }
 
-        if (n == ngx_process_slot) 
-		{
+        if (n == ngx_process_slot) {
             continue;
         }
 
-        if (ngx_processes[n].channel[1] == -1) 
-		{
+        if (ngx_processes[n].channel[1] == -1) {
             continue;
         }
 
-        if (close(ngx_processes[n].channel[1]) == -1) 
-		{
+        if (close(ngx_processes[n].channel[1]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "close() channel failed");
         }
     }
 
 	/*关闭channel[0]*/
-    if (close(ngx_processes[ngx_process_slot].channel[0]) == -1)
-	{
+    if (close(ngx_processes[ngx_process_slot].channel[0]) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "close() channel failed");
     }
 
@@ -960,8 +944,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
     ngx_last_process = 0;
 #endif
 
-    if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT, ngx_channel_handler) == NGX_ERROR)
-    {
+    if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT, ngx_channel_handler) == NGX_ERROR) {
         /* fatal */
         exit(2);
     }

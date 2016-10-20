@@ -35,13 +35,15 @@ typedef struct {
     time_t                           valid;
 } ngx_http_cache_valid_t;
 
-
+///保存每个缓存文件在内存中的描述信息。
+//这些信息需要存储于共享内存中，以便多个 worker 进程共享。
+//所以，为了提高利用率，此结构体多个字段使用了位域 (Bit field)，
+//同时，缓存 key 中用作查询树键值( ngx_rbtree_key_t ) 的部分字节不再重复存储
 typedef struct {
     ngx_rbtree_node_t                node;
     ngx_queue_t                      queue;
 
-    u_char                           key[NGX_HTTP_CACHE_KEY_LEN
-                                         - sizeof(ngx_rbtree_key_t)];
+    u_char                           key[NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t)];
 
     unsigned                         count:20;
     unsigned                         uses:10;
@@ -60,7 +62,10 @@ typedef struct {
     ngx_msec_t                       lock_time;
 } ngx_http_file_cache_node_t;
 
-
+//每个http request对应的缓存条目的完整信息 
+//(请求使用的缓存 file_cache 、缓存条目对应的缓存节点信息 node 、缓存文件 file 、key 值及其检验 crc32 等等) 
+//都临时保存于ngx_http_cache_t (ngx_http_request_t->cache) 结构体中，
+//这个结构体中的信息量基本上相当于ngx_http_file_cache_header_t 和 ngx_http_file_cache_node_t 的总和
 struct ngx_http_cache_s 
 {
     ngx_file_t                       file;
@@ -114,7 +119,10 @@ struct ngx_http_cache_s
     unsigned                         secondary:1;
 };
 
-
+//每个文件系统中的缓存文件都有固定的存储格式，其中 ngx_http_file_cache_header_t为包头结构，
+//存储缓存文件的相关信息 (修改时间、缓存 key 的 crc32 值、和用于指明
+//HTTP 响应包头和包体在缓存文件中偏移位置的字段等)：
+//缓存文件格式 [ngx_http_file_cache_header_t]["\nKEY: "][orig_key]["\n"][header][body]
 typedef struct {
     ngx_uint_t                       version;
     time_t                           valid_sec;
@@ -143,7 +151,7 @@ typedef struct {
 
 
 struct ngx_http_file_cache_s {
-    ngx_http_file_cache_sh_t        *sh;
+    ngx_http_file_cache_sh_t        *sh;		//维护 LRU 队列和红黑树，以及缓存文件的当前状态 (是否正在从磁盘加载、当前缓存大小等)
     ngx_slab_pool_t                 *shpool;
 
     ngx_path_t                      *path;

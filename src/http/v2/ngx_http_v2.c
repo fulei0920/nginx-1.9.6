@@ -337,12 +337,13 @@ ngx_http_v2_read_handler(ngx_event_t *rev)
             break;
         }
 
-        if (n == 0 && (h2c->state.incomplete || h2c->processing)) {
-            ngx_log_error(NGX_LOG_INFO, c->log, 0,
-                          "client prematurely closed connection");
+        if (n == 0 && (h2c->state.incomplete || h2c->processing)) 
+		{
+            ngx_log_error(NGX_LOG_INFO, c->log, 0, "client prematurely closed connection");
         }
 
-        if (n == 0 || n == NGX_ERROR) {
+        if (n == 0 || n == NGX_ERROR) 
+		{
             c->error = 1;
             ngx_http_v2_finalize_connection(h2c, 0);
             return;

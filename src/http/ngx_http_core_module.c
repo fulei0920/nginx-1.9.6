@@ -37,8 +37,7 @@ static char *ngx_http_core_merge_loc_conf(ngx_conf_t *cf,
 
 static char *ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy);
 static char *ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy);
-static ngx_int_t ngx_http_core_regex_location(ngx_conf_t *cf,
-    ngx_http_core_loc_conf_t *clcf, ngx_str_t *regex, ngx_uint_t caseless);
+static ngx_int_t ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf, ngx_str_t *regex, ngx_uint_t caseless);
 
 static char *ngx_http_core_types(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_core_type(ngx_conf_t *cf, ngx_command_t *dummy,
@@ -3577,12 +3576,10 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
         }
 		else if (len == 2 && mod[0] == '~' && mod[1] == '*') 
 		{
-
             if (ngx_http_core_regex_location(cf, clcf, name, 1) != NGX_OK)
 			{
                 return NGX_CONF_ERROR;
             }
-
         }
 		else 
 		{
@@ -3600,15 +3597,12 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
             clcf->name.len = name->len - 1;
             clcf->name.data = name->data + 1;
             clcf->exact_match = 1;
-
         } 
 		else if (name->data[0] == '^' && name->data[1] == '~')
        	{
-
             clcf->name.len = name->len - 2;
             clcf->name.data = name->data + 2;
             clcf->noregex = 1;
-
         }
 		else if (name->data[0] == '~') 
 		{
@@ -3617,20 +3611,22 @@ ngx_http_core_location(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
             if (name->data[0] == '*')
 			{
-
                 name->len--;
                 name->data++;
 
-                if (ngx_http_core_regex_location(cf, clcf, name, 1) != NGX_OK) {
+                if (ngx_http_core_regex_location(cf, clcf, name, 1) != NGX_OK) 
+				{
                     return NGX_CONF_ERROR;
                 }
 
-            } else {
-                if (ngx_http_core_regex_location(cf, clcf, name, 0) != NGX_OK) {
+            } 
+			else 
+			{
+                if (ngx_http_core_regex_location(cf, clcf, name, 0) != NGX_OK) 
+				{
                     return NGX_CONF_ERROR;
                 }
             }
-
         }
 		else 
 		{
@@ -4655,20 +4651,25 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         if (ngx_strcmp(value[n].data, "spdy") == 0)
 		{
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "invalid parameter \"spdy\": "
-				"ngx_http_spdy_module was superseded by ngx_http_v2_module");
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "invalid parameter \"spdy\": ngx_http_spdy_module was superseded by ngx_http_v2_module");
             continue;
         }
 
-        if (ngx_strncmp(value[n].data, "so_keepalive=", 13) == 0) {
+        if (ngx_strncmp(value[n].data, "so_keepalive=", 13) == 0)
+		{
 
-            if (ngx_strcmp(&value[n].data[13], "on") == 0) {
+            if (ngx_strcmp(&value[n].data[13], "on") == 0) 
+			{
                 lsopt.so_keepalive = 1;
 
-            } else if (ngx_strcmp(&value[n].data[13], "off") == 0) {
+            } 
+			else if (ngx_strcmp(&value[n].data[13], "off") == 0)
+           	{
                 lsopt.so_keepalive = 2;
 
-            } else {
+            } 
+			else 
+			{
 
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
                 u_char     *p, *end;
@@ -4678,15 +4679,18 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
                 s.data = value[n].data + 13;
 
                 p = ngx_strlchr(s.data, end, ':');
-                if (p == NULL) {
+                if (p == NULL) 
+				{
                     p = end;
                 }
 
-                if (p > s.data) {
+                if (p > s.data) 
+				{
                     s.len = p - s.data;
 
                     lsopt.tcp_keepidle = ngx_parse_time(&s, 1);
-                    if (lsopt.tcp_keepidle == (time_t) NGX_ERROR) {
+                    if (lsopt.tcp_keepidle == (time_t) NGX_ERROR) 
+					{
                         goto invalid_so_keepalive;
                     }
                 }
@@ -4694,15 +4698,18 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
                 s.data = (p < end) ? (p + 1) : end;
 
                 p = ngx_strlchr(s.data, end, ':');
-                if (p == NULL) {
+                if (p == NULL) 
+				{
                     p = end;
                 }
 
-                if (p > s.data) {
+                if (p > s.data) 
+				{
                     s.len = p - s.data;
 
                     lsopt.tcp_keepintvl = ngx_parse_time(&s, 1);
-                    if (lsopt.tcp_keepintvl == (time_t) NGX_ERROR) {
+                    if (lsopt.tcp_keepintvl == (time_t) NGX_ERROR)
+					{
                         goto invalid_so_keepalive;
                     }
                 }
@@ -4728,9 +4735,7 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #else
 
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "the \"so_keepalive\" parameter accepts "
-                                   "only \"on\" or \"off\" on this platform");
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the \"so_keepalive\" parameter accepts only \"on\" or \"off\" on this platform");
                 return NGX_CONF_ERROR;
 
 #endif

@@ -120,15 +120,13 @@ ngx_http_compile_complex_value(ngx_http_compile_complex_value_t *ccv)
         if (v->data[i] == '$') {
             if (v->data[i + 1] >= '1' && v->data[i + 1] <= '9') {
                 nc++;
-
             } else {
                 nv++;
             }
         }
     }
 
-    if ((v->len == 0 || v->data[0] != '$')
-        && (ccv->conf_prefix || ccv->root_prefix))
+    if ((v->len == 0 || v->data[0] != '$') && (ccv->conf_prefix || ccv->root_prefix))
     {
         if (ngx_conf_full_name(ccv->cf->cycle, v, ccv->conf_prefix) != NGX_OK) {
             return NGX_ERROR;
@@ -149,15 +147,11 @@ ngx_http_compile_complex_value(ngx_http_compile_complex_value_t *ccv)
 
     n = nv + 1;
 
-    if (ngx_array_init(&flushes, ccv->cf->pool, n, sizeof(ngx_uint_t))
-        != NGX_OK)
-    {
+    if (ngx_array_init(&flushes, ccv->cf->pool, n, sizeof(ngx_uint_t)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    n = nv * (2 * sizeof(ngx_http_script_copy_code_t)
-                  + sizeof(ngx_http_script_var_code_t))
-        + sizeof(uintptr_t);
+    n = nv * (2 * sizeof(ngx_http_script_copy_code_t) + sizeof(ngx_http_script_var_code_t)) + sizeof(uintptr_t);
 
     if (ngx_array_init(&lengths, ccv->cf->pool, n, 1) != NGX_OK) {
         return NGX_ERROR;

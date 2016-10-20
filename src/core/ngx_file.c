@@ -28,8 +28,7 @@ ngx_get_full_name(ngx_pool_t *pool, ngx_str_t *prefix, ngx_str_t *name)
 
 	//若name本身就是全路径名，直接返回
     rc = ngx_test_full_name(name);
-    if (rc == NGX_OK) 
-	{
+    if (rc == NGX_OK) {
         return rc;
     }
 
@@ -46,8 +45,7 @@ ngx_get_full_name(ngx_pool_t *pool, ngx_str_t *prefix, ngx_str_t *name)
 #endif
 
     n = ngx_pnalloc(pool, len + name->len + 1);
-    if (n == NULL)
-	{
+    if (n == NULL) {
         return NGX_ERROR;
     }
 

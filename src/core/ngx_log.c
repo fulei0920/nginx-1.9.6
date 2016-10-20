@@ -285,8 +285,7 @@ ngx_log_stderr(ngx_err_t err, const char *fmt, ...)
         p = ngx_log_errno(p, last, err);
     }
 
-    if (p > last - NGX_LINEFEED_SIZE)
-	{
+    if (p > last - NGX_LINEFEED_SIZE) {
         p = last - NGX_LINEFEED_SIZE;
     }
 
@@ -296,6 +295,7 @@ ngx_log_stderr(ngx_err_t err, const char *fmt, ...)
 }
 
 
+//将err及其对应的字符串以'(数字: 描述)'的格式写入buf指定的空间中
 u_char *
 ngx_log_errno(u_char *buf, u_char *last, ngx_err_t err)
 {
@@ -310,8 +310,7 @@ ngx_log_errno(u_char *buf, u_char *last, ngx_err_t err)
     }
 
 #if (NGX_WIN32)
-    buf = ngx_slprintf(buf, last, ((unsigned) err < 0x80000000)
-                                       ? " (%d: " : " (%Xd: ", err);
+    buf = ngx_slprintf(buf, last, ((unsigned) err < 0x80000000) ? " (%d: " : " (%Xd: ", err);
 #else
     buf = ngx_slprintf(buf, last, " (%d: ", err);
 #endif
@@ -344,8 +343,7 @@ ngx_log_init(u_char *prefix)
 
     nlen = ngx_strlen(name);
 	//未指定日志文件则设置为标准错误输出
-    if (nlen == 0) 
-	{
+    if (nlen == 0) {
         ngx_log_file.fd = ngx_stderr;
         return &ngx_log;
     }
@@ -354,19 +352,15 @@ ngx_log_init(u_char *prefix)
 
 	//若日志文件路径非绝对路径，则尝试添加路径前缀
 #if (NGX_WIN32)
-    if (name[1] != ':') 
-	{
+    if (name[1] != ':') {
 #else
-    if (name[0] != '/') 
-	{
+    if (name[0] != '/') {
 #endif
 
-        if (prefix)
-		{
+        if (prefix) {
             plen = ngx_strlen(prefix);
         }
-		else
-		{
+		else {
 #ifdef NGX_PREFIX
             prefix = (u_char *) NGX_PREFIX;
             plen = ngx_strlen(prefix);
@@ -375,18 +369,15 @@ ngx_log_init(u_char *prefix)
 #endif
         }
 
-        if (plen)
-		{
+        if (plen) {
             name = malloc(plen + nlen + 2);
-            if (name == NULL)
-			{
+            if (name == NULL) {
                 return NULL;
             }
 
             p = ngx_cpymem(name, prefix, plen);
 
-            if (!ngx_path_separator(*(p - 1)))
-			{
+            if (!ngx_path_separator(*(p - 1))) {
                 *p++ = '/';
             }
 
@@ -398,8 +389,7 @@ ngx_log_init(u_char *prefix)
 
     ngx_log_file.fd = ngx_open_file(name, NGX_FILE_APPEND, NGX_FILE_CREATE_OR_OPEN, NGX_FILE_DEFAULT_ACCESS);
 
-    if (ngx_log_file.fd == NGX_INVALID_FILE) 
-	{
+    if (ngx_log_file.fd == NGX_INVALID_FILE)  {
         ngx_log_stderr(ngx_errno, "[alert] could not open error log file: " ngx_open_file_n " \"%s\" failed", name);
 #if (NGX_WIN32)
         ngx_event_log(ngx_errno, "could not open error log file: " ngx_open_file_n " \"%s\" failed", name);
@@ -407,8 +397,7 @@ ngx_log_init(u_char *prefix)
         ngx_log_file.fd = ngx_stderr;
     }
 
-    if (p) 
-	{
+    if (p) {
         ngx_free(p);
     }
 

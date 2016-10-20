@@ -497,7 +497,10 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NULL },
 
 #if (NGX_HTTP_CACHE)
-
+	/*
+	proxy_cache  zone|off
+	存放缓存的索引数据，描述的缓存区必须事先由 proxy_cache_path 指令定义
+	*/
     { ngx_string("proxy_cache"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_http_proxy_cache,
@@ -512,6 +515,17 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       0,
       NULL },
 
+	/*
+	proxy_cache_path：缓存的存储路径和索引信息；
+	path  缓存目录的根路径
+	level=N:N在目录的第几级hash目录缓存数据；
+	keys_zone=name:size 缓存索引重建进程建立索引时用于存放索引的内存区域名和大小；
+	interval=time 强制更新缓存时间，规定时间内没有访问则从内存删除，默认10s；
+	max_size=size 硬盘中缓存数据的上限，由cache manager管理，超出则根据LRU策略删除；
+	loader_files=number 重建索引时每次加载数据元素的上限，进程递归遍历读取硬盘上的缓存目录和文件，对每个文件在内存中建立索引，每建立一个索引称为加载
+		一个数据元素，每次遍历时可同时加载多个数据元素，默认100；
+	loader_sleep=time索引重建进程在两次遍历间的暂停时长，默认50ms；
+	*/
     { ngx_string("proxy_cache_path"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_2MORE,
       ngx_http_file_cache_set_slot,
@@ -554,6 +568,13 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_use_stale),
       &ngx_http_proxy_next_upstream_masks },
 
+	/*
+	语法：proxy_cache_methods [GET HEAD POST];
+	默认值：proxy_cache_methods GET HEAD;
+	使用字段：http, server, location
+	GET/HEAD用来装饰语句，即你无法禁用GET/HEAD即使你只使用下列语句设置：
+	proxy_cache_methods POST;
+	*/
     { ngx_string("proxy_cache_methods"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
       ngx_conf_set_bitmask_slot,
@@ -941,8 +962,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     ngx_http_proxy_main_conf_t  *pmcf;
 #endif
 
-    if (ngx_http_upstream_create(r) != NGX_OK) 
-	{
+    if (ngx_http_upstream_create(r) != NGX_OK)  {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -4336,8 +4356,7 @@ ngx_http_proxy_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     if (cv.lengths != NULL) {
 
-        plcf->upstream.cache_value = ngx_palloc(cf->pool,
-                                             sizeof(ngx_http_complex_value_t));
+        plcf->upstream.cache_value = ngx_palloc(cf->pool, sizeof(ngx_http_complex_value_t));
         if (plcf->upstream.cache_value == NULL) {
             return NGX_CONF_ERROR;
         }
@@ -4347,8 +4366,7 @@ ngx_http_proxy_cache(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_OK;
     }
 
-    plcf->upstream.cache_zone = ngx_shared_memory_add(cf, &value[1], 0,
-                                                      &ngx_http_proxy_module);
+    plcf->upstream.cache_zone = ngx_shared_memory_add(cf, &value[1], 0, &ngx_http_proxy_module);
     if (plcf->upstream.cache_zone == NULL) {
         return NGX_CONF_ERROR;
     }

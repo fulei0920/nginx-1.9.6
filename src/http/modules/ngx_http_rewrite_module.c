@@ -41,11 +41,11 @@ static char * ngx_http_rewrite_value(ngx_conf_t *cf,
     ngx_http_rewrite_loc_conf_t *lcf, ngx_str_t *value);
 
 
-static ngx_command_t  ngx_http_rewrite_commands[] = {
+static ngx_command_t  ngx_http_rewrite_commands[] = 
+{
 
     { ngx_string("rewrite"),
-      NGX_HTTP_SRV_CONF|NGX_HTTP_SIF_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                       |NGX_CONF_TAKE23,
+      NGX_HTTP_SRV_CONF|NGX_HTTP_SIF_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE23,
       ngx_http_rewrite,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
@@ -287,14 +287,16 @@ ngx_http_rewrite_init(ngx_conf_t *cf)
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_SERVER_REWRITE_PHASE].handlers);
-    if (h == NULL) {
+    if (h == NULL) 
+	{
         return NGX_ERROR;
     }
 
     *h = ngx_http_rewrite_handler;
 
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers);
-    if (h == NULL) {
+    if (h == NULL) 
+	{
         return NGX_ERROR;
     }
 

@@ -63,15 +63,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     log = old_cycle->log;
 
     pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
-    if (pool == NULL)
-	{
+    if (pool == NULL) {
         return NULL;
     }
     pool->log = log;
 
     cycle = ngx_pcalloc(pool, sizeof(ngx_cycle_t));
-    if (cycle == NULL)
-	{
+    if (cycle == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
@@ -83,8 +81,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	/*设置cycle->conf_prefix*/
     cycle->conf_prefix.len = old_cycle->conf_prefix.len;
     cycle->conf_prefix.data = ngx_pstrdup(pool, &old_cycle->conf_prefix);
-    if (cycle->conf_prefix.data == NULL)
-	{
+    if (cycle->conf_prefix.data == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
@@ -101,8 +98,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	/*设置cycle->conf_file*/
     cycle->conf_file.len = old_cycle->conf_file.len;
     cycle->conf_file.data = ngx_pnalloc(pool, old_cycle->conf_file.len + 1);
-    if (cycle->conf_file.data == NULL) 
-	{
+    if (cycle->conf_file.data == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
@@ -126,35 +122,28 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	}
 
 	/*设置cycle->config_dump*/
-    if (ngx_array_init(&cycle->config_dump, pool, 1, sizeof(ngx_conf_dump_t)) != NGX_OK)
-    {
+    if (ngx_array_init(&cycle->config_dump, pool, 1, sizeof(ngx_conf_dump_t)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
 	/*设置cycle->open_files*/
-    if (old_cycle->open_files.part.nelts)
-	{
+    if (old_cycle->open_files.part.nelts) {
 		/*if not zero, calculate total number*/
         n = old_cycle->open_files.part.nelts;
-        for (part = old_cycle->open_files.part.next; part; part = part->next)
-		{
+        for (part = old_cycle->open_files.part.next; part; part = part->next) {
             n += part->nelts;
         }
-    }
-	else 
-	{
+    } else {
         n = 20;
     }
-    if (ngx_list_init(&cycle->open_files, pool, n, sizeof(ngx_open_file_t)) != NGX_OK)
-    {
+    if (ngx_list_init(&cycle->open_files, pool, n, sizeof(ngx_open_file_t)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
 	/*设置cycle->shared_memory*/
-    if (old_cycle->shared_memory.part.nelts)
-	{
+    if (old_cycle->shared_memory.part.nelts) {
 		/*if not zero, calculate total number*/
         n = old_cycle->shared_memory.part.nelts;
         for (part = old_cycle->shared_memory.part.next; part; part = part->next)
@@ -167,16 +156,14 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	{
         n = 1;
     }
-    if (ngx_list_init(&cycle->shared_memory, pool, n, sizeof(ngx_shm_zone_t)) != NGX_OK)
-    {
+    if (ngx_list_init(&cycle->shared_memory, pool, n, sizeof(ngx_shm_zone_t)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
 	/*设置cycle->listening*/
     n = old_cycle->listening.nelts ? old_cycle->listening.nelts : 10;
-	if(ngx_array_init(&cycle->listening, pool, n, sizeof(ngx_listening_t)) != NGX_OK)
-	{
+	if(ngx_array_init(&cycle->listening, pool, n, sizeof(ngx_listening_t)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
 	}
@@ -184,17 +171,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 	/*设置cycle->reusable_connections_queue*/
     ngx_queue_init(&cycle->reusable_connections_queue);
 
-	/*设置cycle->conf_ctx*/
+	/*为cycle->conf_ctx分配空间*/
     cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
-    if (cycle->conf_ctx == NULL)
-	{
+    if (cycle->conf_ctx == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
 	/*设置cycle->hostname*/
-    if (gethostname(hostname, NGX_MAXHOSTNAMELEN) == -1) 
-	{
+    if (gethostname(hostname, NGX_MAXHOSTNAMELEN) == -1) {
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "gethostname() failed");
         ngx_destroy_pool(pool);
         return NULL;
@@ -203,29 +188,24 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     hostname[NGX_MAXHOSTNAMELEN - 1] = '\0';
     cycle->hostname.len = ngx_strlen(hostname);
     cycle->hostname.data = ngx_pnalloc(pool, cycle->hostname.len);
-    if (cycle->hostname.data == NULL)
-	{
+    if (cycle->hostname.data == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
 
-	/*调用每个核心模块的create_conf*/
-    for (i = 0; ngx_modules[i]; i++) 
-	{
-        if (ngx_modules[i]->type != NGX_CORE_MODULE) 
-		{
+	/*调用每个核心模块的create_conf，来分配核心模块的配置存储空间*/
+    for (i = 0; ngx_modules[i]; i++) {
+        if (ngx_modules[i]->type != NGX_CORE_MODULE) {
             continue;
         }
 
         module = ngx_modules[i]->ctx;
 
-        if (module->create_conf)
-		{
+        if (module->create_conf) {
             rv = module->create_conf(cycle);
-            if (rv == NULL)
-			{
+            if (rv == NULL) {
                 ngx_destroy_pool(pool);
                 return NULL;
             }
@@ -240,15 +220,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
-    if (conf.args == NULL)
-	{
+    if (conf.args == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
     conf.temp_pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
-    if (conf.temp_pool == NULL) 
-	{
+    if (conf.temp_pool == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
@@ -267,31 +245,26 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 	/*根据配置递归设置所有模块的参数*/
 	/*解析启动-g参数配置*/
-    if (ngx_conf_param(&conf) != NGX_CONF_OK) 
-	{
+    if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
 	/*解析nginx.conf配置文件*/
-    if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) 
-	{
+    if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
 
-    if (ngx_test_config && !ngx_quiet_mode) 
-	{
+    if (ngx_test_config && !ngx_quiet_mode) {
         ngx_log_stderr(0, "the configuration file %s syntax is ok", cycle->conf_file.data);
     }
 
 
 	/*调用每个核心模块的init_conf*/
-    for (i = 0; ngx_modules[i]; i++) 
-	{
-        if (ngx_modules[i]->type != NGX_CORE_MODULE) 
-		{
+    for (i = 0; ngx_modules[i]; i++) {
+        if (ngx_modules[i]->type != NGX_CORE_MODULE) {
             continue;
         }
 
@@ -308,12 +281,11 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
     }
 
-    if (ngx_process == NGX_PROCESS_SIGNALLER) 
-	{
+    if (ngx_process == NGX_PROCESS_SIGNALLER) {
         return cycle;
     }
 
-    ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
+    ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);  //获取ngx_core_module模块的配置
 
     if (ngx_test_config) 
 	{
@@ -424,8 +396,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
             i = 0;
         }
 
-        if (shm_zone[i].shm.size == 0)
-		{
+        if (shm_zone[i].shm.size == 0) {
             ngx_log_error(NGX_LOG_EMERG, log, 0, "zero size shared memory zone \"%V\"", &shm_zone[i].shm.name);
             goto failed;
         }
@@ -476,18 +447,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
             break;
         }
 
-        if (ngx_shm_alloc(&shm_zone[i].shm) != NGX_OK) 
-		{
+        if (ngx_shm_alloc(&shm_zone[i].shm) != NGX_OK) {
             goto failed;
         }
 
-        if (ngx_init_zone_pool(cycle, &shm_zone[i]) != NGX_OK)
-		{
+        if (ngx_init_zone_pool(cycle, &shm_zone[i]) != NGX_OK) {
             goto failed;
         }
 
-        if (shm_zone[i].init(&shm_zone[i], NULL) != NGX_OK) 
-		{
+        if (shm_zone[i].init(&shm_zone[i], NULL) != NGX_OK) {
             goto failed;
         }
 
@@ -1261,13 +1229,10 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
 
 	//遍历全局链表，检查冲突，
 	//对于已经存在且不冲突的共享内存可直接返回引用
-    for (i = 0; /* void */ ; i++)
-	{
+    for (i = 0; /* void */ ; i++) {
 
-        if (i >= part->nelts) 
-		{
-            if (part->next == NULL) 
-			{
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
                 break;
             }
             part = part->next;
@@ -1275,30 +1240,25 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
             i = 0;
         }
 
-        if (name->len != shm_zone[i].shm.name.len) 
-		{
+        if (name->len != shm_zone[i].shm.name.len) {
             continue;
         }
 
-        if (ngx_strncmp(name->data, shm_zone[i].shm.name.data, name->len) != 0)
-        {
+        if (ngx_strncmp(name->data, shm_zone[i].shm.name.data, name->len) != 0) {
             continue;
         }
 
-        if (tag != shm_zone[i].tag)
-		{
+        if (tag != shm_zone[i].tag) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the shared memory zone \"%V\" is "
 					"already declared for a different use", &shm_zone[i].shm.name);
             return NULL;
         }
 
-        if (shm_zone[i].shm.size == 0) 
-		{
+        if (shm_zone[i].shm.size == 0) {
             shm_zone[i].shm.size = size;
         }
 
-        if (size && size != shm_zone[i].shm.size)
-		{
+        if (size && size != shm_zone[i].shm.size) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the size %uz of shared memory zone \"%V\" "
 					"conflicts with already declared size %uz", size, &shm_zone[i].shm.name, shm_zone[i].shm.size);
             return NULL;
@@ -1308,8 +1268,7 @@ ngx_shared_memory_add(ngx_conf_t *cf, ngx_str_t *name, size_t size, void *tag)
     }
 
     shm_zone = ngx_list_push(&cf->cycle->shared_memory);
-    if (shm_zone == NULL)
-	{
+    if (shm_zone == NULL) {
         return NULL;
     }
 

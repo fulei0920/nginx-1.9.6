@@ -31,9 +31,14 @@ int              ngx_argc;
 char           **ngx_argv;
 char           **ngx_os_argv;
 
-ngx_int_t        ngx_process_slot;		/*当前进程在ngx_processes中元素的下标*/
-ngx_socket_t     ngx_channel;			/*子进程套接字对中的使用的套接字(用于与其他进程进行通信) channel[1]*/
-ngx_int_t        ngx_last_process;   	/*ngx_processes中最后一个子进程的下一个位置的索引*/
+//(主进程)新产生的进程在ngx_processes中元素的下标
+//(工作进程)当前进程在ngx_processes中元素的下标
+ngx_int_t        ngx_process_slot;	
+//子进程套接字对中的使用的套接字(用于与其他进程进行通信) channel[1]
+ngx_socket_t     ngx_channel;			
+//ngx_processes中最后一个子进程的下一个位置的索引
+//记录了边界位置，当遍历所有的进程时，可以不用遍历整个ngx_processes
+ngx_int_t        ngx_last_process;   	
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];  /*存储所有子进程的信息*/
 
 
@@ -91,7 +96,6 @@ ngx_signal_t  signals[] =
     { 0, NULL, "", NULL }
 };
 
-
 ngx_pid_t
 ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *name, ngx_int_t respawn)
 {
@@ -99,74 +103,63 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     ngx_pid_t  pid;
     ngx_int_t  s;
 
-	/*获取ngx_processes中可用的槽的索引*/
-    if (respawn >= 0) 
-	{
+	//为即将创建的进程分配一个进程信息结构体(从ngx_processes中选取)。
+	//如果是重启某个进程(工作进程)，直接使用respawn参数作为索引所指向进程信息结构体，
+	//否则需要从ngx_process数组中找到一个空闲的进程信息结构体。
+    if (respawn >= 0)  {
         s = respawn;
-    } 
-	else
-	{
+    } else {
 
 		/*查找ngx_processess数组内第一个可用元素的下标*/
-        for (s = 0; s < ngx_last_process; s++)
-		{
-            if (ngx_processes[s].pid == -1) 
-			{
+        for (s = 0; s < ngx_last_process; s++) {
+            if (ngx_processes[s].pid == -1) {
                 break;
             }
         }
-
-        if (s == NGX_MAX_PROCESSES) 
-		{
+		//如果ngx_process数组全部用光了，就返回错误。
+        if (s == NGX_MAX_PROCESSES)  {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, 0, "no more than %d processes can be spawned", NGX_MAX_PROCESSES);
             return NGX_INVALID_PID;
         }
     }
 
 	/*创建套接字对*/
-    if (respawn != NGX_PROCESS_DETACHED)
-	{
+    if (respawn != NGX_PROCESS_DETACHED) {
 
         /* Solaris 9 still has no AF_LOCAL */
-        if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1)
-        {
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "socketpair() failed while spawning \"%s\"", name);
             return NGX_INVALID_PID;
         }
 
         ngx_log_debug2(NGX_LOG_DEBUG_CORE, cycle->log, 0, "channel %d:%d", ngx_processes[s].channel[0], ngx_processes[s].channel[1]);
 
-        if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) 
-		{
+        if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, ngx_nonblocking_n " failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (ngx_nonblocking(ngx_processes[s].channel[1]) == -1) 
-		{
+        if (ngx_nonblocking(ngx_processes[s].channel[1]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, ngx_nonblocking_n " failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
         on = 1;
-        if (ioctl(ngx_processes[s].channel[0], FIOASYNC, &on) == -1) 
-		{
+        if (ioctl(ngx_processes[s].channel[0], FIOASYNC, &on) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "ioctl(FIOASYNC) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (fcntl(ngx_processes[s].channel[0], F_SETOWN, ngx_pid) == -1) 
-		{
+        if (fcntl(ngx_processes[s].channel[0], F_SETOWN, ngx_pid) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "fcntl(F_SETOWN) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
         }
 
-        if (fcntl(ngx_processes[s].channel[0], F_SETFD, FD_CLOEXEC) == -1)
-		{
+        if (fcntl(ngx_processes[s].channel[0], F_SETFD, FD_CLOEXEC) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "fcntl(FD_CLOEXEC) failed while spawning \"%s\"", name);
             ngx_close_channel(ngx_processes[s].channel, cycle->log);
             return NGX_INVALID_PID;
@@ -188,13 +181,14 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
         ngx_processes[s].channel[1] = -1;
     }
 
+	//在fork之前会将新进程在ngx_process中的索引保存在ngx_process_slot中
+	//那么新进程可以根据ngx_process_slot找到自己对应的进程信息结构体
     ngx_process_slot = s;
 
 
     pid = fork();
 
-    switch (pid)
-	{
+    switch (pid) {
 
     case -1:
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "fork() failed while spawning \"%s\"", name);
@@ -215,8 +209,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     ngx_processes[s].pid = pid;
     ngx_processes[s].exited = 0;
 
-    if (respawn >= 0)
-	{
+    if (respawn >= 0) {
         return pid;
     }
 
@@ -225,8 +218,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
     ngx_processes[s].name = name;
     ngx_processes[s].exiting = 0;
 
-    switch (respawn) 
-	{
+    switch (respawn) {
 
     case NGX_PROCESS_NORESPAWN:
         ngx_processes[s].respawn = 0;
@@ -259,8 +251,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data, char *
         break;
     }
 
-    if (s == ngx_last_process) 
-	{
+    if (s == ngx_last_process) {
         ngx_last_process++;
     }
 

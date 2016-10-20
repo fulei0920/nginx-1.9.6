@@ -84,7 +84,9 @@ struct ngx_queue_s
 
 #endif
 
-
+//分割队列
+//将队列h从q的地方进行分割，q前面的部分仍然属于h，
+//q后面的部分(包括q)属于新的队列n
 #define ngx_queue_split(h, q, n)                                              \
     (n)->prev = (h)->prev;                                                    \
     (n)->prev->next = n;                                                      \
@@ -93,7 +95,8 @@ struct ngx_queue_s
     (h)->prev->next = h;                                                      \
     (q)->prev = n;
 
-
+//链接队列
+//将队列n中的元素链接到队列h的尾部
 #define ngx_queue_add(h, n)                                                   \
     (h)->prev->next = (n)->next;                                              \
     (n)->next->prev = (h)->prev;                                              \
@@ -106,8 +109,7 @@ struct ngx_queue_s
 
 
 ngx_queue_t *ngx_queue_middle(ngx_queue_t *queue);
-void ngx_queue_sort(ngx_queue_t *queue,
-    ngx_int_t (*cmp)(const ngx_queue_t *, const ngx_queue_t *));
+void ngx_queue_sort(ngx_queue_t *queue, ngx_int_t (*cmp)(const ngx_queue_t *, const ngx_queue_t *));
 
 
 #endif /* _NGX_QUEUE_H_INCLUDED_ */

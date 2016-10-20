@@ -32,14 +32,12 @@ static char *ngx_http_merge_locations(ngx_conf_t *cf,
     ngx_uint_t ctx_index);
 static ngx_int_t ngx_http_init_locations(ngx_conf_t *cf,
     ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf);
-static ngx_int_t ngx_http_init_static_location_trees(ngx_conf_t *cf,
-    ngx_http_core_loc_conf_t *pclcf);
+static ngx_int_t ngx_http_init_static_location_trees(ngx_conf_t *cf, ngx_http_core_loc_conf_t *pclcf);
 static ngx_int_t ngx_http_cmp_locations(const ngx_queue_t *one,
     const ngx_queue_t *two);
 static ngx_int_t ngx_http_join_exact_locations(ngx_conf_t *cf,
     ngx_queue_t *locations);
-static void ngx_http_create_locations_list(ngx_queue_t *locations,
-    ngx_queue_t *q);
+static void ngx_http_create_locations_list(ngx_queue_t *locations, ngx_queue_t *q);
 static ngx_http_location_tree_node_t *
     ngx_http_create_locations_tree(ngx_conf_t *cf, ngx_queue_t *locations,
     size_t prefix);
@@ -245,19 +243,17 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
     rv = ngx_conf_parse(cf, NULL);
 
-    if (rv != NGX_CONF_OK) 
-	{
+    if (rv != NGX_CONF_OK) {
         goto failed;
     }
 
     /* init http{} main_conf's, merge the server{}s' srv_conf's and its location{}s' loc_conf's */
-    cmcf = ctx->main_conf[ngx_http_core_module.ctx_index]; 	//cmcf是ngx_http_core_module在http块下的全局配置结构体
-    cscfp = cmcf->servers.elts;
+    cmcf = ctx->main_conf[ngx_http_core_module.ctx_index]; //获取ngx_http_core_module模块的http{}下的main配置
+    cscfp = cmcf->servers.elts;							   //获取ngx_http_core_module模块在所有sever{}下的srv配置的数组，相当于所有的server配置的数组
 
-    for (m = 0; ngx_modules[m]; m++) 	//ngx_modules数组中包括了所有的Nginx模块
-	{
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
-		{
+    for (m = 0; ngx_modules[m]; m++) { 	//ngx_modules数组中包括了所有的Nginx模块
+	
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
@@ -266,11 +262,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         mi = ngx_modules[m]->ctx_index;
 
         /* init http{} main_conf's */
-        if (module->init_main_conf) 
-		{
+        if (module->init_main_conf) {
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
-            if (rv != NGX_CONF_OK) 
-			{
+            if (rv != NGX_CONF_OK) {
                 goto failed;
             }
         }
@@ -285,11 +279,10 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* create location trees */
-    for (s = 0; s < cmcf->servers.nelts; s++) 
-	{
+    for (s = 0; s < cmcf->servers.nelts; s++) {   		//遍历每一个server{}
 		//clcf是server{}块下的ngx_http_core_loc_conf_t结构体，
 		//它的locations成员以双向链表关联着隶属于这个server块的所有location对应的ngx_http_core_loc_conf_t结构体
-        clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
+        clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];  
 
 		//将ngx_http_core_loc_conf_t组成的双向链表按照location匹配字符串进行排序。
 		//这个操作是递归进行的，如果某个location块下还具有其它location，那么它的locations链表也会被排序

@@ -539,15 +539,15 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     ngx_http_upstream_srv_conf_t   *uscf, **uscfp;
     ngx_http_upstream_main_conf_t  *umcf;
 
-    if (r->aio)
-	{
+    if (r->aio) {
         return;
     }
 
     u = r->upstream;
 
 #if (NGX_HTTP_CACHE)
-
+	///nignx向上游服务器发出upstream请求时，会先检查是否有可用缓存。
+	///--检查该location是否配置了proxy_cache/fastcgi_cache，如果是则使用缓存
     if (u->conf->cache) 
 	{
         ngx_int_t  rc;
@@ -970,8 +970,7 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
 
 static ngx_int_t
-ngx_http_upstream_cache_get(ngx_http_request_t *r, ngx_http_upstream_t *u,
-    ngx_http_file_cache_t **cache)
+ngx_http_upstream_cache_get(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_http_file_cache_t **cache)
 {
     ngx_str_t               *name, val;
     ngx_uint_t               i;

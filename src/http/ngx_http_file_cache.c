@@ -77,7 +77,7 @@ ngx_str_t  ngx_http_cache_status[] = {
 
 static u_char  ngx_http_file_cache_key[] = { LF, 'K', 'E', 'Y', ':', ' ' };
 
-
+///在ngx_init_cycle 中先调用ngx_init_zone_pool 函数对共享内存进行初始化，然后调用ngx_http_file_cache_init 函数对缓存和成员进行初始化
 static ngx_int_t
 ngx_http_file_cache_init(ngx_shm_zone_t *shm_zone, void *data)
 {

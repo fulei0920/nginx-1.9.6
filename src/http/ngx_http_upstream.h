@@ -233,6 +233,7 @@ typedef struct
     ngx_array_t                     *store_values;
 
 #if (NGX_HTTP_CACHE)
+	///标志位:表示是否进行缓存, -1:未设置， 0:不缓存，1:缓存
     signed                           cache:2;
 #endif
     signed                           store:2;			/* 文件缓存标志位 */ 

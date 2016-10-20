@@ -804,12 +804,14 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
         u->naddrs = 1;
 
         u->addrs = ngx_pcalloc(pool, sizeof(ngx_addr_t));
-        if (u->addrs == NULL) {
+        if (u->addrs == NULL) 
+		{
             return NGX_ERROR;
         }
 
         sin = ngx_pcalloc(pool, sizeof(struct sockaddr_in));
-        if (sin == NULL) {
+        if (sin == NULL) 
+		{
             return NGX_ERROR;
         }
 
@@ -819,12 +821,12 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
         u->addrs[0].socklen = sizeof(struct sockaddr_in);
 
         p = ngx_pnalloc(pool, u->host.len + sizeof(":65535") - 1);
-        if (p == NULL) {
+        if (p == NULL) 
+		{
             return NGX_ERROR;
         }
 
-        u->addrs[0].name.len = ngx_sprintf(p, "%V:%d",
-                                           &u->host, u->port) - p;
+        u->addrs[0].name.len = ngx_sprintf(p, "%V:%d", &u->host, u->port) - p;
         u->addrs[0].name.data = p;
 
         return NGX_OK;

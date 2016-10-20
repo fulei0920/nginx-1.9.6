@@ -152,12 +152,10 @@ ngx_set_inherited_sockets(ngx_cycle_t *cycle)
 #endif
 
     ls = cycle->listening.elts;
-    for (i = 0; i < cycle->listening.nelts; i++) 
-	{
+    for (i = 0; i < cycle->listening.nelts; i++) {
 		/* set the socket address */
         ls[i].sockaddr = ngx_palloc(cycle->pool, NGX_SOCKADDRLEN);
-        if (ls[i].sockaddr == NULL)
-		{
+        if (ls[i].sockaddr == NULL) {
             return NGX_ERROR;
         }
         ls[i].socklen = NGX_SOCKADDRLEN;
