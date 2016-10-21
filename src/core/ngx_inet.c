@@ -564,13 +564,11 @@ ngx_parse_url(ngx_pool_t *pool, ngx_url_t *u)
 
     p = u->url.data;
 
-    if (ngx_strncasecmp(p, (u_char *) "unix:", 5) == 0)
-	{
+    if (ngx_strncasecmp(p, (u_char *) "unix:", 5) == 0) {
         return ngx_parse_unix_domain_url(pool, u);
     }
 
-    if (p[0] == '[') 
-	{
+    if (p[0] == '[') {
         return ngx_parse_inet6_url(pool, u);
     }
 

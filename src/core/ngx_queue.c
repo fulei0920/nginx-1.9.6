@@ -54,11 +54,11 @@ ngx_queue_sort(ngx_queue_t *queue, ngx_int_t (*cmp)(const ngx_queue_t *, const n
 
     q = ngx_queue_head(queue);
 
-    if (q == ngx_queue_last(queue)) {
+    if (q == ngx_queue_last(queue)) {  //©у╤сап
         return;
     }
 
-    for (q = ngx_queue_next(q); q != ngx_queue_sentinel(queue); q = next) {
+    for (q = ngx_queue_next(q); q != ngx_queue_sentinel(queue); q = next) {  //
 
         prev = ngx_queue_prev(q);
         next = ngx_queue_next(q);

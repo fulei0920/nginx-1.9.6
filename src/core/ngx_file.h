@@ -17,9 +17,9 @@ struct ngx_file_s
 {
     ngx_fd_t                   fd;			/*文件描述符*/
     ngx_str_t                  name;		/*文件名*/
-    ngx_file_info_t            info;		/*文件属性*/
-	/*已经读取的字节数*/
-    off_t                      offset;		
+    ngx_file_info_t            info;		/*文件属性，通过fstat函数获取*/
+	
+    off_t                      offset;		/*已经读取的字节数*/
     off_t                      sys_offset;	/*系统读写偏移指针位置*/
 
     ngx_log_t                 *log;

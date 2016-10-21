@@ -140,8 +140,7 @@ ngx_palloc(ngx_pool_t *pool, size_t size)
     u_char      *m;
     ngx_pool_t  *p;
 
-    if (size <= pool->max) 
-	{
+    if (size <= pool->max) {
 
         p = pool->current;
 
@@ -337,8 +336,7 @@ ngx_pcalloc(ngx_pool_t *pool, size_t size)
     void *p;
 
     p = ngx_palloc(pool, size);
-    if (p) 
-	{
+    if (p) {
         ngx_memzero(p, size);
     }
 

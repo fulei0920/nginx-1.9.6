@@ -75,6 +75,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
 
     cycle->pool = pool;
+	//nginx启动可能出错，出错就要记录到错误日志中。而错误日志本身也是配置的一部分，所以不解析完配置，nginx就不能了解错误日志的信息。
+	//nginx通过使用上一个周期的错误日志来记录解析配置时发生的错误，而在配置解析完成以后，nginx就用新的错误日志替换旧的错误日志
     cycle->log = log;
     cycle->old_cycle = old_cycle;
 
@@ -127,7 +129,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-	/*设置cycle->open_files*/
+	/*cycle->open_files单链表准备内存*/
     if (old_cycle->open_files.part.nelts) {
 		/*if not zero, calculate total number*/
         n = old_cycle->open_files.part.nelts;
@@ -142,7 +144,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-	/*设置cycle->shared_memory*/
+	/*为cycle->shared_memory单链表准备内存*/
     if (old_cycle->shared_memory.part.nelts) {
 		/*if not zero, calculate total number*/
         n = old_cycle->shared_memory.part.nelts;
@@ -161,7 +163,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-	/*设置cycle->listening*/
+	/*为cycle->listening动态数组准备内存*/
     n = old_cycle->listening.nelts ? old_cycle->listening.nelts : 10;
 	if(ngx_array_init(&cycle->listening, pool, n, sizeof(ngx_listening_t)) != NGX_OK) {
         ngx_destroy_pool(pool);

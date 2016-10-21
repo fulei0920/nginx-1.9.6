@@ -15,9 +15,9 @@
 
 typedef struct 
 {
-    void             *value;
-    u_short           len;
-    u_char            name[1];
+    void             *value;		//字符串key对应的value
+    u_short           len;			//字符串key的长度
+    u_char            name[1];		//字符串key
 } ngx_hash_elt_t;
 
 
@@ -55,11 +55,11 @@ typedef struct {
 
 typedef struct 
 {
-    ngx_hash_t       *hash;
+    ngx_hash_t       *hash;				//hash构建完成后的查找表
     ngx_hash_key_pt   key;				//hash函数
 
-    ngx_uint_t        max_size;
-    ngx_uint_t        bucket_size;
+    ngx_uint_t        max_size;			//冲突桶的最大个数
+    ngx_uint_t        bucket_size;		//冲突桶的最大大小
 
     char             *name;
     ngx_pool_t       *pool;

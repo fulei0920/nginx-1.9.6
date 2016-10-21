@@ -30,8 +30,7 @@ static char *ngx_http_merge_servers(ngx_conf_t *cf,
 static char *ngx_http_merge_locations(ngx_conf_t *cf,
     ngx_queue_t *locations, void **loc_conf, ngx_http_module_t *module,
     ngx_uint_t ctx_index);
-static ngx_int_t ngx_http_init_locations(ngx_conf_t *cf,
-    ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf);
+static ngx_int_t ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf);
 static ngx_int_t ngx_http_init_static_location_trees(ngx_conf_t *cf, ngx_http_core_loc_conf_t *pclcf);
 static ngx_int_t ngx_http_cmp_locations(const ngx_queue_t *one,
     const ngx_queue_t *two);
@@ -128,15 +127,13 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_core_srv_conf_t   **cscfp;
     ngx_http_core_main_conf_t   *cmcf;
 
-    if (*(ngx_http_conf_ctx_t **) conf)
-	{
+    if (*(ngx_http_conf_ctx_t **) conf) {
         return "is duplicate";
     }
 
     /* the main http context */
     ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));
-    if (ctx == NULL)
-	{
+    if (ctx == NULL) {
         return NGX_CONF_ERROR;
     }
 
@@ -145,10 +142,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 	//统计HTTP模块的数目，初始化所有HTTP模块的ctx_index序号
     ngx_http_max_module = 0;
-    for (m = 0; ngx_modules[m]; m++)
-	{
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
-		{
+    for (m = 0; ngx_modules[m]; m++) {
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
@@ -158,59 +153,48 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* the http main_conf context, it is the same in the all http contexts */
     ctx->main_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->main_conf == NULL)
-	{
+    if (ctx->main_conf == NULL) {
         return NGX_CONF_ERROR;
     }
 
     /* the http null srv_conf context, it is used to merge the server{}s' srv_conf's */
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->srv_conf == NULL)
-	{
+    if (ctx->srv_conf == NULL) {
         return NGX_CONF_ERROR;
     }
 
     /* the http null loc_conf context, it is used to merge the server{}s' loc_conf's */
     ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
-    if (ctx->loc_conf == NULL)
-	{
+    if (ctx->loc_conf == NULL) {
         return NGX_CONF_ERROR;
     }
 
     /* create the main_conf's, the null srv_conf's, and the null loc_conf's of the all http modules */
-    for (m = 0; ngx_modules[m]; m++) 
-	{
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
-		{
+    for (m = 0; ngx_modules[m]; m++) {
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
         module = ngx_modules[m]->ctx;
         mi = ngx_modules[m]->ctx_index;
 
-        if (module->create_main_conf) 
-		{
+        if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
-            if (ctx->main_conf[mi] == NULL) 
-			{
+            if (ctx->main_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
 
-        if (module->create_srv_conf)
-		{
+        if (module->create_srv_conf) {
             ctx->srv_conf[mi] = module->create_srv_conf(cf);
-            if (ctx->srv_conf[mi] == NULL) 
-			{
+            if (ctx->srv_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
 
-        if (module->create_loc_conf) 
-		{
+        if (module->create_loc_conf) {
             ctx->loc_conf[mi] = module->create_loc_conf(cf);
-            if (ctx->loc_conf[mi] == NULL)
-			{
+            if (ctx->loc_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
@@ -220,19 +204,15 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->ctx = ctx;
 
 	//调用每个HTTP模块的preconfiguration
-    for (m = 0; ngx_modules[m]; m++) 
-	{
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE) 
-		{
+    for (m = 0; ngx_modules[m]; m++) {
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
         module = ngx_modules[m]->ctx;
 
-        if (module->preconfiguration)
-		{
-            if (module->preconfiguration(cf) != NGX_OK)
-			{
+        if (module->preconfiguration) {
+            if (module->preconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
             }
         }
@@ -251,28 +231,28 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index]; //获取ngx_http_core_module模块的http{}下的main配置
     cscfp = cmcf->servers.elts;							   //获取ngx_http_core_module模块在所有sever{}下的srv配置的数组，相当于所有的server配置的数组
 
-    for (m = 0; ngx_modules[m]; m++) { 	//ngx_modules数组中包括了所有的Nginx模块
+	//调用每个HTTP模块的init_main_conf，相当于对main配置做处理
+	//合并srv配置和loc配置
+    for (m = 0; ngx_modules[m]; m++) { 	
 	
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
-		//ngx_modules[m]是一个ngx_module_t模块结构体，它的ctx成员对于HTTP模块来说是ngx_http_module_t接口
         module = ngx_modules[m]->ctx;
         mi = ngx_modules[m]->ctx_index;
 
         /* init http{} main_conf's */
         if (module->init_main_conf) {
-            rv = module->init_main_conf(cf, ctx->main_conf[mi]);
+            rv = module->(cf, ctx->main_conf[mi]);
             if (rv != NGX_CONF_OK) {
                 goto failed;
             }
         }
 
-		//调用ngx_http_merge_servers方法合并ngx_modules[m]模块
+		//调用ngx_http_merge_servers方法合并ngx_modules[m]模块的srv配置和loc配置
         rv = ngx_http_merge_servers(cf, cmcf, module, mi);
-        if (rv != NGX_CONF_OK) 
-		{
+        if (rv != NGX_CONF_OK) {
             goto failed;
         }
     }
@@ -280,14 +260,11 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* create location trees */
     for (s = 0; s < cmcf->servers.nelts; s++) {   		//遍历每一个server{}
-		//clcf是server{}块下的ngx_http_core_loc_conf_t结构体，
-		//它的locations成员以双向链表关联着隶属于这个server块的所有location对应的ngx_http_core_loc_conf_t结构体
-        clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];  
+        clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];  //获取某个server{}块下ngx_http_core_module模块的loc配置，其location成员关联着隶属于这个server{}块的所有location{}
 
 		//将ngx_http_core_loc_conf_t组成的双向链表按照location匹配字符串进行排序。
 		//这个操作是递归进行的，如果某个location块下还具有其它location，那么它的locations链表也会被排序
-        if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK) 
-		{
+        if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK)  {
             return NGX_CONF_ERROR;
         }
 
@@ -300,19 +277,16 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
 
-    if (ngx_http_init_phases(cf, cmcf) != NGX_OK) 
-	{
+    if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_http_init_headers_in_hash(cf, cmcf) != NGX_OK) 
-	{
+    if (ngx_http_init_headers_in_hash(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
 
-    for (m = 0; ngx_modules[m]; m++) 
-	{
+    for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE)
 		{
             continue;
@@ -320,17 +294,14 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = ngx_modules[m]->ctx;
 
-        if (module->postconfiguration)
-		{
-            if (module->postconfiguration(cf) != NGX_OK) 
-			{
+        if (module->postconfiguration) {
+            if (module->postconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
             }
         }
     }
 
-    if (ngx_http_variables_init_vars(cf) != NGX_OK) 
-	{
+    if (ngx_http_variables_init_vars(cf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
@@ -342,14 +313,12 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     *cf = pcf;
 
 
-    if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) 
-	{
+    if (ngx_http_init_phase_handlers(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
     /* optimize the lists of ports, addresses and server names */
-    if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK)
-	{
+    if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
@@ -366,18 +335,15 @@ failed:
 static ngx_int_t
 ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 {
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_POST_READ_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_POST_READ_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_SERVER_REWRITE_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_SERVER_REWRITE_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -404,7 +370,7 @@ ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     return NGX_OK;
 }
 
-
+//将所有可能的header初始化成hash map，然后保存至ngx_http_core_main_conf_t的headers_in_hash字段中
 static ngx_int_t
 ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 {
@@ -413,16 +379,13 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     ngx_hash_init_t     hash;
     ngx_http_header_t  *header;
 
-    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t)) != NGX_OK)
-    {
+    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    for (header = ngx_http_headers_in; header->name.len; header++) 
-	{
+    for (header = ngx_http_headers_in; header->name.len; header++) {
         hk = ngx_array_push(&headers_in);
-        if (hk == NULL) 
-		{
+        if (hk == NULL) {
             return NGX_ERROR;
         }
 
@@ -439,8 +402,7 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     hash.pool = cf->pool;
     hash.temp_pool = NULL;
 
-    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK) 
-	{
+    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -591,6 +553,11 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 }
 
 
+/*
+cmcf -- 
+module -- 需要合并的HTTP模块的模块上下文
+ctx_index -- 需要合并的HTTP模块在HTTP类型模块中的索引
+*/
 static char *
 ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http_module_t *module, ngx_uint_t ctx_index)
 {
@@ -606,42 +573,34 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http
     saved = *ctx;
     rv = NGX_CONF_OK;
 
-	//遍历所有server块下对应的ngx_http_core_srv_conf_t结构体
-    for (s = 0; s < cmcf->servers.nelts; s++) 
-	{
-        /* merge the server{}s' srv_conf's */
-		//将http{}块下main级别的server与server{}块下的server相关的结构体合并
-		
-		/*srv_conf将指向所有的HTTP模块产生的server相关的srv级别配置结构体*/
-        ctx->srv_conf = cscfp[s]->ctx->srv_conf;	
-        if (module->merge_srv_conf) 
-		{
-			//saved.srv_conf[ctx_index]是当前http模块在http{}块下由create_srv_conf方法创建的结构体，
-			//cscfp[s]->ctx->srv_conf[ctx_index]是在server{}块下由create_srv_conf方法创建的结构体，
+	//遍历所有server块下对应的ngx_http_core_srv_conf_t结构体，相当于遍历所有server{}
+    for (s = 0; s < cmcf->servers.nelts; s++) {
+    
+		//将当前需要合并的模块在http{}块下的srv配置和某server{}块下的srv配置进行合并	
+        ctx->srv_conf = cscfp[s]->ctx->srv_conf;	//XXX:ctx->srv_conf将指向所有的HTTP模块产生的在某server{}下相关的srv级别配置结构体,替换了后续用到的cf->ctx->srv_conf
+        if (module->merge_srv_conf) {
+			//saved.srv_conf[ctx_index]是需要合并的HTTP模块在http{}块下的srv配置
+			//cscfp[s]->ctx->srv_conf[ctx_index]是需要合并的HTTP模块在某server{}块下的srv配置
             rv = module->merge_srv_conf(cf, saved.srv_conf[ctx_index], cscfp[s]->ctx->srv_conf[ctx_index]);
-            if (rv != NGX_CONF_OK)
-			{
+            if (rv != NGX_CONF_OK) {
                 goto failed;
             }
         }
 
-        if (module->merge_loc_conf) 
-		{
+        if (module->merge_loc_conf) {
 
-            /* merge the server{}'s loc_conf */
-			//将http{}块下main级别与server{}块下srv级别的location相关的结构体合并
-			/*cscfp[s]->ctx->loc_conf这个动态数组中的成员都是由server{}块下所有HTTP模块的create_loc_conf方法创建的结构体指针*/
-            ctx->loc_conf = cscfp[s]->ctx->loc_conf;	
+          
+			//将当前需要合并的模块在http{}块下loc配置与某server{}块下loc配置进行合并
+            ctx->loc_conf = cscfp[s]->ctx->loc_conf;  	//XXX:ctx->loc_conf将指向所有的HTTP模块产生的在某server{}下相关的loc级别配置结构体,替换了后续用到的cf->ctx->loc_conf
+            //saved.loc_conf[ctx_index]是需要合并的HTTP模块在http{}块下的loc配置
+			//cscfp[s]->ctx->loc_conf[ctx_index]是需要合并的HTTP模块在某server{}块下的loc配置
             rv = module->merge_loc_conf(cf, saved.loc_conf[ctx_index], cscfp[s]->ctx->loc_conf[ctx_index]);
-            if (rv != NGX_CONF_OK) 
-			{
+            if (rv != NGX_CONF_OK) {
                 goto failed;
             }
-
-            /* merge the locations{}' loc_conf's */
-			//clcf是server{}块下ngx_http_core_module模块使用create_loc_conf方法产生的ngx_http_core_loc_conf_t结构体，
-			//它的locations成员将以双向链表的形式关联到所有当前server{}块下的location{}块
-            clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
+       
+			//将当前需要合并的模块在server{}块下的loc配置和该server{}块下的所有location{}块下的loc配置进行合并
+            clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];  //获取某server{}下ngx_http_core_module模块的loc级别的配置，其location成员存储了该server{}下的所有location
 
             rv = ngx_http_merge_locations(cf, clcf->locations, cscfp[s]->ctx->loc_conf, module, ctx_index);
             if (rv != NGX_CONF_OK) 
@@ -659,6 +618,13 @@ failed:
 }
 
 
+/*
+将某HTTP模块在某server{}下相关的loc级别的配置与该server{}下的所有location{}下相关的loc级别的配置合并
+locations --某server{}下的所有location块的链表
+loc_conf -- 所有的HTTP模块产生的在某server{}下相关的loc级别配置结构体
+module -- 需要合并的HTTP模块的模块上下文
+ctx_index -- 需要合并的HTTP模块在HTTP类型模块中的索引
+*/
 static char *
 ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations, void **loc_conf, ngx_http_module_t *module, ngx_uint_t ctx_index)
 {
@@ -669,16 +635,15 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations, void **loc_conf
     ngx_http_location_queue_t  *lq;
 
 	//如果locations链表为空，也就是说，当前server/location块下没有location块，则立即返回
-    if (locations == NULL)
-	{
+    if (locations == NULL) {
         return NGX_CONF_OK;
     }
 
     ctx = (ngx_http_conf_ctx_t *) cf->ctx;
     saved = *ctx;
 
-    for (q = ngx_queue_head(locations); q != ngx_queue_sentinel(locations); q = ngx_queue_next(q))
-    {
+	//遍历后server{}块下的所有location{}块或某location{}块下嵌套的所有location{}块
+    for (q = ngx_queue_head(locations); q != ngx_queue_sentinel(locations); q = ngx_queue_next(q)) {
         lq = (ngx_http_location_queue_t *) q;
 
 		//如果location后的匹配字符不依靠Nginx自定义的通配符就可以完全匹配的话，
@@ -686,19 +651,17 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations, void **loc_conf
 		//否则使用inclusive指向该结构体，且exact的优先级高于inclusive
         clcf = lq->exact ? lq->exact : lq->inclusive;
 
-		//clcf->loc_conf这个指针数组里保存着当前location下所有HTTP模块使用create_loc_conf方法生成的结构体的指针
-        ctx->loc_conf = clcf->loc_conf;
-
+        ctx->loc_conf = clcf->loc_conf;  //XXX:ctx->loc_conf将指向所有的HTTP模块产生的在某location{}块下loc级别配置结构体,替换了后续用到的cf->ctx->loc_conf
+		//loc_conf[ctx_index]是需要合并的HTTP模块在server{}块下的loc配置
+		//clcf->loc_conf[ctx_index]是需要合并的HTTP模块在某location{}块下的loc配置
         rv = module->merge_loc_conf(cf, loc_conf[ctx_index], clcf->loc_conf[ctx_index]);
-        if (rv != NGX_CONF_OK) 
-		{
+        if (rv != NGX_CONF_OK) {
             return rv;
         }
 
 		//因为location{}中可以继续嵌套location{}配置块，所以是可以继续合并的
         rv = ngx_http_merge_locations(cf, clcf->locations, clcf->loc_conf, module, ctx_index);
-        if (rv != NGX_CONF_OK) 
-		{
+        if (rv != NGX_CONF_OK) {
             return rv;
         }
     }
@@ -708,6 +671,11 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations, void **loc_conf
     return NGX_CONF_OK;
 }
 
+
+/*
+cscf -- 表示某server{}块
+pclcf -- 表示某server{}块下的所有location{}块
+*/
 
 static ngx_int_t
 ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_core_loc_conf_t *pclcf)
@@ -722,41 +690,36 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http
     ngx_queue_t                 *regex;
 #endif
 
-    locations = pclcf->locations;
+    locations = pclcf->locations;  //获取server{}块下的所有location{}块
 
-    if (locations == NULL) 
-	{
+    if (locations == NULL) {  //该server{}块下没有location{}块
         return NGX_OK;
     }
 
     ngx_queue_sort(locations, ngx_http_cmp_locations);
 
-    named = NULL;
-    n = 0;
+    named = NULL;	//第一个name类型的location{}的位置
+    n = 0;			//named类型的location{}的个数
 #if (NGX_PCRE)
-    regex = NULL;
-    r = 0;
+    regex = NULL;	//第一个regex类型的location{}的位置
+    r = 0;			//regex类型的location{}的个数	
 #endif
 
-    for (q = ngx_queue_head(locations); q != ngx_queue_sentinel(locations); q = ngx_queue_next(q))
-    {
+    for (q = ngx_queue_head(locations); q != ngx_queue_sentinel(locations); q = ngx_queue_next(q)) {
         lq = (ngx_http_location_queue_t *) q;
 
         clcf = lq->exact ? lq->exact : lq->inclusive;
 
-        if (ngx_http_init_locations(cf, NULL, clcf) != NGX_OK) 
-		{
+        if (ngx_http_init_locations(cf, NULL, clcf) != NGX_OK) {
             return NGX_ERROR;
         }
 
 #if (NGX_PCRE)
 
-        if (clcf->regex) 
-		{
+        if (clcf->regex) {
             r++;
 
-            if (regex == NULL) 
-			{
+            if (regex == NULL) {
                 regex = q;
             }
 
@@ -765,44 +728,36 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http
 
 #endif
 
-        if (clcf->named) 
-		{
+        if (clcf->named) {
             n++;
 
-            if (named == NULL)
-			{
+            if (named == NULL) {
                 named = q;
             }
 
             continue;
         }
 
-        if (clcf->noname) 
-		{
+        if (clcf->noname) {
             break;
         }
     }
 
 	//对前面排序好的队列做拆分，
 	//具体点将就是把正则匹配location和命名location给拆出来。
-    if (q != ngx_queue_sentinel(locations)) 
-	{
+    if (q != ngx_queue_sentinel(locations))  {
         ngx_queue_split(locations, q, &tail);
     }
 
     if (named) {
-        clcfp = ngx_palloc(cf->pool,
-                           (n + 1) * sizeof(ngx_http_core_loc_conf_t *));
+        clcfp = ngx_palloc(cf->pool, (n + 1) * sizeof(ngx_http_core_loc_conf_t *));
         if (clcfp == NULL) {
             return NGX_ERROR;
         }
 
         cscf->named_locations = clcfp;
 
-        for (q = named;
-             q != ngx_queue_sentinel(locations);
-             q = ngx_queue_next(q))
-        {
+        for (q = named; q != ngx_queue_sentinel(locations); q = ngx_queue_next(q)) {
             lq = (ngx_http_location_queue_t *) q;
 
             *(clcfp++) = lq->exact;
@@ -817,18 +772,14 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http
 
     if (regex) {
 
-        clcfp = ngx_palloc(cf->pool,
-                           (r + 1) * sizeof(ngx_http_core_loc_conf_t *));
+        clcfp = ngx_palloc(cf->pool, (r + 1) * sizeof(ngx_http_core_loc_conf_t *));
         if (clcfp == NULL) {
             return NGX_ERROR;
         }
 
         pclcf->regex_locations = clcfp;
 
-        for (q = regex;
-             q != ngx_queue_sentinel(locations);
-             q = ngx_queue_next(q))
-        {
+        for (q = regex; q != ngx_queue_sentinel(locations); q = ngx_queue_next(q)) {
             lq = (ngx_http_location_queue_t *) q;
 
             *(clcfp++) = lq->exact;
@@ -895,11 +846,9 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations, ngx_http_core_loc
 {
     ngx_http_location_queue_t  *lq;
 
-    if (*locations == NULL) 
-	{
+    if (*locations == NULL) {
         *locations = ngx_palloc(cf->temp_pool, sizeof(ngx_http_location_queue_t));
-        if (*locations == NULL) 
-		{
+        if (*locations == NULL) {
             return NGX_ERROR;
         }
 
@@ -907,8 +856,7 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations, ngx_http_core_loc
     }
 
     lq = ngx_palloc(cf->temp_pool, sizeof(ngx_http_location_queue_t));
-    if (lq == NULL) 
-	{
+    if (lq == NULL) {
         return NGX_ERROR;
     }
 
@@ -916,14 +864,11 @@ ngx_http_add_location(ngx_conf_t *cf, ngx_queue_t **locations, ngx_http_core_loc
 #if (NGX_PCRE)
         || clcf->regex
 #endif
-        || clcf->named || clcf->noname)
-    {
+        || clcf->named || clcf->noname) {
         lq->exact = clcf;
         lq->inclusive = NULL;
 
-    }
-	else 
-   	{
+    } else {
         lq->exact = NULL;
         lq->inclusive = clcf;
     }
@@ -1000,8 +945,7 @@ ngx_http_cmp_locations(const ngx_queue_t *one, const ngx_queue_t *two)
 
 #endif
 
-    rc = ngx_filename_cmp(first->name.data, second->name.data,
-                          ngx_min(first->name.len, second->name.len) + 1);
+    rc = ngx_filename_cmp(first->name.data, second->name.data, ngx_min(first->name.len, second->name.len) + 1);
 
     if (rc == 0 && !first->exact_match && second->exact_match) {
         /* an exact match must be before the same inclusive one */
@@ -1190,7 +1134,10 @@ inclusive:
 }
 
 /*
-将所有的linsten配置组织在核心配置ngx_http_core_main_conf_t下的ports数组字段内
+添加一个监听的ip:port
+将所有的listen配置组织在核心配置ngx_http_core_main_conf_t下的ports数组字段内
+cscf  -- 被监听ip:port所属于的server{} (虚拟主机)
+lsopt -- 存储需要监听的ip、port及其他的相关属性(ssl, rcvbuff等)
 */
 ngx_int_t
 ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_listen_opt_t *lsopt)
@@ -1206,20 +1153,17 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_lis
 #endif
 
 	/*若端口存储空间未分配，则分配*/
-    cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
-    if (cmcf->ports == NULL) 
-	{
+    cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);  //获取ngx_http_core_module模块的main配置
+    if (cmcf->ports == NULL) {
         cmcf->ports = ngx_array_create(cf->temp_pool, 2, sizeof(ngx_http_conf_port_t));
-        if (cmcf->ports == NULL) 
-		{
+        if (cmcf->ports == NULL) {
             return NGX_ERROR;
         }
     }
 
 	/*获取端口*/
     sa = &lsopt->u.sockaddr;
-    switch (sa->sa_family)
-	{
+    switch (sa->sa_family) {
 
 #if (NGX_HAVE_INET6)
     case AF_INET6:
@@ -1242,10 +1186,8 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_lis
 
 	/*查看该端口是否已经存在列表中*/
     port = cmcf->ports->elts;
-    for (i = 0; i < cmcf->ports->nelts; i++)
-	{
-        if (p != port[i].port || sa->sa_family != port[i].family)
-		{
+    for (i = 0; i < cmcf->ports->nelts; i++) {
+        if (p != port[i].port || sa->sa_family != port[i].family) {
             continue;
         }
 
@@ -1255,8 +1197,7 @@ ngx_http_add_listen(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_lis
 
     /* add a port to the port list */
     port = ngx_array_push(cmcf->ports);
-    if (port == NULL)
-	{
+    if (port == NULL) {
         return NGX_ERROR;
     }
 
@@ -1291,10 +1232,10 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
      * may fill some fields in inherited sockaddr struct's
      */
 
+	//判断协议族，获取对应ip地址位置相对于协议族地址结构的偏移量
     sa = &lsopt->u.sockaddr;
 
-    switch (sa->sa_family) 
-	{
+    switch (sa->sa_family) {
 
 #if (NGX_HAVE_INET6)
     case AF_INET6:
@@ -1320,17 +1261,15 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
 
     addr = port->addrs.elts;
 
-    for (i = 0; i < port->addrs.nelts; i++) 
-	{
+	
+    for (i = 0; i < port->addrs.nelts; i++) {
 		//检查ip地址是否相同
-        if (ngx_memcmp(p, addr[i].opt.u.sockaddr_data + off, len) != 0)
-		{
+        if (ngx_memcmp(p, addr[i].opt.u.sockaddr_data + off, len) != 0) {
             continue;
         }
 
         /* the address is already in the address list */
-        if (ngx_http_add_server(cf, cscf, &addr[i]) != NGX_OK) 
-		{
+        if (ngx_http_add_server(cf, cscf, &addr[i]) != NGX_OK) {
             return NGX_ERROR;
         }
 
@@ -1399,10 +1338,8 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_co
 {
     ngx_http_conf_addr_t  *addr;
 
-    if (port->addrs.elts == NULL) 
-	{
-        if (ngx_array_init(&port->addrs, cf->temp_pool, 4, sizeof(ngx_http_conf_addr_t)) != NGX_OK)
-        {
+    if (port->addrs.elts == NULL) {
+        if (ngx_array_init(&port->addrs, cf->temp_pool, 4, sizeof(ngx_http_conf_addr_t)) != NGX_OK) {
             return NGX_ERROR;
         }
     }
@@ -1420,8 +1357,7 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_co
 #endif
 
     addr = ngx_array_push(&port->addrs);
-    if (addr == NULL)
-	{
+    if (addr == NULL) {
         return NGX_ERROR;
     }
 
@@ -1449,21 +1385,16 @@ ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_con
     ngx_uint_t                  i;
     ngx_http_core_srv_conf_t  **server;
 
-    if (addr->servers.elts == NULL) 
-	{
-        if (ngx_array_init(&addr->servers, cf->temp_pool, 4, sizeof(ngx_http_core_srv_conf_t *)) != NGX_OK)
-        {
+    if (addr->servers.elts == NULL) {
+        if (ngx_array_init(&addr->servers, cf->temp_pool, 4, sizeof(ngx_http_core_srv_conf_t *)) != NGX_OK) {
             return NGX_ERROR;
         }
 
-    } 
-	else
-	{
+    } else {
+		//检查是否在同一个server{}下配置了两个相同的listen(ip和端口相同)
         server = addr->servers.elts;
-        for (i = 0; i < addr->servers.nelts; i++) 
-		{
-            if (server[i] == cscf)
-			{
+        for (i = 0; i < addr->servers.nelts; i++) {
+            if (server[i] == cscf) {
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "a duplicate listen %s", addr->opt.addr);
                 return NGX_ERROR;
             }
@@ -1471,8 +1402,7 @@ ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_con
     }
 
     server = ngx_array_push(&addr->servers);
-    if (server == NULL)
-	{
+    if (server == NULL) {
         return NGX_ERROR;
     }
 

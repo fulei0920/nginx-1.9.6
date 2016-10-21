@@ -72,7 +72,7 @@ typedef struct
         u_char                 sockaddr_data[NGX_SOCKADDRLEN];
     } u;
 
-    socklen_t                  socklen;
+    socklen_t                  socklen;		//套接字地址结构的长度
 
     unsigned                   set:1;
     unsigned                   default_server:1;
@@ -93,7 +93,7 @@ typedef struct
     unsigned                   so_keepalive:2;
     unsigned                   proxy_protocol:1;
 
-    int                        backlog;
+    int                        backlog;			//TCP中的backlog大小
     int                        rcvbuf;
     int                        sndbuf;
 #if (NGX_HAVE_SETFIB)
@@ -114,8 +114,8 @@ typedef struct
 #if (NGX_HAVE_DEFERRED_ACCEPT && defined TCP_DEFER_ACCEPT)
     ngx_uint_t                 deferred_accept;
 #endif
-	/*ip地址和端口的字符串表示 -- "192.18.1.2:80"*/
-    u_char                     addr[NGX_SOCKADDR_STRLEN + 1];
+	
+    u_char                     addr[NGX_SOCKADDR_STRLEN + 1];		//ip地址和端口的字符串表示 -- "192.18.1.2:80"
 } ngx_http_listen_opt_t;
 
 //ngx_http_phases定义的11个阶段是有顺序的，必须按照其定义的顺序执行。
@@ -403,7 +403,7 @@ struct ngx_http_core_loc_conf_s
     ngx_http_regex_t  *regex;
 #endif
     unsigned      noname:1;   			/* "if () {}" block or limit_except */
-    unsigned      lmt_excpt:1;
+    unsigned      lmt_excpt:1;			//表示当前loc配置属于limit_except{}块内的配置
 	//命名location，仅用于server内部跳转
     unsigned      named:1;				
 	//绝对匹配
@@ -427,6 +427,7 @@ struct ngx_http_core_loc_conf_s
     void        **loc_conf;		
 
     uint32_t      limit_except;
+	//指向所属location块内的limit_except块内ngx_http_conf_ctx_t结构体中的loc_conf指针数组，它保存着当前limit_execept块内所有HTTP模块create_loc_conf方法产生的结构体指针
     void        **limit_except_loc_conf;
 
     ngx_http_handler_pt  handler;
@@ -623,8 +624,8 @@ typedef struct
     ngx_http_core_loc_conf_t        *exact;		//如果location中的字符串可以精确匹配(包括正则表达式)，exact将指向对应的ngx_http_core_loc_conf_t结构体，否则值为NULL
     ngx_http_core_loc_conf_t        *inclusive;	//如果location中的字符串无法精确匹配(包括了自定义的通配符),inclusizve将指向对应的ngx_http_core_loc_conf_t结构体，否则值为NULL
     ngx_str_t                       *name;		//指向location的名称
-    u_char                          *file_name;
-    ngx_uint_t                       line;
+    u_char                          *file_name;	//配置文件名
+    ngx_uint_t                       line;		//命令在配置文件中的行号(location|limit_except等)
     ngx_queue_t                      list;
 } ngx_http_location_queue_t;
 

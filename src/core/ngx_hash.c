@@ -245,9 +245,15 @@ ngx_hash_find_combined(ngx_hash_combined_t *hash, ngx_uint_t key, u_char *name,
 }
 
 
+//NGX_HASH_ELT_SIZE计算将一个ngx_hash_key_t转化为ngx_hash_elt_t存储时，ngx_hash_elt_t所占用空间的大小
 #define NGX_HASH_ELT_SIZE(name)                                               \
     (sizeof(void *) + ngx_align((name)->key.len + 2, sizeof(void *)))
 
+
+/*
+names -- 初始化一个ngx_hash_t所需要的所有key的一个数组
+nelts -- key的个数
+*/
 ngx_int_t
 ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
 {
@@ -257,17 +263,15 @@ ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
     ngx_uint_t       i, n, key, size, start, bucket_size;
     ngx_hash_elt_t  *elt, **buckets;
 
-    if (hinit->max_size == 0) 
-	{
+    if (hinit->max_size == 0) {
         ngx_log_error(NGX_LOG_EMERG, hinit->pool->log, 0,"could not build %s, you should "
 				"increase %s_max_size: %i", hinit->name, hinit->name, hinit->max_size);
         return NGX_ERROR;
     }
-
-    for (n = 0; n < nelts; n++)
-	{
-        if (hinit->bucket_size < NGX_HASH_ELT_SIZE(&names[n]) + sizeof(void *))
-        {
+	
+    for (n = 0; n < nelts; n++) {
+		//在冲突桶中连续存储元素，且最后一个元素是个NULL指针
+        if (hinit->bucket_size < NGX_HASH_ELT_SIZE(&names[n]) + sizeof(void *)) {
             ngx_log_error(NGX_LOG_EMERG, hinit->pool->log, 0, "could not build %s, you should "
 					"increase %s_bucket_size: %i", hinit->name, hinit->name, hinit->bucket_size);
             return NGX_ERROR;
@@ -275,13 +279,13 @@ ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
     }
 
     test = ngx_alloc(hinit->max_size * sizeof(u_short), hinit->pool->log);
-    if (test == NULL)
-	{
+    if (test == NULL) {
         return NGX_ERROR;
     }
 
     bucket_size = hinit->bucket_size - sizeof(void *);
 
+	//计算当每个桶中的元素最小时，平均大约需要多少个冲突桶
     start = nelts / (bucket_size / (2 * sizeof(void *)));
     start = start ? start : 1;
 
@@ -289,17 +293,19 @@ ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
         start = hinit->max_size - 1000;
     }
 
+	//计算实际应该使用多少个冲突桶
     for (size = start; size <= hinit->max_size; size++) {
 
         ngx_memzero(test, size * sizeof(u_short));
 
+		//检查是否size个冲突桶可以满足要求
         for (n = 0; n < nelts; n++) {
             if (names[n].key.data == NULL) {
                 continue;
             }
 
-            key = names[n].key_hash % size;
-            test[key] = (u_short) (test[key] + NGX_HASH_ELT_SIZE(&names[n]));
+            key = names[n].key_hash % size;  //计算元素放到那个冲突桶中(下标)
+            test[key] = (u_short) (test[key] + NGX_HASH_ELT_SIZE(&names[n]));   //累加冲突桶的大小
 
 #if 0
             ngx_log_error(NGX_LOG_ALERT, hinit->pool->log, 0,
@@ -307,7 +313,7 @@ ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
                           size, key, test[key], &names[n].key);
 #endif
 
-            if (test[key] > (u_short) bucket_size) {
+            if (test[key] > (u_short) bucket_size) {  //冲突桶大小大于最大冲突桶大小，不符合要求
                 goto next;
             }
         }
@@ -321,15 +327,13 @@ ngx_hash_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names, ngx_uint_t nelts)
 
     size = hinit->max_size;
 
-    ngx_log_error(NGX_LOG_WARN, hinit->pool->log, 0,
-                  "could not build optimal %s, you should increase "
-                  "either %s_max_size: %i or %s_bucket_size: %i; "
-                  "ignoring %s_bucket_size",
-                  hinit->name, hinit->name, hinit->max_size,
-                  hinit->name, hinit->bucket_size, hinit->name);
+    ngx_log_error(NGX_LOG_WARN, hinit->pool->log, 0, "could not build optimal %s, you should increase "
+                  "either %s_max_size: %i or %s_bucket_size: %i; ignoring %s_bucket_size",
+                  hinit->name, hinit->name, hinit->max_size, hinit->name, hinit->bucket_size, hinit->name);
 
 found:
 
+	//计算size大小个冲突桶的情况下，每个冲突桶的大小，保存到test中
     for (i = 0; i < size; i++) {
         test[i] = sizeof(void *);
     }
@@ -343,8 +347,8 @@ found:
         test[key] = (u_short) (test[key] + NGX_HASH_ELT_SIZE(&names[n]));
     }
 
+	//统计所有有效的冲突桶(忽略没有元素的冲突桶)，所需要的空间按ngx_cacheline_size对其后的大小
     len = 0;
-
     for (i = 0; i < size; i++) {
         if (test[i] == sizeof(void *)) {
             continue;
@@ -356,15 +360,13 @@ found:
     }
 
     if (hinit->hash == NULL) {
-        hinit->hash = ngx_pcalloc(hinit->pool, sizeof(ngx_hash_wildcard_t)
-                                             + size * sizeof(ngx_hash_elt_t *));
+        hinit->hash = ngx_pcalloc(hinit->pool, sizeof(ngx_hash_wildcard_t) + size * sizeof(ngx_hash_elt_t *));
         if (hinit->hash == NULL) {
             ngx_free(test);
             return NGX_ERROR;
         }
 
-        buckets = (ngx_hash_elt_t **)
-                      ((u_char *) hinit->hash + sizeof(ngx_hash_wildcard_t));
+        buckets = (ngx_hash_elt_t **)((u_char *) hinit->hash + sizeof(ngx_hash_wildcard_t));
 
     } else {
         buckets = ngx_pcalloc(hinit->pool, size * sizeof(ngx_hash_elt_t *));
@@ -389,7 +391,6 @@ found:
 
         buckets[i] = (ngx_hash_elt_t *) elts;
         elts += test[i];
-
     }
 
     for (i = 0; i < size; i++) {
@@ -606,6 +607,8 @@ ngx_hash_wildcard_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names,
 }
 
 
+
+//hash函数，用于计算hash值
 ngx_uint_t
 ngx_hash_key(u_char *data, size_t len)
 {
@@ -628,8 +631,7 @@ ngx_hash_key_lc(u_char *data, size_t len)
 
     key = 0;
 
-    for (i = 0; i < len; i++) 
-	{
+    for (i = 0; i < len; i++) {
         key = ngx_hash(key, ngx_tolower(data[i]));
     }
 
