@@ -28,7 +28,7 @@ typedef ngx_int_t (*ngx_shm_zone_init_pt) (ngx_shm_zone_t *zone, void *data);
 
 struct ngx_shm_zone_s 
 {
-    void                     *data;		/*共享内存特定数据*/	
+    void                     *data;		/*共享内存特定数据*/  //由申请此共享内存的模块设置	
     ngx_shm_t                 shm;
     ngx_shm_zone_init_pt      init;		/*共享内存特定初始化函数*/
     void                     *tag;		/*共享内存标签，用于标明该共享内存属于哪个模块*/
@@ -55,7 +55,7 @@ struct ngx_cycle_s
     ngx_queue_t               reusable_connections_queue; 	
 	//ngx_listening_t类型的动态数组，表示监听端口及相关参数
     ngx_array_t               listening;	
-	//ngx_path_t*类型的动态数组，保存着Nginx所有要操作的目录。如果有目录不存在，而创建目录失败会导致Nginx启动失败。
+	//ngx_path_t*类型的动态数组，保存着Nginx所有要操作的所有目录。如果有目录不存在，而创建目录失败会导致Nginx启动失败。
 	//例如，上传文件的临时目录也在pathes中，如果没有权限创建，则会导致Nginx无法启动
     ngx_array_t               paths;			
     ngx_array_t               config_dump;		/*ngx_conf_dump_t类型的数组*/

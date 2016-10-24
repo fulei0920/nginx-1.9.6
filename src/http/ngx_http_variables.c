@@ -325,10 +325,8 @@ ngx_http_variable_value_t  ngx_http_variable_true_value = ngx_http_variable("1")
 /*
 创建变量
 name -- 创建的变量的变量名
-
+返回创建的变量名对应的变量(ngx_http_variable_t -- nginx中变量以该结构体表示)
 */
-
-
 ngx_http_variable_t *
 ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 {
@@ -345,6 +343,7 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
+	//检测变量是否已经已创建
     key = cmcf->variables_keys->keys.elts;
     for (i = 0; i < cmcf->variables_keys->keys.nelts; i++) {
         if (name->len != key[i].key.len || ngx_strncasecmp(name->data, key[i].key.data, name->len) != 0) {
@@ -353,12 +352,12 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 
         v = key[i].value;
 
-        if (!(v->flags & NGX_HTTP_VAR_CHANGEABLE)) {
+        if (!(v->flags & NGX_HTTP_VAR_CHANGEABLE)) {  //变量已存在，且不可修改，返回错误
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the duplicate \"%V\" variable", name);
             return NULL;
         }
 
-        return v;
+        return v;  //变量已存在，且可修改，返回该变量
     }
 
     v = ngx_palloc(cf->pool, sizeof(ngx_http_variable_t));
@@ -405,8 +404,7 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
     ngx_http_variable_t        *v;
     ngx_http_core_main_conf_t  *cmcf;
 
-    if (name->len == 0) 
-	{
+    if (name->len == 0) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid variable name \"$\"");
         return NGX_ERROR;
     }
@@ -415,20 +413,14 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
 
     v = cmcf->variables.elts;
 
-    if (v == NULL) 
-	{
-        if (ngx_array_init(&cmcf->variables, cf->pool, 4, sizeof(ngx_http_variable_t)) != NGX_OK)
-        {
+    if (v == NULL) {
+        if (ngx_array_init(&cmcf->variables, cf->pool, 4, sizeof(ngx_http_variable_t)) != NGX_OK) {
             return NGX_ERROR;
         }
 
-    } 
-	else 
-	{
-        for (i = 0; i < cmcf->variables.nelts; i++) 
-		{
-            if (name->len != v[i].name.len || ngx_strncasecmp(name->data, v[i].name.data, name->len) != 0)
-            {
+    } else {
+        for (i = 0; i < cmcf->variables.nelts; i++) {
+            if (name->len != v[i].name.len || ngx_strncasecmp(name->data, v[i].name.data, name->len) != 0) {
                 continue;
             }
 
@@ -437,8 +429,7 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
     }
 
     v = ngx_array_push(&cmcf->variables);
-    if (v == NULL) 
-	{
+    if (v == NULL) {
         return NGX_ERROR;
     }
 

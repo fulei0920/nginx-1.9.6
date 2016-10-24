@@ -88,7 +88,7 @@ struct ngx_http_cache_s
     off_t                            length;
     off_t                            fs_size;
 
-    ngx_uint_t                       min_uses;
+    ngx_uint_t                       min_uses;   //响应被缓存的最小请求次数
     ngx_uint_t                       error;
     ngx_uint_t                       valid_msec;
 
@@ -151,24 +151,25 @@ typedef struct {
 
 
 struct ngx_http_file_cache_s {
-    ngx_http_file_cache_sh_t        *sh;		//维护 LRU 队列和红黑树，以及缓存文件的当前状态 (是否正在从磁盘加载、当前缓存大小等)
-    ngx_slab_pool_t                 *shpool;
+    ngx_http_file_cache_sh_t        *sh;			//维护 LRU 队列和红黑树，以及缓存文件的当前状态 (是否正在从磁盘加载、当前缓存大小等)
+    ngx_slab_pool_t                 *shpool;		///share pool
 
-    ngx_path_t                      *path;
+    ngx_path_t                      *path;				//缓存文件存放目录
     ngx_path_t                      *temp_path;
 
-    off_t                            max_size;
+    off_t                            max_size;		//缓存数据的条目上限，由cache manager管理，超出则根据LRU策略删除
     size_t                           bsize;
 
-    time_t                           inactive;
+    time_t                           inactive;		//强制更新缓存时间，规定时间内没有访问则从内存删除
 
     ngx_uint_t                       files;
-    ngx_uint_t                       loader_files;
-    ngx_msec_t                       last;
-    ngx_msec_t                       loader_sleep;
-    ngx_msec_t                       loader_threshold;
 
-    ngx_shm_zone_t                  *shm_zone;
+    ngx_uint_t                       loader_files;			//cache loader进程每次迭代加载文件的数目的最大值
+    ngx_msec_t                       last;
+    ngx_msec_t                       loader_sleep;			//cache loader进程每次迭代之间nginx的暂停时间
+    ngx_msec_t                       loader_threshold;		//cache loader进程每次迭代过程的持续时间的最大值
+
+    ngx_shm_zone_t                  *shm_zone;		///存放key和缓存文件路径散列表的共享内存
 };
 
 
@@ -183,8 +184,7 @@ ngx_int_t ngx_http_cache_send(ngx_http_request_t *);
 void ngx_http_file_cache_free(ngx_http_cache_t *c, ngx_temp_file_t *tf);
 time_t ngx_http_file_cache_valid(ngx_array_t *cache_valid, ngx_uint_t status);
 
-char *ngx_http_file_cache_set_slot(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+char *ngx_http_file_cache_set_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 char *ngx_http_file_cache_valid_set_slot(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 

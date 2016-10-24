@@ -74,9 +74,15 @@ static ngx_command_t  ngx_http_rewrite_commands[] =
       0,
       NULL },
 
+	/*
+	语法:	set $variable value;
+	默认值:	—
+	上下文:	server, location, if
+	为指定变量variable设置变量值value。value可以包含文本、变量或者它们的组合。
+	*/
+	
     { ngx_string("set"),
-      NGX_HTTP_SRV_CONF|NGX_HTTP_SIF_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                       |NGX_CONF_TAKE2,
+      NGX_HTTP_SRV_CONF|NGX_HTTP_SIF_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_TAKE2,
       ngx_http_rewrite_set,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
@@ -908,8 +914,7 @@ ngx_http_rewrite_set(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value = cf->args->elts;
 
     if (value[1].data[0] != '$') {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid variable name \"%V\"", &value[1]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid variable name \"%V\"", &value[1]);
         return NGX_CONF_ERROR;
     }
 

@@ -343,14 +343,12 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     slot = (ngx_path_t **) (p + cmd->offset);
 
-    if (*slot) 
-	{
+    if (*slot) {
         return "is duplicate";
     }
 
     path = ngx_pcalloc(cf->pool, sizeof(ngx_path_t));
-    if (path == NULL)
-	{
+    if (path == NULL) {
         return NGX_CONF_ERROR;
     }
 
@@ -362,16 +360,14 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         path->name.len--;
     }
 
-    if (ngx_conf_full_name(cf->cycle, &path->name, 0) != NGX_OK)
-	{
+    if (ngx_conf_full_name(cf->cycle, &path->name, 0) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
     path->conf_file = cf->conf_file->file.name.data;
     path->line = cf->conf_file->line;
 
-    for (i = 0, n = 2; n < cf->args->nelts; i++, n++) 
-	{
+    for (i = 0, n = 2; n < cf->args->nelts; i++, n++) {
         level = ngx_atoi(value[n].data, value[n].len);
         if (level == NGX_ERROR || level == 0)
 		{
@@ -382,15 +378,13 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         path->len += level + 1;
     }
 
-    if (path->len > 10 + i) 
-	{
+    if (path->len > 10 + i) {
         return "invalid value";
     }
 
     *slot = path;
 
-    if (ngx_add_path(cf, slot) == NGX_ERROR)
-	{
+    if (ngx_add_path(cf, slot) == NGX_ERROR) {
         return NGX_CONF_ERROR;
     }
 
@@ -510,14 +504,9 @@ ngx_add_path(ngx_conf_t *cf, ngx_path_t **slot)
 
     p = cf->cycle->paths.elts;
     for (i = 0; i < cf->cycle->paths.nelts; i++) {
-        if (p[i]->name.len == path->name.len
-            && ngx_strcmp(p[i]->name.data, path->name.data) == 0)
-        {
+        if (p[i]->name.len == path->name.len && ngx_strcmp(p[i]->name.data, path->name.data) == 0) {
             if (p[i]->data != path->data) {
-                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                   "the same path name \"%V\" "
-                                   "used in %s:%ui and",
-                                   &p[i]->name, p[i]->conf_file, p[i]->line);
+                ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the same path name \"%V\" used in %s:%ui and", &p[i]->name, p[i]->conf_file, p[i]->line);
                 return NGX_ERROR;
             }
 
@@ -525,12 +514,8 @@ ngx_add_path(ngx_conf_t *cf, ngx_path_t **slot)
                 if (p[i]->level[n] != path->level[n]) {
                     if (path->conf_file == NULL) {
                         if (p[i]->conf_file == NULL) {
-                            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                                      "the default path name \"%V\" has "
-                                      "the same name as another default path, "
-                                      "but the different levels, you need to "
-                                      "redefine one of them in http section",
-                                      &p[i]->name);
+                            ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "the default path name \"%V\" has the same name as another default path, "
+                                      "but the different levels, you need to redefine one of them in http section", &p[i]->name);
                             return NGX_ERROR;
                         }
 

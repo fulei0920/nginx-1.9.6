@@ -548,44 +548,39 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 #if (NGX_HTTP_CACHE)
 	///nignx向上游服务器发出upstream请求时，会先检查是否有可用缓存。
 	///--检查该location是否配置了proxy_cache/fastcgi_cache，如果是则使用缓存
-    if (u->conf->cache) 
-	{
+    if (u->conf->cache) {
         ngx_int_t  rc;
 
+		///寻找缓存  
+        ///如果返回NGX_DECLINED就是说缓存中没有，请向后端发送请求 
         rc = ngx_http_upstream_cache(r, u);
 
-        if (rc == NGX_BUSY)
-		{
+        if (rc == NGX_BUSY) {
             r->write_event_handler = ngx_http_upstream_init_request;
             return;
         }
 
         r->write_event_handler = ngx_http_request_empty_handler;
 
-        if (rc == NGX_ERROR) 
-		{
+        if (rc == NGX_ERROR) {
             ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
         }
 
-        if (rc == NGX_OK) 
-		{
+        if (rc == NGX_OK) {
             rc = ngx_http_upstream_cache_send(r, u);
 
-            if (rc == NGX_DONE) 
-			{
+            if (rc == NGX_DONE) {
                 return;
             }
 
-            if (rc == NGX_HTTP_UPSTREAM_INVALID_HEADER)
-			{
+            if (rc == NGX_HTTP_UPSTREAM_INVALID_HEADER) {
                 rc = NGX_DECLINED;
                 r->cached = 0;
             }
         }
 
-        if (rc != NGX_DECLINED) 
-		{
+        if (rc != NGX_DECLINED) {
             ngx_http_finalize_request(r, rc);
             return;
         }
@@ -604,21 +599,18 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
      * 检查ngx_http_upstream_conf_t 结构中标志位 ignore_client_abort；
      * 若上面这些标志位为1，则表示需要检查Nginx与下游(即客户端)之间的TCP连接是否断开；
      */
-    if (!u->store && !r->post_action && !u->conf->ignore_client_abort)
-	{
+    if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
         r->read_event_handler = ngx_http_upstream_rd_check_broken_connection;
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
 
 	 /* 把当前请求包体结构保存在ngx_http_upstream_t 结构的request_bufs链表缓冲区中 */
-    if (r->request_body) 
-	{
+    if (r->request_body) {
         u->request_bufs = r->request_body->bufs;
     }
 
 	//调用请求中ngx_http_upstream_t结构体里由某个HTTP模块实现的create_request方法，构造发往上游服务器的请求
-    if (u->create_request(r) != NGX_OK) 
-	{
+    if (u->create_request(r) != NGX_OK) {
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
     }
@@ -853,11 +845,8 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
         ngx_http_file_cache_create_key(r);
 
         if (r->cache->header_start + 256 >= u->conf->buffer_size) {
-            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                          "%V_buffer_size %uz is not enough for cache key, "
-                          "it should be increased to at least %uz",
-                          &u->conf->module, u->conf->buffer_size,
-                          ngx_align(r->cache->header_start + 256, 1024));
+            ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%V_buffer_size %uz is not enough for cache key, it should be increased to at least %uz",
+                          &u->conf->module, u->conf->buffer_size, ngx_align(r->cache->header_start + 256, 1024));
 
             r->cache = NULL;
             return NGX_DECLINED;
@@ -873,15 +862,15 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
         switch (ngx_http_test_predicates(r, u->conf->cache_bypass)) {
 
-        case NGX_ERROR:
-            return NGX_ERROR;
+	        case NGX_ERROR:
+	            return NGX_ERROR;
 
-        case NGX_DECLINED:
-            u->cache_status = NGX_HTTP_CACHE_BYPASS;
-            return NGX_DECLINED;
+	        case NGX_DECLINED:
+	            u->cache_status = NGX_HTTP_CACHE_BYPASS;
+	            return NGX_DECLINED;
 
-        default: /* NGX_OK */
-            break;
+	        default: /* NGX_OK */
+	            break;
         }
 
         c->lock = u->conf->cache_lock;
@@ -893,8 +882,7 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     rc = ngx_http_file_cache_open(r);
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http upstream cache: %i", rc);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http upstream cache: %i", rc);
 
     switch (rc) {
 
@@ -968,7 +956,7 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
     return NGX_DECLINED;
 }
 
-
+///获取存储cache key于对应文件路径的散列表所在的。。。
 static ngx_int_t
 ngx_http_upstream_cache_get(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_http_file_cache_t **cache)
 {
@@ -985,9 +973,7 @@ ngx_http_upstream_cache_get(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_h
         return NGX_ERROR;
     }
 
-    if (val.len == 0
-        || (val.len == 3 && ngx_strncmp(val.data, "off", 3) == 0))
-    {
+    if (val.len == 0 || (val.len == 3 && ngx_strncmp(val.data, "off", 3) == 0)) {
         return NGX_DECLINED;
     }
 
@@ -996,16 +982,13 @@ ngx_http_upstream_cache_get(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_h
     for (i = 0; i < u->caches->nelts; i++) {
         name = &caches[i]->shm_zone->shm.name;
 
-        if (name->len == val.len
-            && ngx_strncmp(name->data, val.data, val.len) == 0)
-        {
+        if (name->len == val.len && ngx_strncmp(name->data, val.data, val.len) == 0) {
             *cache = caches[i];
             return NGX_OK;
         }
     }
 
-    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0,
-                  "cache \"%V\" not found", &val);
+    ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "cache \"%V\" not found", &val);
 
     return NGX_ERROR;
 }
@@ -2972,8 +2955,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 	 /* 调用ngx_http_send_hander方法向下游发送响应头部 */
     rc = ngx_http_send_header(r);
 
-    if (rc == NGX_ERROR || rc > NGX_OK || r->post_action) 
-	{
+    if (rc == NGX_ERROR || rc > NGX_OK || r->post_action) {
         ngx_http_upstream_finalize_request(r, u, rc);
         return;
     }
@@ -3014,8 +2996,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 	//客户端转发HTTP响应时，则意味着肯定不会在需要客户端请求的包体了，这时可以关闭、转移、或者删除临时
 	//文件，具体动作由HTTP模块实现的handler回调方法决定
 	 /* 若临时文件保存着请求包体，则调用ngx_pool_run_cleanup_file方法清理临时文件的请求包体 */
-    if (r->request_body && r->request_body->temp_file) 
-	{
+    if (r->request_body && r->request_body->temp_file) {
         ngx_pool_run_cleanup_file(r->pool, r->request_body->temp_file->file.fd);
         r->request_body->temp_file->file.fd = NGX_INVALID_FILE;
     }
@@ -3129,27 +3110,27 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     switch (ngx_http_test_predicates(r, u->conf->no_cache)) {
 
-    case NGX_ERROR:
-        ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
-        return;
+	    case NGX_ERROR:
+	        ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
+	        return;
 
-    case NGX_DECLINED:
-        u->cacheable = 0;
-        break;
+	    case NGX_DECLINED:
+	        u->cacheable = 0;
+	        break;
 
-    default: /* NGX_OK */
+	    default: /* NGX_OK */
 
-        if (u->cache_status == NGX_HTTP_CACHE_BYPASS) {
+	        if (u->cache_status == NGX_HTTP_CACHE_BYPASS) {
 
-            /* create cache if previously bypassed */
+	            /* create cache if previously bypassed */
 
-            if (ngx_http_file_cache_create(r) != NGX_OK) {
-                ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
-                return;
-            }
-        }
+	            if (ngx_http_file_cache_create(r) != NGX_OK) {
+	                ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
+	                return;
+	            }
+	        }
 
-        break;
+	        break;
     }
 
     if (u->cacheable) {
@@ -3160,8 +3141,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         valid = r->cache->valid_sec;
 
         if (valid == 0) {
-            valid = ngx_http_file_cache_valid(u->conf->cache_valid,
-                                              u->headers_in.status_n);
+            valid = ngx_http_file_cache_valid(u->conf->cache_valid, u->headers_in.status_n);
             if (valid) {
                 r->cache->valid_sec = now + valid;
             }
@@ -3171,8 +3151,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
             r->cache->date = now;
             r->cache->body_start = (u_short) (u->buffer.pos - u->buffer.start);
 
-            if (u->headers_in.status_n == NGX_HTTP_OK
-                || u->headers_in.status_n == NGX_HTTP_PARTIAL_CONTENT)
+            if (u->headers_in.status_n == NGX_HTTP_OK || u->headers_in.status_n == NGX_HTTP_PARTIAL_CONTENT)
             {
                 r->cache->last_modified = u->headers_in.last_modified_time;
 
@@ -3198,8 +3177,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         }
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http cacheable: %d", u->cacheable);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0, "http cacheable: %d", u->cacheable);
 
     if (u->cacheable == 0 && r->cache) {
         ngx_http_file_cache_free(r->cache, u->pipe->temp_file);
@@ -3662,8 +3640,7 @@ ngx_http_upstream_process_non_buffered_upstream(ngx_http_request_t *r, ngx_http_
     c->log->action = "reading upstream";
 
 	//判断上游连接上读事件是否超时，若超时则结束当前请求, 并从当前函数返回
-    if (c->read->timedout)
-	{
+    if (c->read->timedout) {
         ngx_connection_error(c, NGX_ETIMEDOUT, "upstream timed out");
         ngx_http_upstream_finalize_request(r, u, NGX_HTTP_GATEWAY_TIME_OUT);
         return;

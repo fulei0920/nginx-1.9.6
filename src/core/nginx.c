@@ -455,8 +455,7 @@ main(int argc, char *const *argv)
     if (ngx_process == NGX_PROCESS_SINGLE) {
         ngx_single_process_cycle(cycle);
     }
-	else 
-	{
+	else {
         ngx_master_process_cycle(cycle);
     }
 

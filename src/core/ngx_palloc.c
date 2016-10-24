@@ -386,14 +386,11 @@ ngx_pool_run_cleanup_file(ngx_pool_t *p, ngx_fd_t fd)
     ngx_pool_cleanup_t       *c;
     ngx_pool_cleanup_file_t  *cf;
 
-    for (c = p->cleanup; c; c = c->next) 
-	{
-        if (c->handler == ngx_pool_cleanup_file) 
-		{
+    for (c = p->cleanup; c; c = c->next) {
+        if (c->handler == ngx_pool_cleanup_file) {
             cf = c->data;
 
-            if (cf->fd == fd) 
-			{
+            if (cf->fd == fd) {
                 c->handler(cf);
                 c->handler = NULL;
                 return;

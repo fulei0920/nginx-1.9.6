@@ -77,6 +77,9 @@ typedef struct
 #define NGX_HASH_READONLY_KEY     2
 
 
+
+//构建hash表的辅助数据结构
+//用于在构建hash表前，存储所有的需要构建的key
 typedef struct 
 {
     ngx_uint_t        hsize;    	/*冲突桶数目*/
@@ -85,13 +88,13 @@ typedef struct
     ngx_pool_t       *temp_pool;
 
     ngx_array_t       keys;			/*array of ngx_hash_key_t, 以列表形式记录所有结点*/
-    ngx_array_t      *keys_hash;	/*完全匹配散列表*/
+    ngx_array_t      *keys_hash;	/*完全匹配的key的临时hash表，用于重复key冲突检测*/
 
     ngx_array_t       dns_wc_head;			/* array of ngx_hash_key_t */
-    ngx_array_t      *dns_wc_head_hash;
+    ngx_array_t      *dns_wc_head_hash;			/*前缀匹配散列表*/
 
     ngx_array_t       dns_wc_tail;			/* array of ngx_hash_key_t */
-    ngx_array_t      *dns_wc_tail_hash;
+    ngx_array_t      *dns_wc_tail_hash;		/*后缀匹配散列表*/
 } ngx_hash_keys_arrays_t;
 
 

@@ -2390,8 +2390,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 	//NGX_DONE表示http请求已经明确正常结束，所以开始进入到http连接的结束流程上，
 	//否则表示当前http请求可能还有一些事情需要进一步处理，比如判错、删除定时器等
 	//当某一动作(如接收HTTP请求包体)正常结束而请求还有业务要继续处理时，多半都是传递NGX_DONE参数
-    if (rc == NGX_DONE) 
-	{
+    if (rc == NGX_DONE) {
 		//ngx_http_finalize_connection方法回去检查引用计数情况，并不一定会销毁请求
         ngx_http_finalize_connection(r);
         return;

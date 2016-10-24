@@ -47,7 +47,7 @@ struct ngx_http_variable_s
     ngx_http_get_variable_pt      get_handler;
 	//传递给set_handler和get_handler的参数
     uintptr_t                     data;
-	//变量属性标志
+	//变量属性标志 NGX_HTTP_VAR_CHANGEABLE, NGX_HTTP_VAR_NOCACHEABLE, NGX_HTTP_VAR_INDEXED, NGX_HTTP_VAR_NOHASH
     ngx_uint_t                    flags;
 	//变量在cmcf->variables中的索引
     ngx_uint_t                    index;

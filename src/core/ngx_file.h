@@ -53,7 +53,7 @@ typedef struct
 
     ngx_path_manager_pt        manager;
     ngx_path_loader_pt         loader;
-    void                      *data;
+    void                      *data;		//manager和loader函数的参数
 
     u_char                    *conf_file;
     ngx_uint_t                 line;

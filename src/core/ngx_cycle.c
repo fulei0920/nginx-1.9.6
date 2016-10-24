@@ -117,8 +117,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 	/*ÉèÖÃcycle->paths*/
     n = old_cycle->paths.nelts ? old_cycle->paths.nelts : 10;
-	if(ngx_array_init(&cycle->paths, pool, n, sizeof(ngx_path_t *)) != NGX_OK)
-	{
+	if(ngx_array_init(&cycle->paths, pool, n, sizeof(ngx_path_t *)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
 	}
@@ -385,12 +384,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     /* create shared memory */
     part = &cycle->shared_memory.part;
     shm_zone = part->elts;
-    for (i = 0; /* void */ ; i++) 
-	{
-        if (i >= part->nelts) 
-		{
-            if (part->next == NULL) 
-			{
+    for (i = 0; /* void */ ; i++) {
+        if (i >= part->nelts) {
+            if (part->next == NULL) {
                 break;
             }
             part = part->next;
@@ -407,12 +403,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         opart = &old_cycle->shared_memory.part;
         oshm_zone = opart->elts;
-        for (n = 0; /* void */ ; n++) 
-		{
-            if (n >= opart->nelts)
-			{
-                if (opart->next == NULL) 
-				{
+        for (n = 0; /* void */ ; n++) {
+            if (n >= opart->nelts) {
+                if (opart->next == NULL) {
                     break;
                 }
                 opart = opart->next;
@@ -420,24 +413,20 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                 n = 0;
             }
 
-            if (shm_zone[i].shm.name.len != oshm_zone[n].shm.name.len) 
-			{
+            if (shm_zone[i].shm.name.len != oshm_zone[n].shm.name.len) {
                 continue;
             }
 
-            if (ngx_strncmp(shm_zone[i].shm.name.data, oshm_zone[n].shm.name.data, shm_zone[i].shm.name.len) != 0)
-            {
+            if (ngx_strncmp(shm_zone[i].shm.name.data, oshm_zone[n].shm.name.data, shm_zone[i].shm.name.len) != 0) {
                 continue;
             }
 
-            if (shm_zone[i].tag == oshm_zone[n].tag && shm_zone[i].shm.size == oshm_zone[n].shm.size && !shm_zone[i].noreuse)
-            {
+            if (shm_zone[i].tag == oshm_zone[n].tag && shm_zone[i].shm.size == oshm_zone[n].shm.size && !shm_zone[i].noreuse) {
                 shm_zone[i].shm.addr = oshm_zone[n].shm.addr;
 #if (NGX_WIN32)
                 shm_zone[i].shm.handle = oshm_zone[n].shm.handle;
 #endif
-                if (shm_zone[i].init(&shm_zone[i], oshm_zone[n].data) != NGX_OK)
-                {
+                if (shm_zone[i].init(&shm_zone[i], oshm_zone[n].data) != NGX_OK) {
                     goto failed;
                 }
 
@@ -877,11 +866,9 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 
     sp = (ngx_slab_pool_t *) zn->shm.addr;
 
-    if (zn->shm.exists) 
-	{
+    if (zn->shm.exists) {
 
-        if (sp == sp->addr) 
-		{
+        if (sp == sp->addr) {
             return NGX_OK;
         }
 
@@ -889,15 +876,13 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 
         /* remap at the required address */
 
-        if (ngx_shm_remap(&zn->shm, sp->addr) != NGX_OK) 
-		{
+        if (ngx_shm_remap(&zn->shm, sp->addr) != NGX_OK) {
             return NGX_ERROR;
         }
 
         sp = (ngx_slab_pool_t *) zn->shm.addr;
 
-        if (sp == sp->addr)
-		{
+        if (sp == sp->addr) {
             return NGX_OK;
         }
 
@@ -920,8 +905,7 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 #else
 
     file = ngx_pnalloc(cycle->pool, cycle->lock_file.len + zn->shm.name.len);
-    if (file == NULL) 
-	{
+    if (file == NULL) {
         return NGX_ERROR;
     }
 
@@ -929,8 +913,7 @@ ngx_init_zone_pool(ngx_cycle_t *cycle, ngx_shm_zone_t *zn)
 
 #endif
 
-    if (ngx_shmtx_create(&sp->mutex, &sp->lock, file) != NGX_OK) 
-	{
+    if (ngx_shmtx_create(&sp->mutex, &sp->lock, file) != NGX_OK) {
         return NGX_ERROR;
     }
 

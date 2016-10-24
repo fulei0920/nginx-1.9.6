@@ -214,7 +214,8 @@ typedef struct
     ngx_shm_zone_t                  *cache_zone;
     ngx_http_complex_value_t        *cache_value;
 
-    ngx_uint_t                       cache_min_uses;
+	//响应被缓存的最小请求次数
+    ngx_uint_t                       cache_min_uses;   
     ngx_uint_t                       cache_use_stale;
     ngx_uint_t                       cache_methods;
 
@@ -226,7 +227,7 @@ typedef struct
 
     ngx_array_t                     *cache_valid;
     ngx_array_t                     *cache_bypass;
-    ngx_array_t                     *no_cache;
+    ngx_array_t                     *no_cache;  	///ngx_http_complex_value_t类型的的动态数组
 #endif
 
     ngx_array_t                     *store_lengths;
@@ -354,7 +355,7 @@ struct ngx_http_upstream_s
 	//proxy module 指向对应location中的plcf->upstream
     ngx_http_upstream_conf_t        *conf;
 #if (NGX_HTTP_CACHE)
-    ngx_array_t                     *caches;
+    ngx_array_t                     *caches;   //ngx_http_file_cache_t*
 #endif
 
 	//HTTP模块在实现process_header方法时，如果希望upstream直接转发响应，就需要把解析出的

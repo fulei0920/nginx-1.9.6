@@ -193,8 +193,7 @@ static char *ngx_http_proxy_store(ngx_conf_t *cf, ngx_command_t *cmd,
 #if (NGX_HTTP_CACHE)
 static char *ngx_http_proxy_cache(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char *ngx_http_proxy_cache_key(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_proxy_cache_key(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 #endif
 #if (NGX_HTTP_SSL)
 static char *ngx_http_proxy_ssl_password_file(ngx_conf_t *cf,
@@ -336,6 +335,19 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.store_access),
       NULL },
 
+	/*
+	语法:	proxy_buffering on | off;
+	默认值:	proxy_buffering on;
+	上下文:	http, server, location
+	代理的时候，开启或关闭缓冲后端服务器的响应。
+
+	当开启缓冲时，nginx尽可能快地从被代理的服务器接收响应，再将它存入proxy_buffer_size和proxy_buffers指令设置的缓冲区中。
+	如果响应无法整个纳入内存，那么其中一部分将存入磁盘上的临时文件。proxy_max_temp_file_size和proxy_temp_file_write_size指令可以控制临时文件的写入。
+
+	当关闭缓冲时，收到响应后，nginx立即将其同步传给客户端。nginx不会尝试从被代理的服务器读取整个请求，而是将proxy_buffer_size指令设定的大小作为一次读取的最大长度。
+
+	响应头“X-Accel-Buffering”传递“yes”或“no”可以动态地开启或关闭代理的缓冲功能。 这个能力可以通过proxy_ignore_headers指令关闭。
+	*/
     { ngx_string("proxy_buffering"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -454,6 +466,17 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 		NULL 
     },
 
+
+	/*
+	语法:	proxy_buffer_size size;
+	默认值:	proxy_buffer_size 4k|8k;
+	上下文:	http, server, location
+	设置缓冲区的大小为size。nginx从被代理的服务器读取响应时，使用该缓冲区保存响应的开始部分。这部分通常包含着一个小小的响应头。该缓冲区大小默认等于proxy_buffers指令设置的一块缓冲区的大小，但它也可以被设置得更小。
+	Sets the size of the buffer used for reading the first part of the response received from the proxied server. 
+	This part usually contains a small response header. By default, the buffer size is equal to one memory page. This is either 4K or 8K, depending on a platform. 
+	It can be made smaller, however.
+
+	*/
     { ngx_string("proxy_buffer_size"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_size_slot,
@@ -467,6 +490,16 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.read_timeout),
       NULL },
+
+	/*
+	语法:	proxy_buffers number size;
+	默认值: proxy_buffers 8 4k|8k;
+	上下文:	http, server, location
+	为每个连接设置缓冲区的数量为number，每块缓冲区的大小为size。这些缓冲区用于保存从被代理的服务器读取的响应。每块缓冲区默认等于一个内存页的大小。这个值是4K还是8K，取决于平台。
+	Sets the number and size of the buffers used for reading a response from the proxied server, for a single connection. 
+	By default, the buffer size is equal to one memory page. This is either 4K or 8K, depending on a platform.
+
+	*/
 
     { ngx_string("proxy_buffers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
@@ -498,8 +531,12 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 
 #if (NGX_HTTP_CACHE)
 	/*
-	proxy_cache  zone|off
-	存放缓存的索引数据，描述的缓存区必须事先由 proxy_cache_path 指令定义
+	语法:	proxy_cache zone | off;
+	默认值:	
+	proxy_cache off;
+	上下文:	http, server, location
+	指定用于页面缓存的共享内存(存放缓存的索引数据)。同一块共享内存可以在多个地方使用。参数中可以包含变量(1.7.9)。off参数可以屏蔽从上层配置继承的缓存功能。
+	//描述的缓存区必须事先由 proxy_cache_path 指令定义
 	*/
     { ngx_string("proxy_cache"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -507,6 +544,16 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
+
+	/*
+	语法:	proxy_cache_key string;
+	默认值:	proxy_cache_key $scheme$proxy_host$request_uri;
+	上下文:	http, server, location
+	定义如何生成缓存的键，比如
+		proxy_cache_key "$host$request_uri $cookie_user";
+	这条指令的默认值类似于下面字符串
+		proxy_cache_key $scheme$proxy_host$uri$is_args$args;
+	*/
 
     { ngx_string("proxy_cache_key"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -525,6 +572,48 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 	loader_files=number 重建索引时每次加载数据元素的上限，进程递归遍历读取硬盘上的缓存目录和文件，对每个文件在内存中建立索引，每建立一个索引称为加载
 		一个数据元素，每次遍历时可同时加载多个数据元素，默认100；
 	loader_sleep=time索引重建进程在两次遍历间的暂停时长，默认50ms；
+
+	语法:	proxy_cache_path path [levels=levels] keys_zone=name:size [inactive=time] [max_size=size] [loader_files=number] [loader_sleep=time] [loader_threshold=time];
+	默认值:	—
+	上下文:	http
+	设置缓存的路径和其他参数。缓存数据是保存在文件中的，缓存的键和文件名都是在代理URL上执行MD5的结果。 levels参数定义了缓存的层次结构。比如，下面配置
+		proxy_cache_path /data/nginx/cache levels=1:2 keys_zone=one:10m;
+	缓存中文件名看起来是这样的：
+	/data/nginx/cache/c/29/b7f54b2df7773722d382f4809d65029c
+	被缓存的响应首先写入一个临时文件，然后进行重命名。从0.8.9版本开始，临时文件和缓存可以放在不同的文件系统。但请注意，这将导致文件在这两个文件系统中进行拷贝，而不是廉价的重命名操作。因此，针对任何路径，都建议将缓存和proxy_temp_path指令设置的临时文件目录放在同一文件系统。
+	此外，所有活动的键和缓存数据相关的信息都被存放在共享内存中。共享内存通过keys_zone参数的name和size来定义。被缓存的数据如果在inactive参数指定的时间内未被访问，就会被从缓存中移除，不论它是否是刚产生的。inactive的默认值是10分钟。
+	特殊进程“cache manager”监控缓存的条目数量，如果超过max_size参数设置的最大值，使用LRU算法移除缓存数据。
+	nginx新启动后不就，特殊进程“cache loader”就被启动。该进程将文件系统上保存的过去缓存的数据的相关信息重新加载到共享内存。加载过程分多次迭代完成，每次迭代，进程只加载不多于loader_files参数指定的文件数量（默认值为100）。此外，每次迭代过程的持续时间不能超过loader_threshold参数的值（默认200毫秒）。每次迭代之间，nginx的暂停时间由loader_sleep参数指定（默认50毫秒）。
+
+
+	Sets the path and other parameters of a cache. Cache data are stored in files. The file name in a cache is a result of applying the MD5 function to the cache key. The levels parameter defines hierarchy levels of a cache: from 1 to 3, each level accepts values 1 or 2. For example, in the following configuration
+
+proxy_cache_path /data/nginx/cache levels=1:2 keys_zone=one:10m;
+file names in a cache will look like this:
+
+/data/nginx/cache/c/29/b7f54b2df7773722d382f4809d65029c
+A cached response is first written to a temporary file, and then the file is renamed. Starting from version 0.8.9, temporary files and the cache can be put on different file systems. However, be aware that in this case a file is copied across two file systems instead of the cheap renaming operation. It is thus recommended that for any given location both cache and a directory holding temporary files are put on the same file system. The directory for temporary files is set based on the use_temp_path parameter (1.7.10). If this parameter is omitted or set to the value on, the directory set by the proxy_temp_path directive for the given location will be used. If the value is set to off, temporary files will be put directly in the cache directory.
+
+In addition, all active keys and information about data are stored in a shared memory zone, whose name and size are configured by the keys_zone parameter. One megabyte zone can store about 8 thousand keys.
+
+Cached data that are not accessed during the time specified by the inactive parameter get removed from the cache regardless of their freshness. By default, inactive is set to 10 minutes.
+
+The special “cache manager” process monitors the maximum cache size set by the max_size parameter. When this size is exceeded, it removes the least recently used data. The data is removed in iterations configured by manager_files, manager_threshold, and manager_sleep parameters (1.11.5). During one iteration no more than manager_files items are deleted (by default, 100). The duration of one iteration is limited by the manager_threshold parameter (by default, 200 milliseconds). Between iterations, a pause configured by the manager_sleep parameter (by default, 50 milliseconds) is made.
+
+A minute after the start the special “cache loader” process is activated. It loads information about previously cached data stored on file system into a cache zone. The loading is also done in iterations. During one iteration no more than loader_files items are loaded (by default, 100). Besides, the duration of one iteration is limited by the loader_threshold parameter (by default, 200 milliseconds). Between iterations, a pause configured by the loader_sleep parameter (by default, 50 milliseconds) is made.
+
+Additionally, the following parameters are available as part of our commercial subscription:
+
+purger=on|off
+Instructs whether cache entries that match a wildcard key will be removed from the disk by the cache purger (1.7.12). Setting the parameter to on (default is off) will activate the “cache purger” process that permanently iterates through all cache entries and deletes the entries that match the wildcard key.
+purger_files=number
+Sets the number of items that will be scanned during one iteration (1.7.12). By default, purger_files is set to 10.
+purger_threshold=number
+Sets the duration of one iteration (1.7.12). By default, purger_threshold is set to 50 milliseconds.
+purger_sleep=number
+Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 milliseconds.
+
+
 	*/
     { ngx_string("proxy_cache_path"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_2MORE,
@@ -540,6 +629,15 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_bypass),
       NULL },
 
+	/*
+	语法:	proxy_no_cache string ...;
+	默认值:	—
+	上下文:	http, server, location
+	定义nginx不将响应写入缓存的条件。如果至少一个字符串条件非空而且非"0"，nginx就不将响应存入缓存：
+	proxy_no_cache $cookie_nocache $arg_nocache$arg_comment;
+	proxy_no_cache $http_pragma    $http_authorization;
+	这条指令可以和proxy_cache_bypass指令一起使用。
+	*/
     { ngx_string("proxy_no_cache"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
       ngx_http_set_predicate_slot,
@@ -554,6 +652,12 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_valid),
       NULL },
 
+	/*
+	语法:	proxy_cache_min_uses number;
+	默认值:	proxy_cache_min_uses 1;
+	上下文:	http, server, location
+	设置响应被缓存的最小请求次数。(Sets the number of requests after which the response will be cached.)
+	*/
     { ngx_string("proxy_cache_min_uses"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
@@ -967,8 +1071,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     }
 
     ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_proxy_ctx_t));
-    if (ctx == NULL) 
-	{
+    if (ctx == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -978,8 +1081,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 
     u = r->upstream;
 
-    if (plcf->proxy_lengths == NULL)
-	{
+    if (plcf->proxy_lengths == NULL) {
         ctx->vars = plcf->vars;
         u->schema = plcf->vars.schema;
 #if (NGX_HTTP_SSL)
@@ -987,10 +1089,8 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 #endif
 
     } 
-	else 
-	{
-        if (ngx_http_proxy_eval(r, ctx, plcf) != NGX_OK) 
-		{
+	else {
+        if (ngx_http_proxy_eval(r, ctx, plcf) != NGX_OK) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
     }
@@ -1026,8 +1126,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     u->buffering = plcf->upstream.buffering;
 
     u->pipe = ngx_pcalloc(r->pool, sizeof(ngx_event_pipe_t));
-    if (u->pipe == NULL)
-	{
+    if (u->pipe == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -1209,8 +1308,7 @@ ngx_http_proxy_create_key(ngx_http_request_t *r)
 
         return NGX_OK;
 
-    } else if (ctx->vars.uri.len == 0 && r->valid_unparsed_uri && r == r->main)
-    {
+    } else if (ctx->vars.uri.len == 0 && r->valid_unparsed_uri && r == r->main) {
         *key = r->unparsed_uri;
         u->uri = r->unparsed_uri;
 
@@ -1220,8 +1318,7 @@ ngx_http_proxy_create_key(ngx_http_request_t *r)
     loc_len = (r->valid_location && ctx->vars.uri.len) ? plcf->location.len : 0;
 
     if (r->quoted_uri || r->internal) {
-        escape = 2 * ngx_escape_uri(NULL, r->uri.data + loc_len,
-                                    r->uri.len - loc_len, NGX_ESCAPE_URI);
+        escape = 2 * ngx_escape_uri(NULL, r->uri.data + loc_len, r->uri.len - loc_len, NGX_ESCAPE_URI);
     } else {
         escape = 0;
     }
@@ -1241,8 +1338,7 @@ ngx_http_proxy_create_key(ngx_http_request_t *r)
     }
 
     if (escape) {
-        ngx_escape_uri(p, r->uri.data + loc_len,
-                       r->uri.len - loc_len, NGX_ESCAPE_URI);
+        ngx_escape_uri(p, r->uri.data + loc_len, r->uri.len - loc_len, NGX_ESCAPE_URI);
         p += r->uri.len - loc_len + escape;
 
     } else {
@@ -2935,14 +3031,12 @@ ngx_http_proxy_create_main_conf(ngx_conf_t *cf)
     ngx_http_proxy_main_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_proxy_main_conf_t));
-    if (conf == NULL) 
-	{
+    if (conf == NULL) {
         return NULL;
     }
 
 #if (NGX_HTTP_CACHE)
-    if (ngx_array_init(&conf->caches, cf->pool, 4, sizeof(ngx_http_file_cache_t *)) != NGX_OK)
-    {
+    if (ngx_array_init(&conf->caches, cf->pool, 4, sizeof(ngx_http_file_cache_t *)) != NGX_OK) {
         return NULL;
     }
 #endif
@@ -3254,8 +3348,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 #if (NGX_HTTP_CACHE)
 
     if (conf->upstream.cache == NGX_CONF_UNSET) {
-        ngx_conf_merge_value(conf->upstream.cache,
-                              prev->upstream.cache, 0);
+        ngx_conf_merge_value(conf->upstream.cache, prev->upstream.cache, 0);
 
         conf->upstream.cache_zone = prev->upstream.cache_zone;
         conf->upstream.cache_value = prev->upstream.cache_value;
@@ -3266,15 +3359,12 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
         shm_zone = conf->upstream.cache_zone;
 
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "\"proxy_cache\" zone \"%V\" is unknown",
-                           &shm_zone->shm.name);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "\"proxy_cache\" zone \"%V\" is unknown", &shm_zone->shm.name);
 
         return NGX_CONF_ERROR;
     }
 
-    ngx_conf_merge_uint_value(conf->upstream.cache_min_uses,
-                              prev->upstream.cache_min_uses, 1);
+    ngx_conf_merge_uint_value(conf->upstream.cache_min_uses, prev->upstream.cache_min_uses, 1);
 
     ngx_conf_merge_bitmask_value(conf->upstream.cache_use_stale,
                               prev->upstream.cache_use_stale,
@@ -3299,8 +3389,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     ngx_conf_merge_ptr_value(conf->upstream.cache_bypass,
                              prev->upstream.cache_bypass, NULL);
 
-    ngx_conf_merge_ptr_value(conf->upstream.no_cache,
-                             prev->upstream.no_cache, NULL);
+    ngx_conf_merge_ptr_value(conf->upstream.no_cache, prev->upstream.no_cache, NULL);
 
     ngx_conf_merge_ptr_value(conf->upstream.cache_valid,
                              prev->upstream.cache_valid, NULL);
@@ -3464,8 +3553,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 #endif
     }
 
-    if (clcf->lmt_excpt && clcf->handler == NULL && (conf->upstream.upstream || conf->proxy_lengths))
-    {
+    if (clcf->lmt_excpt && clcf->handler == NULL && (conf->upstream.upstream || conf->proxy_lengths)) {
         clcf->handler = ngx_http_proxy_handler;
     }
 
@@ -3780,12 +3868,11 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return "is duplicate";
     }
 
-    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
+    clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);  //获取ngx_http_core_module模块在当前proxy pass指令所属的location{}块下的loc配置
 
     clcf->handler = ngx_http_proxy_handler;
 
-    if (clcf->name.data[clcf->name.len - 1] == '/')
-	{
+    if (clcf->name.data[clcf->name.len - 1] == '/') {
         clcf->auto_redirect = 1;
     }
 
@@ -3795,8 +3882,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     n = ngx_http_script_variables_count(url);
 
-    if (n) 
-	{
+    if (n) {
 
         ngx_memzero(&sc, sizeof(ngx_http_script_compile_t));
 
@@ -3808,8 +3894,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         sc.complete_lengths = 1;
         sc.complete_values = 1;
 
-        if (ngx_http_script_compile(&sc) != NGX_OK) 
-		{
+        if (ngx_http_script_compile(&sc) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
 
