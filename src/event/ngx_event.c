@@ -479,8 +479,7 @@ ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 static char *
 ngx_event_init_conf(ngx_cycle_t *cycle, void *conf)
 {
-    if (ngx_get_conf(cycle->conf_ctx, ngx_events_module) == NULL) 
-	{
+    if (ngx_get_conf(cycle->conf_ctx, ngx_events_module) == NULL) {
         ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "no \"events\" section in configuration");
         return NGX_CONF_ERROR;
     }
@@ -984,17 +983,14 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_conf_t            pcf;
     ngx_event_module_t   *m;
 
-    if (*(void **) conf) 
-	{
+    if (*(void **) conf) {
         return "is duplicate";
     }
 
 	//统计事件模块的数目，初始化所有事件模块的ctx_index序号
     ngx_event_max_module = 0;
-    for (i = 0; ngx_modules[i]; i++) 
-	{
-        if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
-		{
+    for (i = 0; ngx_modules[i]; i++) {
+        if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
             continue;
         }
 
@@ -1003,14 +999,12 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 	
 	//为所有的NGX_EVENT_MODULE模块分配指向对应上下文空间的索引空间 void***--->void **--->array of void*     
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
-    if (ctx == NULL) 
-	{
+    if (ctx == NULL) {
         return NGX_CONF_ERROR;
     }
 
     *ctx = ngx_pcalloc(cf->pool, ngx_event_max_module * sizeof(void *));
-    if (*ctx == NULL) 
-	{
+    if (*ctx == NULL) {
         return NGX_CONF_ERROR;
     }
 
@@ -1018,20 +1012,16 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
 	/*调用事件模块的create_conf分配模块上下文配置的空间*/
-    for (i = 0; ngx_modules[i]; i++) 
-	{
-        if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
-		{
+    for (i = 0; ngx_modules[i]; i++) {
+        if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
             continue;
         }
 
         m = ngx_modules[i]->ctx;
 
-        if (m->create_conf)
-		{
+        if (m->create_conf) {
 			(*ctx)[ngx_modules[i]->ctx_index] = m->create_conf(cf->cycle);
-            if ((*ctx)[ngx_modules[i]->ctx_index] == NULL)
-			{
+            if ((*ctx)[ngx_modules[i]->ctx_index] == NULL) {
                 return NGX_CONF_ERROR;
             }
         }
@@ -1045,26 +1035,21 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->cmd_type = NGX_EVENT_CONF;
     rv = ngx_conf_parse(cf, NULL);
     *cf = pcf;
-    if (rv != NGX_CONF_OK) 
-	{
+    if (rv != NGX_CONF_OK) {
         return rv;
     }
 
 	/*调用模块的init_conf将模块上下文未初始化配置设置为默认值*/
-    for (i = 0; ngx_modules[i]; i++)
-	{
-        if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
-		{
+    for (i = 0; ngx_modules[i]; i++) {
+        if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
             continue;
         }
 
         m = ngx_modules[i]->ctx;
 
-        if (m->init_conf) 
-		{
+        if (m->init_conf) {
             rv = m->init_conf(cf->cycle, (*ctx)[ngx_modules[i]->ctx_index]);
-            if (rv != NGX_CONF_OK) 
-			{
+            if (rv != NGX_CONF_OK) {
                 return rv;
             }
         }
@@ -1331,14 +1316,12 @@ ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
 
     fd = epoll_create(100);
 
-    if (fd != -1) 
-	{
+    if (fd != -1) {
         (void) close(fd);
         module = &ngx_epoll_module;
 
     }
-	else if (ngx_errno != NGX_ENOSYS) 
-	{
+	else if (ngx_errno != NGX_ENOSYS) {
         module = &ngx_epoll_module;
     }
 
@@ -1358,27 +1341,22 @@ ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
 
 #if (NGX_HAVE_SELECT)
 
-    if (module == NULL) 
-	{
+    if (module == NULL) {
         module = &ngx_select_module;
     }
 
 #endif
 
-    if (module == NULL) 
-	{
-        for (i = 0; ngx_modules[i]; i++) 
-		{
+    if (module == NULL) {
+        for (i = 0; ngx_modules[i]; i++) {
 
-            if (ngx_modules[i]->type != NGX_EVENT_MODULE) 
-			{
+            if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
                 continue;
             }
 
             event_module = ngx_modules[i]->ctx;
 
-            if (ngx_strcmp(event_module->name->data, event_core_name.data) == 0)
-            {
+            if (ngx_strcmp(event_module->name->data, event_core_name.data) == 0) {
                 continue;
             }
 
@@ -1387,8 +1365,7 @@ ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
         }
     }
 
-    if (module == NULL)
-	{
+    if (module == NULL) {
         ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "no events module found");
         return NGX_CONF_ERROR;
     }

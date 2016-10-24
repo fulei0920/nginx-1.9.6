@@ -322,6 +322,13 @@ ngx_http_variable_value_t  ngx_http_variable_null_value = ngx_http_variable("");
 ngx_http_variable_value_t  ngx_http_variable_true_value = ngx_http_variable("1");
 
 
+/*
+创建变量
+name -- 创建的变量的变量名
+
+*/
+
+
 ngx_http_variable_t *
 ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 {
@@ -331,8 +338,7 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
     ngx_http_variable_t        *v;
     ngx_http_core_main_conf_t  *cmcf;
 
-    if (name->len == 0) 
-	{
+    if (name->len == 0)  {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid variable name \"$\"");
         return NULL;
     }
@@ -340,17 +346,14 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
     key = cmcf->variables_keys->keys.elts;
-    for (i = 0; i < cmcf->variables_keys->keys.nelts; i++)
-	{
-        if (name->len != key[i].key.len || ngx_strncasecmp(name->data, key[i].key.data, name->len) != 0)
-        {
+    for (i = 0; i < cmcf->variables_keys->keys.nelts; i++) {
+        if (name->len != key[i].key.len || ngx_strncasecmp(name->data, key[i].key.data, name->len) != 0) {
             continue;
         }
 
         v = key[i].value;
 
-        if (!(v->flags & NGX_HTTP_VAR_CHANGEABLE))
-		{
+        if (!(v->flags & NGX_HTTP_VAR_CHANGEABLE)) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the duplicate \"%V\" variable", name);
             return NULL;
         }
@@ -359,15 +362,13 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
     }
 
     v = ngx_palloc(cf->pool, sizeof(ngx_http_variable_t));
-    if (v == NULL) 
-	{
+    if (v == NULL) {
         return NULL;
     }
 
     v->name.len = name->len;
     v->name.data = ngx_pnalloc(cf->pool, name->len);
-    if (v->name.data == NULL) 
-	{
+    if (v->name.data == NULL) {
         return NULL;
     }
 
@@ -381,13 +382,11 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 
     rc = ngx_hash_add_key(cmcf->variables_keys, &v->name, v, 0);
 
-    if (rc == NGX_ERROR) 
-	{
+    if (rc == NGX_ERROR) {
         return NULL;
     }
 
-    if (rc == NGX_BUSY) 
-	{
+    if (rc == NGX_BUSY) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "conflicting variable name \"%V\"", name);
         return NULL;
     }
@@ -2516,9 +2515,7 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
             }
         }
 
-        if (v[i].name.len >= 5
-            && ngx_strncmp(v[i].name.data, "http_", 5) == 0)
-        {
+        if (v[i].name.len >= 5 && ngx_strncmp(v[i].name.data, "http_", 5) == 0) {
             v[i].get_handler = ngx_http_variable_unknown_header_in;
             v[i].data = (uintptr_t) &v[i].name;
 

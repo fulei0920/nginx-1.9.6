@@ -203,7 +203,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     pcf = *cf;
     cf->ctx = ctx;
 
-	//调用每个HTTP模块的preconfiguration
+	//调用每个HTTP模块的preconfiguration,完成对应模块的预处理操作，
+	//其主要工作是创建模块用到的变量
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
@@ -264,19 +265,19 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 		//将ngx_http_core_loc_conf_t组成的双向链表按照location匹配字符串进行排序。
 		//这个操作是递归进行的，如果某个location块下还具有其它location，那么它的locations链表也会被排序
-        if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK)  {
+        if (ngx_http_init_locations(cf, cscfp[s], clcf) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
 
 		//根据已经按照location字符串排序过的双向链表，快速的构建静态的二叉查找树。
 		//与ngx_http_init_locations方法类似，这个操作也是递归进行的
-        if (ngx_http_init_static_location_trees(cf, clcf) != NGX_OK) 
-		{
+        if (ngx_http_init_static_location_trees(cf, clcf) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
     }
 
-
+	
+	///初始化phases数组，以便于后面postconfiguration阶段，模块挂载handle
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -287,8 +288,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     for (m = 0; ngx_modules[m]; m++) {
-        if (ngx_modules[m]->type != NGX_HTTP_MODULE)
-		{
+        if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
@@ -347,23 +347,19 @@ ngx_http_init_phases(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_PREACCESS_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_PREACCESS_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers, cf->pool, 2, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers, cf->pool, 2, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers, cf->pool, 4, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_CONTENT_PHASE].handlers, cf->pool, 4, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&cmcf->phases[NGX_HTTP_LOG_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK)
-    {
+    if (ngx_array_init(&cmcf->phases[NGX_HTTP_LOG_PHASE].handlers, cf->pool, 1, sizeof(ngx_http_handler_pt)) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -673,6 +669,7 @@ ngx_http_merge_locations(ngx_conf_t *cf, ngx_queue_t *locations, void **loc_conf
 
 
 /*
+根据不同的路径类型将locations分成多段，并以不同的指针引用
 cscf -- 表示某server{}块
 pclcf -- 表示某server{}块下的所有location{}块
 */
@@ -695,7 +692,13 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http
     if (locations == NULL) {  //该server{}块下没有location{}块
         return NGX_OK;
     }
+	
+	//根据ngx_http_cmp_locations比较各个location，排序以后的顺序依次是
 
+	//1.精确匹配的路径和两类前缀匹配的路径(字母序，如果某个精确匹配的路径的名字和前缀匹配的路径相同，精确匹配的路径排在前面)
+	//2.正则路径(出现序)
+	//3.命名路径(字母序)
+	//4.无名路径(出现序)
     ngx_queue_sort(locations, ngx_http_cmp_locations);
 
     named = NULL;	//第一个name类型的location{}的位置
@@ -745,11 +748,14 @@ ngx_http_init_locations(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http
 
 	//对前面排序好的队列做拆分，
 	//具体点将就是把正则匹配location和命名location给拆出来。
+	//location中就只有普通前缀匹配的路径、抢占式前缀匹配的路径和精确匹配的路径这三类
+
     if (q != ngx_queue_sentinel(locations))  {
-        ngx_queue_split(locations, q, &tail);
+        ngx_queue_split(locations, q, &tail);  //从locations中剔除无名路径
     }
 
     if (named) {
+		
         clcfp = ngx_palloc(cf->pool, (n + 1) * sizeof(ngx_http_core_loc_conf_t *));
         if (clcfp == NULL) {
             return NGX_ERROR;
@@ -813,10 +819,7 @@ ngx_http_init_static_location_trees(ngx_conf_t *cf, ngx_http_core_loc_conf_t *pc
         return NGX_OK;
     }
 
-    for (q = ngx_queue_head(locations);
-         q != ngx_queue_sentinel(locations);
-         q = ngx_queue_next(q))
-    {
+    for (q = ngx_queue_head(locations); q != ngx_queue_sentinel(locations); q = ngx_queue_next(q)) {
         lq = (ngx_http_location_queue_t *) q;
 
         clcf = lq->exact ? lq->exact : lq->inclusive;
@@ -956,6 +959,8 @@ ngx_http_cmp_locations(const ngx_queue_t *one, const ngx_queue_t *two)
 }
 
 
+//将名字相同的精确匹配的路径和普通前缀匹配的路径、抢占式前缀匹配的路径合并
+//简言之，就是将前缀匹配的路径放入精确匹配的路径的inclusive指针中，然后从列表删除前缀匹配的路径
 static ngx_int_t
 ngx_http_join_exact_locations(ngx_conf_t *cf, ngx_queue_t *locations)
 {
@@ -996,7 +1001,7 @@ ngx_http_join_exact_locations(ngx_conf_t *cf, ngx_queue_t *locations)
     return NGX_OK;
 }
 
-
+//将和某个路径名拥有相同名称前缀的路径添加到此路径节点的list指针域下，并将这些路径从locations中摘除
 static void
 ngx_http_create_locations_list(ngx_queue_t *locations, ngx_queue_t *q)
 {

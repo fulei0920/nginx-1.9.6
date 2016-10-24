@@ -400,14 +400,17 @@ struct ngx_http_core_loc_conf_s
 	//location名称，即location指令后的表达式
     ngx_str_t     name;        
 #if (NGX_PCRE)
+	//表示为正则路径
     ngx_http_regex_t  *regex;
 #endif
+	//表示为无名路径
     unsigned      noname:1;   			/* "if () {}" block or limit_except */
     unsigned      lmt_excpt:1;			//表示当前loc配置属于limit_except{}块内的配置
-	//命名location，仅用于server内部跳转
+	//表示为命名路径，仅用于server内部跳转
     unsigned      named:1;				
-	//绝对匹配
-    unsigned      exact_match:1;		
+	//表示为精确匹配的路径
+    unsigned      exact_match:1;	
+	//表示为抢占式前缀匹配的路径
     unsigned      noregex:1;
 
     unsigned      auto_redirect:1;
@@ -417,10 +420,18 @@ struct ngx_http_core_loc_conf_s
     unsigned      gzip_disable_degradation:2;
 #endif
 #endif
-
+	//nginx搜索路径时，正则匹配路径和其他路径分开搜索，路径时可以嵌套的
+	//其他路径包含如下这些:
+	//1.普通的前缀匹配的路径， 例如 location / {}
+	//2.抢占式前缀匹配的路径， 例如 location / ^~/ {}
+	//3.精确匹配的路径，例如 location = / {}
+	//4.命名路径， 例如 location @a {}
+	//5.无名路径， 例如 if {} 或者 limit_except {}生成的路径
+	
     ngx_http_location_tree_node_t   *static_locations;
 #if (NGX_PCRE)
-    ngx_http_core_loc_conf_t       **regex_locations;
+	//正则表达式路径以指针数组的形式存储
+    ngx_http_core_loc_conf_t       **regex_locations; 
 #endif
 
     //指向所属location块内ngx_http_conf_ctx_t结构体中的loc_conf指针数组，它保存着当前location块内所有HTTP模块create_loc_conf方法产生的结构体指针

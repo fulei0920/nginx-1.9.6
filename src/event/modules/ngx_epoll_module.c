@@ -149,8 +149,7 @@ static ngx_str_t      epoll_name = ngx_string("epoll");
 static ngx_command_t  ngx_epoll_commands[] = 
 {
 
-    { 
-		ngx_string("epoll_events"),
+    { ngx_string("epoll_events"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
       0,
@@ -964,8 +963,7 @@ ngx_epoll_create_conf(ngx_cycle_t *cycle)
     ngx_epoll_conf_t  *epcf;
 
     epcf = ngx_palloc(cycle->pool, sizeof(ngx_epoll_conf_t));
-    if (epcf == NULL) 
-	{
+    if (epcf == NULL) {
         return NULL;
     }
 

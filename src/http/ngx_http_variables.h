@@ -24,12 +24,16 @@ typedef void (*ngx_http_set_variable_pt) (ngx_http_request_t *r, ngx_http_variab
 typedef ngx_int_t (*ngx_http_get_variable_pt) (ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
 
 //变量被添加时如果已有同名变量，则返回该变量，否则会报错认为变量名冲突
+//表示这个变量是可变的
 #define NGX_HTTP_VAR_CHANGEABLE   1
 //变量的值不应该被缓存。变量被取值后，变量值的no_cacheable被置为1
+//表示这个变量每次都要去取值，而不是直接返回上次cache的值(配合对应的接口)
 #define NGX_HTTP_VAR_NOCACHEABLE  2
 //表示变量被索引，存储在cmcf->variables数组，这样的变量可以通过索引值直接找到
+//表示这个变量使用索引读取的
 #define NGX_HTTP_VAR_INDEXED      4
 //不会将该变量存储在cmcf->variables_hash哈希表
+//表示这个变量不需要被hash
 #define NGX_HTTP_VAR_NOHASH       8
 
 //表示变量本身

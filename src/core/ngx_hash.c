@@ -724,15 +724,13 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
 
     last = key->len;
 
-    if (flags & NGX_HASH_WILDCARD_KEY) 
-	{
+    if (flags & NGX_HASH_WILDCARD_KEY) {
         /*
          * supported wildcards  "*.example.com", ".example.com", and "www.example.*"
          */
 
         n = 0; 
-        for (i = 0; i < key->len; i++) 
-		{
+        for (i = 0; i < key->len; i++) {
             if (key->data[i] == '*') 
 			{
                 if (++n > 1) 
@@ -781,10 +779,8 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
 
     /* exact hash */
     k = 0;
-    for (i = 0; i < last; i++) 
-	{
-        if (!(flags & NGX_HASH_READONLY_KEY))
-		{
+    for (i = 0; i < last; i++) {
+        if (!(flags & NGX_HASH_READONLY_KEY)) {
             key->data[i] = ngx_tolower(key->data[i]);
         }
         k = ngx_hash(k, key->data[i]);
@@ -794,41 +790,32 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
 
     /* check conflicts in exact hash */
     name = ha->keys_hash[k].elts;
-    if (name) 
-	{
-        for (i = 0; i < ha->keys_hash[k].nelts; i++)
-		{
-            if (last != name[i].len)
-			{
+    if (name) {
+        for (i = 0; i < ha->keys_hash[k].nelts; i++) {
+            if (last != name[i].len) {
                 continue;
             }
 
-            if (ngx_strncmp(key->data, name[i].data, last) == 0)
-			{
+            if (ngx_strncmp(key->data, name[i].data, last) == 0) {
                 return NGX_BUSY;
             }
         }
 
-    } 
-	else
-	{
-        if (ngx_array_init(&ha->keys_hash[k], ha->temp_pool, 4, sizeof(ngx_str_t)) != NGX_OK)
-        {
+    } else {
+        if (ngx_array_init(&ha->keys_hash[k], ha->temp_pool, 4, sizeof(ngx_str_t)) != NGX_OK) {
             return NGX_ERROR;
         }
     }
 
     name = ngx_array_push(&ha->keys_hash[k]);
-    if (name == NULL)
-	{
+    if (name == NULL) {
         return NGX_ERROR;
     }
 
     *name = *key;
 
     hk = ngx_array_push(&ha->keys);
-    if (hk == NULL)
-	{
+    if (hk == NULL) {
         return NGX_ERROR;
     }
 

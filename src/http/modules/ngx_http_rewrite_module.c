@@ -320,8 +320,7 @@ ngx_http_rewrite(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_script_regex_end_code_t  *regex_end;
     u_char                             errstr[NGX_MAX_CONF_ERRSTR];
 
-    regex = ngx_http_script_start_code(cf->pool, &lcf->codes,
-                                       sizeof(ngx_http_script_regex_code_t));
+    regex = ngx_http_script_start_code(cf->pool, &lcf->codes, sizeof(ngx_http_script_regex_code_t));
     if (regex == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -416,9 +415,7 @@ ngx_http_rewrite(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         regex->lengths = NULL;
     }
 
-    regex_end = ngx_http_script_add_code(lcf->codes,
-                                      sizeof(ngx_http_script_regex_end_code_t),
-                                      &regex);
+    regex_end = ngx_http_script_add_code(lcf->codes, sizeof(ngx_http_script_regex_end_code_t), &regex);
     if (regex_end == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -438,8 +435,7 @@ ngx_http_rewrite(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         *code = NULL;
     }
 
-    regex->next = (u_char *) lcf->codes->elts + lcf->codes->nelts
-                                              - (u_char *) regex;
+    regex->next = (u_char *) lcf->codes->elts + lcf->codes->nelts - (u_char *) regex;
 
     return NGX_CONF_OK;
 }
@@ -582,10 +578,10 @@ ngx_http_rewrite_if(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    pclcf = pctx->loc_conf[ngx_http_core_module.ctx_index];
+    pclcf = pctx->loc_conf[ngx_http_core_module.ctx_index]; //获取上级
 
-    clcf = ctx->loc_conf[ngx_http_core_module.ctx_index];
-    clcf->loc_conf = ctx->loc_conf;
+    clcf = ctx->loc_conf[ngx_http_core_module.ctx_index]; //获取if{}块中ngx_http_core_module模块的loc配置
+    clcf->loc_conf = ctx->loc_conf;  //保存if{}块到if{}块中ngx_http_core_module模块的loc配置中
     clcf->name = pclcf->name;
     clcf->noname = 1;
 
@@ -667,8 +663,7 @@ ngx_http_rewrite_if_condition(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf)
     last = cf->args->nelts - 1;
 
     if (value[1].len < 1 || value[1].data[0] != '(') {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid condition \"%V\"", &value[1]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid condition \"%V\"", &value[1]);
         return NGX_CONF_ERROR;
     }
 
