@@ -153,13 +153,11 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
         case sw_start:
             r->request_start = p;
 
-            if (ch == CR || ch == LF) 
-			{
+            if (ch == CR || ch == LF) {
                 break;
             }
 
-            if ((ch < 'A' || ch > 'Z') && ch != '_') 
-			{
+            if ((ch < 'A' || ch > 'Z') && ch != '_') {
                 return NGX_HTTP_PARSE_INVALID_METHOD;
             }
 
@@ -167,8 +165,7 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
             break;
 
         case sw_method:
-            if (ch == ' ') 
-			{
+            if (ch == ' ') {
                 r->method_end = p - 1;
                 m = r->request_start;
 
@@ -284,8 +281,7 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                     break;
 
                 case 9:
-                    if (ngx_str9cmp(m, 'P', 'R', 'O', 'P', 'P', 'A', 'T', 'C', 'H'))
-                    {
+                    if (ngx_str9cmp(m, 'P', 'R', 'O', 'P', 'P', 'A', 'T', 'C', 'H')) {
                         r->method = NGX_HTTP_PROPPATCH;
                     }
 
@@ -296,8 +292,7 @@ ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
                 break;
             }
 
-            if ((ch < 'A' || ch > 'Z') && ch != '_') 
-			{
+            if ((ch < 'A' || ch > 'Z') && ch != '_') {
                 return NGX_HTTP_PARSE_INVALID_METHOD;
             }
 

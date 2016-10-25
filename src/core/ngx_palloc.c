@@ -350,22 +350,16 @@ ngx_pool_cleanup_add(ngx_pool_t *p, size_t size)
     ngx_pool_cleanup_t  *c;
 
     c = ngx_palloc(p, sizeof(ngx_pool_cleanup_t));
-    if (c == NULL) 
-	{
+    if (c == NULL) {
         return NULL;
     }
 
-    if (size) 
-	{
+    if (size) {
         c->data = ngx_palloc(p, size);
-        if (c->data == NULL)
-		{
+        if (c->data == NULL) {
             return NULL;
         }
-
-    }
-	else
-	{
+    } else {
         c->data = NULL;
     }
 

@@ -214,7 +214,7 @@ static ngx_http_variable_t  ngx_http_core_variables[] =
       
 	//请求URI中的参数，与$args相同，然而$query_string是只读的不会改变
     { ngx_string("query_string"), NULL, ngx_http_variable_request, offsetof(ngx_http_request_t, args), NGX_HTTP_VAR_NOCACHEABLE, 0 },
-	//HTTP请求中的完整参数。例如，在请求/index.html?_w=120&_h=120中，$arg表示字符串_w=120$_h=120
+	//HTTP请求中的完整参数。例如，在请求/index.html?_w=120&_h=120中，$arg表示字符串_w=120&_h=120
     { ngx_string("args"), ngx_http_variable_set_args, ngx_http_variable_request, offsetof(ngx_http_request_t, args), NGX_HTTP_VAR_CHANGEABLE|NGX_HTTP_VAR_NOCACHEABLE, 0 },
 	//表示请求中的URI是否带参数，如果带参数，$is_args值为?，如果不带参数，则是空字符串
     { ngx_string("is_args"), NULL, ngx_http_variable_is_args, 0, NGX_HTTP_VAR_NOCACHEABLE, 0 },

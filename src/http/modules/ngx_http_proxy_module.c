@@ -188,8 +188,7 @@ static char *ngx_http_proxy_cookie_domain(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static char *ngx_http_proxy_cookie_path(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
-static char *ngx_http_proxy_store(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
+static char *ngx_http_proxy_store(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 #if (NGX_HTTP_CACHE)
 static char *ngx_http_proxy_cache(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
@@ -3192,8 +3191,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 #endif
 
     if (conf->upstream.store == NGX_CONF_UNSET) {
-        ngx_conf_merge_value(conf->upstream.store,
-                              prev->upstream.store, 0);
+        ngx_conf_merge_value(conf->upstream.store, prev->upstream.store, 0);
 
         conf->upstream.store_lengths = prev->upstream.store_lengths;
         conf->upstream.store_values = prev->upstream.store_values;

@@ -3664,8 +3664,7 @@ ngx_http_core_regex_location(ngx_conf_t *cf, ngx_http_core_loc_conf_t *clcf, ngx
 #endif
 
     clcf->regex = ngx_http_regex_compile(cf, &rc);
-    if (clcf->regex == NULL) 
-	{
+    if (clcf->regex == NULL)  {
         return NGX_ERROR;
     }
 

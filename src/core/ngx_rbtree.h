@@ -35,8 +35,8 @@ typedef void (*ngx_rbtree_insert_pt) (ngx_rbtree_node_t *root,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
 
 struct ngx_rbtree_s {
-    ngx_rbtree_node_t     *root;
-    ngx_rbtree_node_t     *sentinel;
+    ngx_rbtree_node_t     *root;		//根节点
+    ngx_rbtree_node_t     *sentinel;	//哨兵节点
     ngx_rbtree_insert_pt   insert;
 };
 

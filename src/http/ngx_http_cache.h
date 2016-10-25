@@ -40,25 +40,25 @@ typedef struct {
 //所以，为了提高利用率，此结构体多个字段使用了位域 (Bit field)，
 //同时，缓存 key 中用作查询树键值( ngx_rbtree_key_t ) 的部分字节不再重复存储
 typedef struct {
-    ngx_rbtree_node_t                node;
-    ngx_queue_t                      queue;
+    ngx_rbtree_node_t                node;		//红黑树结点
+    ngx_queue_t                      queue;		//LRU链表结点
 
     u_char                           key[NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t)];
 
-    unsigned                         count:20;
-    unsigned                         uses:10;
+    unsigned                         count:20;			//引用计数
+    unsigned                         uses:10;			///多少请求在使用
     unsigned                         valid_msec:10;
-    unsigned                         error:10;
-    unsigned                         exists:1;
-    unsigned                         updating:1;
+    unsigned                         error:10;			//
+    unsigned                         exists:1;			//是否存在对应的cache文件
+    unsigned                         updating:1;		//是否在更新
     unsigned                         deleting:1;
                                      /* 11 unused bits */
 
     ngx_file_uniq_t                  uniq;
-    time_t                           expire;
-    time_t                           valid_sec;
-    size_t                           body_start;
-    off_t                            fs_size;
+    time_t                           expire;			//失效时间点
+    time_t                           valid_sec;			//max-age?
+    size_t                           body_start;		//body起始位置
+    off_t                            fs_size;			//文件大小  //文件占用系统块的个数	
     ngx_msec_t                       lock_time;
 } ngx_http_file_cache_node_t;
 
@@ -85,8 +85,8 @@ struct ngx_http_cache_s
 
     size_t                           header_start;
     size_t                           body_start;
-    off_t                            length;
-    off_t                            fs_size;
+    off_t                            length;		//文件大小
+    off_t                            fs_size;		//文件占用系统块的个数	
 
     ngx_uint_t                       min_uses;   //响应被缓存的最小请求次数
     ngx_uint_t                       error;
@@ -95,7 +95,7 @@ struct ngx_http_cache_s
     ngx_buf_t                       *buf;
 
     ngx_http_file_cache_t           *file_cache;
-    ngx_http_file_cache_node_t      *node;
+    ngx_http_file_cache_node_t      *node;    	///请求对应的缓存文件节点
 
 #if (NGX_THREADS)
     ngx_thread_task_t               *thread_task;
@@ -141,12 +141,12 @@ typedef struct {
 
 
 typedef struct {
-    ngx_rbtree_t                     rbtree;
-    ngx_rbtree_node_t                sentinel;
-    ngx_queue_t                      queue;
-    ngx_atomic_t                     cold;
-    ngx_atomic_t                     loading;
-    off_t                            size;
+    ngx_rbtree_t                     rbtree;		//红黑树，用于快速查找key对应的文件信息(file_cache_node)
+    ngx_rbtree_node_t                sentinel;		//红黑树NIL结点
+    ngx_queue_t                      queue;			//LRU队列
+    ngx_atomic_t                     cold;			///表示这个cache是否已经被加载
+    ngx_atomic_t                     loading;		///表示load manager进程在加载这个cache
+    off_t                            size;			///所有的缓存文件大小总和
 } ngx_http_file_cache_sh_t;
 
 
@@ -157,16 +157,16 @@ struct ngx_http_file_cache_s {
     ngx_path_t                      *path;				//缓存文件存放目录
     ngx_path_t                      *temp_path;
 
-    off_t                            max_size;		//缓存数据的条目上限，由cache manager管理，超出则根据LRU策略删除
-    size_t                           bsize;
+    off_t                            max_size;				//缓存数据的条目上限，由cache manager管理，超出则根据LRU策略删除
+    size_t                           bsize;					//文件缓存目录所在文件系统的块大小
 
-    time_t                           inactive;		//强制更新缓存时间，规定时间内没有访问则从内存删除
+    time_t                           inactive;				//强制更新缓存时间，规定时间内没有访问则从内存删除
 
-    ngx_uint_t                       files;
+    ngx_uint_t                       files;					//统计cache loader进程每次迭代过程中加载的文件的数目
 
     ngx_uint_t                       loader_files;			//cache loader进程每次迭代加载文件的数目的最大值
-    ngx_msec_t                       last;
-    ngx_msec_t                       loader_sleep;			//cache loader进程每次迭代之间nginx的暂停时间
+    ngx_msec_t                       last;					//cache loader进程或者cache manager进程每次迭代过程开始的时间
+    ngx_msec_t                       loader_sleep;			//cache loader进程每次迭代之间暂停的时间
     ngx_msec_t                       loader_threshold;		//cache loader进程每次迭代过程的持续时间的最大值
 
     ngx_shm_zone_t                  *shm_zone;		///存放key和缓存文件路径散列表的共享内存
