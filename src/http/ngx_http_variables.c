@@ -2465,6 +2465,8 @@ ngx_http_variables_add_core_vars(ngx_conf_t *cf)
 //如果变量指令了NGX_HTTP_VAR_NOHASH标志，则该变量不会被添加到cmcf->variables_hash中。
 //如果一个变量既没有添加到cmcf->variables中，也没有添加到cmcf->variables_hash中，
 //那么这个变量就不能被找到，因而会被认为不存在。
+
+/*检查用户在配置文件中使用的变量是否合法(都已经被定义)*/
 ngx_int_t
 ngx_http_variables_init_vars(ngx_conf_t *cf)
 {
@@ -2513,18 +2515,14 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
             continue;
         }
 
-        if (v[i].name.len >= 10
-            && ngx_strncmp(v[i].name.data, "sent_http_", 10) == 0)
-        {
+        if (v[i].name.len >= 10 && ngx_strncmp(v[i].name.data, "sent_http_", 10) == 0) {
             v[i].get_handler = ngx_http_variable_unknown_header_out;
             v[i].data = (uintptr_t) &v[i].name;
 
             continue;
         }
 
-        if (v[i].name.len >= 14
-            && ngx_strncmp(v[i].name.data, "upstream_http_", 14) == 0)
-        {
+        if (v[i].name.len >= 14 && ngx_strncmp(v[i].name.data, "upstream_http_", 14) == 0) {
             v[i].get_handler = ngx_http_upstream_header_variable;
             v[i].data = (uintptr_t) &v[i].name;
             v[i].flags = NGX_HTTP_VAR_NOCACHEABLE;
@@ -2532,18 +2530,14 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
             continue;
         }
 
-        if (v[i].name.len >= 7
-            && ngx_strncmp(v[i].name.data, "cookie_", 7) == 0)
-        {
+        if (v[i].name.len >= 7 && ngx_strncmp(v[i].name.data, "cookie_", 7) == 0) {
             v[i].get_handler = ngx_http_variable_cookie;
             v[i].data = (uintptr_t) &v[i].name;
 
             continue;
         }
 
-        if (v[i].name.len >= 16
-            && ngx_strncmp(v[i].name.data, "upstream_cookie_", 16) == 0)
-        {
+        if (v[i].name.len >= 16 && ngx_strncmp(v[i].name.data, "upstream_cookie_", 16) == 0) {
             v[i].get_handler = ngx_http_upstream_cookie_variable;
             v[i].data = (uintptr_t) &v[i].name;
             v[i].flags = NGX_HTTP_VAR_NOCACHEABLE;
@@ -2551,8 +2545,7 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
             continue;
         }
 
-        if (v[i].name.len >= 4
-            && ngx_strncmp(v[i].name.data, "arg_", 4) == 0)
+        if (v[i].name.len >= 4 && ngx_strncmp(v[i].name.data, "arg_", 4) == 0)
         {
             v[i].get_handler = ngx_http_variable_argument;
             v[i].data = (uintptr_t) &v[i].name;

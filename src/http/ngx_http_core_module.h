@@ -202,7 +202,7 @@ typedef struct
     ngx_hash_t                 headers_in_hash;
 
     ngx_hash_t                 variables_hash;
-
+	///´æ´¢ÓÃ»§ÔÚÅäÖÃÎÄ¼şÖĞÊ¹ÓÃµÄ±äÁ¿å
     ngx_array_t                variables;       /* array of ngx_http_variable_t */
     ngx_uint_t                 ncaptures;
 	//±íÊ¾´æ´¢ËùÓĞserver_nameµÄÉ¢ÁĞ±íµÄÉ¢ÁĞÍ°µÄ¸öÊı
@@ -212,7 +212,7 @@ typedef struct
 
     ngx_uint_t                 variables_hash_max_size;
     ngx_uint_t                 variables_hash_bucket_size;
-
+	///´æ´¢nginxÄ£¿éÄÚ²¿¶¨ÒåÌá¹©¸øÍâ²¿Ê¹ÓÃµÄ±äÁ¿
     ngx_hash_keys_arrays_t    *variables_keys;  /* ÒÔnameÎªkey£¬ÒÔngx_http_variable_tÎªvalueµÄ±í*/
 
     ngx_array_t               *ports;			//´æ·Å×Å¸Ãhttp{}ÅäÖÃ¿éÏÂ¼àÌıµÄËùÓĞngx_http_conf_port_t¶Ë¿Ú
