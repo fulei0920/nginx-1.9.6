@@ -22,7 +22,7 @@ struct ngx_slab_page_s
     uintptr_t         prev;
 };
 
-
+//在共享内存中分配
 typedef struct 
 {
     ngx_shmtx_sh_t    lock;
@@ -44,7 +44,7 @@ typedef struct
 
     unsigned          log_nomem:1;
 
-    void             *data;
+    void             *data;			//该内存块的私有数据(在共享内存中分配)
     void             *addr;			/*内存块的起始地址*/
 } ngx_slab_pool_t;
 

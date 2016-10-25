@@ -836,13 +836,13 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
             return NGX_ERROR;
         }
 
-        if (u->create_key(r) != NGX_OK) {
+        if (u->create_key(r) != NGX_OK) {		//构造字符串key
             return NGX_ERROR;
         }
 
         /* TODO: add keys */
 
-        ngx_http_file_cache_create_key(r);
+        ngx_http_file_cache_create_key(r);  //构造数字key
 
         if (r->cache->header_start + 256 >= u->conf->buffer_size) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%V_buffer_size %uz is not enough for cache key, it should be increased to at least %uz",

@@ -28,8 +28,7 @@ static ngx_int_t ngx_http_cache_thread_handler(ngx_thread_task_t *task,
     ngx_file_t *file);
 static void ngx_http_cache_thread_event_handler(ngx_event_t *ev);
 #endif
-static ngx_int_t ngx_http_file_cache_exists(ngx_http_file_cache_t *cache,
-    ngx_http_cache_t *c);
+static ngx_int_t ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c);
 static ngx_int_t ngx_http_file_cache_name(ngx_http_request_t *r,
     ngx_path_t *path);
 static ngx_http_file_cache_node_t *
@@ -56,12 +55,9 @@ static ngx_int_t ngx_http_file_cache_manage_file(ngx_tree_ctx_t *ctx,
     ngx_str_t *path);
 static ngx_int_t ngx_http_file_cache_manage_directory(ngx_tree_ctx_t *ctx,
     ngx_str_t *path);
-static ngx_int_t ngx_http_file_cache_add_file(ngx_tree_ctx_t *ctx,
-    ngx_str_t *path);
-static ngx_int_t ngx_http_file_cache_add(ngx_http_file_cache_t *cache,
-    ngx_http_cache_t *c);
-static ngx_int_t ngx_http_file_cache_delete_file(ngx_tree_ctx_t *ctx,
-    ngx_str_t *path);
+static ngx_int_t ngx_http_file_cache_add_file(ngx_tree_ctx_t *ctx, ngx_str_t *path);
+static ngx_int_t ngx_http_file_cache_add(ngx_http_file_cache_t *cache, ngx_http_cache_t *c);
+static ngx_int_t ngx_http_file_cache_delete_file(ngx_tree_ctx_t *ctx, ngx_str_t *path);
 
 
 ngx_str_t  ngx_http_cache_status[] = {
@@ -360,8 +356,7 @@ ngx_http_file_cache_open(ngx_http_request_t *r)
         }
     }
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http file cache fd: %d", of.fd);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http file cache fd: %d", of.fd);
 
     c->file.fd = of.fd;
     c->file.log = r->connection->log;
@@ -809,7 +804,7 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
     fcn = c->node;
 
     if (fcn == NULL) {
-        fcn = ngx_http_file_cache_lookup(cache, c->key);
+        fcn = ngx_http_file_cache_lookup(cache, c->key);  //根据key查找对应的file cache node
     }
 
     if (fcn) {
@@ -848,19 +843,18 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
         goto done;
     }
 
-    fcn = ngx_slab_calloc_locked(cache->shpool, sizeof(ngx_http_file_cache_node_t));
-    if (fcn == NULL) {
+	///没有找到
+    fcn = ngx_slab_calloc_locked(cache->shpool, sizeof(ngx_http_file_cache_node_t));  //从共享内存中分配一个 file cache node
+    if (fcn == NULL) {	//分配失败，强制检查过期时间后，再次尝试分配
         ngx_shmtx_unlock(&cache->shpool->mutex);
 
         (void) ngx_http_file_cache_forced_expire(cache);
 
         ngx_shmtx_lock(&cache->shpool->mutex);
 
-        fcn = ngx_slab_calloc_locked(cache->shpool,
-                                     sizeof(ngx_http_file_cache_node_t));
+        fcn = ngx_slab_calloc_locked(cache->shpool, sizeof(ngx_http_file_cache_node_t));
         if (fcn == NULL) {
-            ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0,
-                          "could not allocate node%s", cache->shpool->log_ctx);
+            ngx_log_error(NGX_LOG_ALERT, ngx_cycle->log, 0, "could not allocate node%s", cache->shpool->log_ctx);
             rc = NGX_ERROR;
             goto failed;
         }
@@ -868,8 +862,7 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
 
     ngx_memcpy((u_char *) &fcn->node.key, c->key, sizeof(ngx_rbtree_key_t));
 
-    ngx_memcpy(fcn->key, &c->key[sizeof(ngx_rbtree_key_t)],
-               NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t));
+    ngx_memcpy(fcn->key, &c->key[sizeof(ngx_rbtree_key_t)], NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t));
 
     ngx_rbtree_insert(&cache->sh->rbtree, &fcn->node);
 
@@ -1184,13 +1177,10 @@ ngx_http_file_cache_reopen(ngx_http_request_t *r, ngx_http_cache_t *c)
 {
     ngx_http_file_cache_t  *cache;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->file.log, 0,
-                   "http file cache reopen");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->file.log, 0, "http file cache reopen");
 
     if (c->secondary) {
-        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0,
-                      "cache file \"%s\" has incorrect vary hash",
-                      c->file.name.data);
+        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0, "cache file \"%s\" has incorrect vary hash", c->file.name.data);
         return NGX_DECLINED;
     }
 
@@ -1677,8 +1667,7 @@ ngx_http_file_cache_forced_expire(ngx_http_file_cache_t *cache)
     ngx_queue_t                 *q;
     ngx_http_file_cache_node_t  *fcn;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0,
-                   "http file cache forced expire");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0, "http file cache forced expire");
 
     path = cache->path;
     len = path->name.len + 1 + path->len + 2 * NGX_HTTP_CACHE_KEY_LEN;
@@ -1695,16 +1684,11 @@ ngx_http_file_cache_forced_expire(ngx_http_file_cache_t *cache)
 
     ngx_shmtx_lock(&cache->shpool->mutex);
 
-    for (q = ngx_queue_last(&cache->sh->queue);
-         q != ngx_queue_sentinel(&cache->sh->queue);
-         q = ngx_queue_prev(q))
-    {
+    for (q = ngx_queue_last(&cache->sh->queue); q != ngx_queue_sentinel(&cache->sh->queue); q = ngx_queue_prev(q)) {
         fcn = ngx_queue_data(q, ngx_http_file_cache_node_t, queue);
 
-        ngx_log_debug6(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0,
-                  "http file cache forced expire: #%d %d %02xd%02xd%02xd%02xd",
-                  fcn->count, fcn->exists,
-                  fcn->key[0], fcn->key[1], fcn->key[2], fcn->key[3]);
+        ngx_log_debug6(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0, "http file cache forced expire: #%d %d %02xd%02xd%02xd%02xd",
+                  fcn->count, fcn->exists, fcn->key[0], fcn->key[1], fcn->key[2], fcn->key[3]);
 
         if (fcn->count == 0) {
             ngx_http_file_cache_delete(cache, q, name);
@@ -1880,7 +1864,7 @@ ngx_http_file_cache_manager(void *data)
     off_t   size;
     time_t  next, wait;
 
-    next = ngx_http_file_cache_expire(cache);
+    next = ngx_http_file_cache_expire(cache);  //删除过期的缓存
 
     cache->last = ngx_current_msec;
     cache->files = 0;
@@ -1888,7 +1872,7 @@ ngx_http_file_cache_manager(void *data)
     for ( ;; ) {
         ngx_shmtx_lock(&cache->shpool->mutex);
 
-        size = cache->sh->size;
+        size = cache->sh->size;		  //获取缓存队列的大小
 
         ngx_shmtx_unlock(&cache->shpool->mutex);
 
@@ -1898,6 +1882,8 @@ ngx_http_file_cache_manager(void *data)
             return next;
         }
 
+		//如果size超过磁盘的使用空间，即size >= cache->max_size 
+        //强制把部分缓存删除，以保证缓存使用的空间在指定范围内        
         wait = ngx_http_file_cache_forced_expire(cache);
 
         if (wait > 0) {
@@ -1949,8 +1935,7 @@ ngx_http_file_cache_loader(void *data)
     cache->sh->loading = 0;
 
     ngx_log_error(NGX_LOG_NOTICE, ngx_cycle->log, 0, "http file cache: %V %.3fM, bsize: %uz",
-                  &cache->path->name,
-                  ((double) cache->sh->size * cache->bsize) / (1024 * 1024), cache->bsize);
+                  &cache->path->name, ((double) cache->sh->size * cache->bsize) / (1024 * 1024), cache->bsize);
 }
 
 
@@ -1981,8 +1966,7 @@ ngx_http_file_cache_manage_file(ngx_tree_ctx_t *ctx, ngx_str_t *path)
 
         elapsed = ngx_abs((ngx_msec_int_t) (ngx_current_msec - cache->last));
 
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0,
-                       "http file cache loader time elapsed: %M", elapsed);
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0, "http file cache loader time elapsed: %M", elapsed);
 
         if (elapsed >= cache->loader_threshold) {
             ngx_http_file_cache_loader_sleep(cache);
@@ -1996,9 +1980,7 @@ ngx_http_file_cache_manage_file(ngx_tree_ctx_t *ctx, ngx_str_t *path)
 static ngx_int_t
 ngx_http_file_cache_manage_directory(ngx_tree_ctx_t *ctx, ngx_str_t *path)
 {
-    if (path->len >= 5
-        && ngx_strncmp(path->data + path->len - 5, "/temp", 5) == 0)
-    {
+    if (path->len >= 5 && ngx_strncmp(path->data + path->len - 5, "/temp", 5) == 0) {  //跳过临时目录
         return NGX_DECLINED;
     }
 
@@ -2027,24 +2009,25 @@ ngx_http_file_cache_add_file(ngx_tree_ctx_t *ctx, ngx_str_t *name)
     ngx_http_cache_t        c;
     ngx_http_file_cache_t  *cache;
 
-    if (name->len < 2 * NGX_HTTP_CACHE_KEY_LEN) {
+	//合法性检查
+    if (name->len < 2 * NGX_HTTP_CACHE_KEY_LEN) {		//16个字节，每4位表示一个16进制数，故有32个
         return NGX_ERROR;
     }
 
     if (ctx->size < (off_t) sizeof(ngx_http_file_cache_header_t)) {
-        ngx_log_error(NGX_LOG_CRIT, ctx->log, 0,
-                      "cache file \"%s\" is too small", name->data);
+        ngx_log_error(NGX_LOG_CRIT, ctx->log, 0, "cache file \"%s\" is too small", name->data);
         return NGX_ERROR;
     }
 
+	//填充文件信息到ngx_http_cache_t中
     ngx_memzero(&c, sizeof(ngx_http_cache_t));
     cache = ctx->data;
 
     c.length = ctx->size;
     c.fs_size = (ctx->fs_size + cache->bsize - 1) / cache->bsize;
 
-    p = &name->data[name->len - 2 * NGX_HTTP_CACHE_KEY_LEN];
-
+	//根据文件名，获取文件的数字key
+    p = &name->data[name->len - 2 * NGX_HTTP_CACHE_KEY_LEN]; 
     for (i = 0; i < NGX_HTTP_CACHE_KEY_LEN; i++) {
         n = ngx_hextoi(p, 2);
 
@@ -2057,10 +2040,11 @@ ngx_http_file_cache_add_file(ngx_tree_ctx_t *ctx, ngx_str_t *name)
         c.key[i] = (u_char) n;
     }
 
+	
     return ngx_http_file_cache_add(cache, &c);
 }
 
-
+//添加文件对应的ngx_http_file_cache_node_t到共享内存中
 static ngx_int_t
 ngx_http_file_cache_add(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
 {
@@ -2072,8 +2056,7 @@ ngx_http_file_cache_add(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
 
     if (fcn == NULL) {
 
-        fcn = ngx_slab_calloc_locked(cache->shpool,
-                                     sizeof(ngx_http_file_cache_node_t));
+        fcn = ngx_slab_calloc_locked(cache->shpool, sizeof(ngx_http_file_cache_node_t));
         if (fcn == NULL) {
             ngx_shmtx_unlock(&cache->shpool->mutex);
             return NGX_ERROR;
@@ -2081,8 +2064,7 @@ ngx_http_file_cache_add(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
 
         ngx_memcpy((u_char *) &fcn->node.key, c->key, sizeof(ngx_rbtree_key_t));
 
-        ngx_memcpy(fcn->key, &c->key[sizeof(ngx_rbtree_key_t)],
-                   NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t));
+        ngx_memcpy(fcn->key, &c->key[sizeof(ngx_rbtree_key_t)], NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t));
 
         ngx_rbtree_insert(&cache->sh->rbtree, &fcn->node);
 
@@ -2093,12 +2075,12 @@ ngx_http_file_cache_add(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
         cache->sh->size += c->fs_size;
 
     } else {
-        ngx_queue_remove(&fcn->queue);
+        ngx_queue_remove(&fcn->queue);   //从LRU队列中删除
     }
 
-    fcn->expire = ngx_time() + cache->inactive;
+    fcn->expire = ngx_time() + cache->inactive;	//设置超时时间
 
-    ngx_queue_insert_head(&cache->sh->queue, &fcn->queue);
+    ngx_queue_insert_head(&cache->sh->queue, &fcn->queue);	//添加到LUR队列头中
 
     ngx_shmtx_unlock(&cache->shpool->mutex);
 
@@ -2109,12 +2091,10 @@ ngx_http_file_cache_add(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
 static ngx_int_t
 ngx_http_file_cache_delete_file(ngx_tree_ctx_t *ctx, ngx_str_t *path)
 {
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ctx->log, 0,
-                   "http file cache delete: \"%s\"", path->data);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, ctx->log, 0, "http file cache delete: \"%s\"", path->data);
 
     if (ngx_delete_file(path->data) == NGX_FILE_ERROR) {
-        ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno,
-                      ngx_delete_file_n " \"%s\" failed", path->data);
+        ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno, ngx_delete_file_n " \"%s\" failed", path->data);
     }
 
     return NGX_OK;

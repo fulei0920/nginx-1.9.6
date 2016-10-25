@@ -916,12 +916,10 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
 
     ngx_str_null(&buf);
 
-    ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                   "walk tree \"%V\"", tree);
+    ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "walk tree \"%V\"", tree);
 
-    if (ngx_open_dir(tree, &dir) == NGX_ERROR) {
-        ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno,
-                      ngx_open_dir_n " \"%s\" failed", tree->data);
+    if (ngx_open_dir(tree, &dir) == NGX_ERROR) {   
+        ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno, ngx_open_dir_n " \"%s\" failed", tree->data);
         return NGX_ERROR;
     }
 
@@ -950,32 +948,32 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
         if (ngx_read_dir(&dir) == NGX_ERROR) {
             err = ngx_errno;
 
-            if (err == NGX_ENOMOREFILES) {
+            if (err == NGX_ENOMOREFILES) {   //读取了所有的子文件
                 rc = NGX_OK;
 
             } else {
-                ngx_log_error(NGX_LOG_CRIT, ctx->log, err,
-                              ngx_read_dir_n " \"%s\" failed", tree->data);
+                ngx_log_error(NGX_LOG_CRIT, ctx->log, err, ngx_read_dir_n " \"%s\" failed", tree->data);
                 rc = NGX_ERROR;
             }
 
             goto done;
         }
 
-        len = ngx_de_namelen(&dir);
-        name = ngx_de_name(&dir);
+        len = ngx_de_namelen(&dir);  	//获取子文件名字长度
+        name = ngx_de_name(&dir);		//获取子文件的名字
 
-        ngx_log_debug2(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                      "tree name %uz:\"%s\"", len, name);
+        ngx_log_debug2(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree name %uz:\"%s\"", len, name);
 
-        if (len == 1 && name[0] == '.') {
+        if (len == 1 && name[0] == '.') {    //跳过 '.'当前目录
             continue;
         }
 
-        if (len == 2 && name[0] == '.' && name[1] == '.') {
+        if (len == 2 && name[0] == '.' && name[1] == '.') { //跳过 '..'上级目录
             continue;
         }
 
+
+		//获取子文件的绝对路径file
         file.len = tree->len + 1 + len;
 
         if (file.len + NGX_DIR_MASK_LEN > buf.len) {
@@ -995,41 +993,37 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
         p = ngx_cpymem(buf.data, tree->data, tree->len);
         *p++ = '/';
         ngx_memcpy(p, name, len + 1);
-
         file.data = buf.data;
+		
 
-        ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                       "tree path \"%s\"", file.data);
+        ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree path \"%s\"", file.data);
 
-        if (!dir.valid_info) {
+        if (!dir.valid_info) {  //获取子文件信息(stat)
             if (ngx_de_info(file.data, &dir) == NGX_FILE_ERROR) {
-                ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno,
-                              ngx_de_info_n " \"%s\" failed", file.data);
+                ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno, ngx_de_info_n " \"%s\" failed", file.data);
                 continue;
             }
         }
 
-        if (ngx_de_is_file(&dir)) {
+        if (ngx_de_is_file(&dir)) {  //子文件是普通文件
 
-            ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                           "tree file \"%s\"", file.data);
+            ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree file \"%s\"", file.data);
 
-            ctx->size = ngx_de_size(&dir);
-            ctx->fs_size = ngx_de_fs_size(&dir);
-            ctx->access = ngx_de_access(&dir);
-            ctx->mtime = ngx_de_mtime(&dir);
+            ctx->size = ngx_de_size(&dir);			//文件大小
+            ctx->fs_size = ngx_de_fs_size(&dir);	//文件占用的块的总大小
+            ctx->access = ngx_de_access(&dir);		//文件权限
+            ctx->mtime = ngx_de_mtime(&dir);		//文件的修改时间
 
             if (ctx->file_handler(ctx, &file) == NGX_ABORT) {
                 goto failed;
             }
 
-        } else if (ngx_de_is_dir(&dir)) {
+        } else if (ngx_de_is_dir(&dir)) { //子文件是目录文件
 
-            ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                           "tree enter dir \"%s\"", file.data);
+            ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree enter dir \"%s\"", file.data);
 
-            ctx->access = ngx_de_access(&dir);
-            ctx->mtime = ngx_de_mtime(&dir);
+            ctx->access = ngx_de_access(&dir);  //获取目录的访问权限
+            ctx->mtime = ngx_de_mtime(&dir);	//获取目录的修改时间
 
             rc = ctx->pre_tree_handler(ctx, &file);
 
@@ -1038,8 +1032,7 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
             }
 
             if (rc == NGX_DECLINED) {
-                ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                               "tree skip dir \"%s\"", file.data);
+                ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree skip dir \"%s\"", file.data);
                 continue;
             }
 
@@ -1054,10 +1047,9 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
                 goto failed;
             }
 
-        } else {
+        }else {	 //子文件是特殊文件
 
-            ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0,
-                           "tree special \"%s\"", file.data);
+            ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree special \"%s\"", file.data);
 
             if (ctx->spec_handler(ctx, &file) == NGX_ABORT) {
                 goto failed;
@@ -1081,8 +1073,7 @@ done:
     }
 
     if (ngx_close_dir(&dir) == NGX_ERROR) {
-        ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno,
-                      ngx_close_dir_n " \"%s\" failed", tree->data);
+        ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno, ngx_close_dir_n " \"%s\" failed", tree->data);
     }
 
     return rc;

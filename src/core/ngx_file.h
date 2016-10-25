@@ -47,7 +47,7 @@ typedef void (*ngx_path_loader_pt) (void *data);
 
 typedef struct 
 {
-    ngx_str_t                  name;
+    ngx_str_t                  name;   //Ä¿Â¼Ãû|Â·¾¶Ãûå
     size_t                     len;
     size_t                     level[3];
 
@@ -112,10 +112,10 @@ typedef ngx_int_t (*ngx_tree_init_handler_pt) (void *ctx, void *prev);
 typedef ngx_int_t (*ngx_tree_handler_pt) (ngx_tree_ctx_t *ctx, ngx_str_t *name);
 
 struct ngx_tree_ctx_s {
-    off_t                      size;
-    off_t                      fs_size;
-    ngx_uint_t                 access;
-    time_t                     mtime;
+    off_t                      size;			//ÎÄ¼ş´óĞ¡
+    off_t                      fs_size;			//ÎÄ¼şÕ¼ÓÃÏµÍ³¿éµÄ×Ü´óĞ¡
+    ngx_uint_t                 access;			//ÎÄ¼şÈ¨ÏŞ
+    time_t                     mtime;			//ÎÄ¼şĞŞ¸ÄÊ±¼ä
 
     ngx_tree_init_handler_pt   init_handler;
     ngx_tree_handler_pt        file_handler;
