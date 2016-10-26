@@ -393,8 +393,7 @@ ngx_http_auth_request_set(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value = cf->args->elts;
 
     if (value[1].data[0] != '$') {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid variable name \"%V\"", &value[1]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid variable name \"%V\"", &value[1]);
         return NGX_CONF_ERROR;
     }
 
@@ -402,8 +401,7 @@ ngx_http_auth_request_set(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     value[1].data++;
 
     if (arcf->vars == NGX_CONF_UNSET_PTR) {
-        arcf->vars = ngx_array_create(cf->pool, 1,
-                                      sizeof(ngx_http_auth_request_variable_t));
+        arcf->vars = ngx_array_create(cf->pool, 1, sizeof(ngx_http_auth_request_variable_t));
         if (arcf->vars == NULL) {
             return NGX_CONF_ERROR;
         }

@@ -155,12 +155,8 @@ ngx_http_compile_complex_value(ngx_http_compile_complex_value_t *ccv)
         return NGX_ERROR;
     }
 
-    n = (nv * (2 * sizeof(ngx_http_script_copy_code_t)
-                   + sizeof(ngx_http_script_var_code_t))
-                + sizeof(uintptr_t)
-                + v->len
-                + sizeof(uintptr_t) - 1)
-            & ~(sizeof(uintptr_t) - 1);
+    n = (nv * (2 * sizeof(ngx_http_script_copy_code_t) + sizeof(ngx_http_script_var_code_t))
+                + sizeof(uintptr_t) + v->len + sizeof(uintptr_t) - 1) & ~(sizeof(uintptr_t) - 1);
 
     if (ngx_array_init(&values, ccv->cf->pool, n, 1) != NGX_OK) {
         return NGX_ERROR;

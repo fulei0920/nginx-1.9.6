@@ -662,48 +662,38 @@ ngx_hash_keys_array_init(ngx_hash_keys_arrays_t *ha, ngx_uint_t type)
 {
     ngx_uint_t  asize;
 
-    if (type == NGX_HASH_SMALL)
-	{
+    if (type == NGX_HASH_SMALL) {
         asize = 4;
         ha->hsize = 107;
-
-    } 
-	else 
-	{
+    } else {
         asize = NGX_HASH_LARGE_ASIZE;
         ha->hsize = NGX_HASH_LARGE_HSIZE;
     }
 
-    if (ngx_array_init(&ha->keys, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK)
-    {
+    if (ngx_array_init(&ha->keys, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&ha->dns_wc_head, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK)
-    {
+    if (ngx_array_init(&ha->dns_wc_head, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    if (ngx_array_init(&ha->dns_wc_tail, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK)
-    {
+    if (ngx_array_init(&ha->dns_wc_tail, ha->temp_pool, asize, sizeof(ngx_hash_key_t)) != NGX_OK) {
         return NGX_ERROR;
     }
 
     ha->keys_hash = ngx_pcalloc(ha->temp_pool, sizeof(ngx_array_t) * ha->hsize);
-    if (ha->keys_hash == NULL) 
-	{
+    if (ha->keys_hash == NULL) {
         return NGX_ERROR;
     }
 
     ha->dns_wc_head_hash = ngx_pcalloc(ha->temp_pool, sizeof(ngx_array_t) * ha->hsize);
-    if (ha->dns_wc_head_hash == NULL) 
-	{
+    if (ha->dns_wc_head_hash == NULL) {
         return NGX_ERROR;
     }
 
     ha->dns_wc_tail_hash = ngx_pcalloc(ha->temp_pool, sizeof(ngx_array_t) * ha->hsize);
-    if (ha->dns_wc_tail_hash == NULL) 
-	{
+    if (ha->dns_wc_tail_hash == NULL) {
         return NGX_ERROR;
     }
 
@@ -778,14 +768,14 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
 
     /* exact hash */
     k = 0;
-    for (i = 0; i < last; i++) {
+    for (i = 0; i < last; i++) {    //计算hash值
         if (!(flags & NGX_HASH_READONLY_KEY)) {
             key->data[i] = ngx_tolower(key->data[i]);
         }
         k = ngx_hash(k, key->data[i]);
     }
 
-    k %= ha->hsize;
+    k %= ha->hsize;   //计算冲突桶序号
 
     /* check conflicts in exact hash */
     name = ha->keys_hash[k].elts;
@@ -795,7 +785,7 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
                 continue;
             }
 
-            if (ngx_strncmp(key->data, name[i].data, last) == 0) {
+            if (ngx_strncmp(key->data, name[i].data, last) == 0) {   //相同的变量名，返回NGX_BUSY
                 return NGX_BUSY;
             }
         }

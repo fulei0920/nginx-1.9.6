@@ -202,7 +202,8 @@ typedef struct
     ngx_hash_t                 headers_in_hash;
 
     ngx_hash_t                 variables_hash;
-	///´æ´¢ÓÃ»§ÔÚÅäÖÃÎÄ¼şÖĞÊ¹ÓÃµÄ±äÁ¿å
+	///´æ´¢ÓÃ»§ÔÚÅäÖÃÎÄ¼şÖĞÊ¹ÓÃµÄ±äÁ¿£
+	///ÓÃ»§ÔÚÅäÖÃÎÄ¼şÀïÊ¹ÓÃµÄ±äÁ¿»áÍ¨¹ıngx_http_get_variable_index()º¯Êı¶øÌí¼Óµ½variablesÖĞ
     ngx_array_t                variables;       /* array of ngx_http_variable_t */
     ngx_uint_t                 ncaptures;
 	//±íÊ¾´æ´¢ËùÓĞserver_nameµÄÉ¢ÁĞ±íµÄÉ¢ÁĞÍ°µÄ¸öÊı

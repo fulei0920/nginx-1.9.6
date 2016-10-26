@@ -82,19 +82,31 @@ typedef struct
 //用于在构建hash表前，存储所有的需要构建的key
 typedef struct 
 {
-    ngx_uint_t        hsize;    	/*冲突桶数目*/
+	//将要构建的hash表的桶的个数。对于使用这个结构中包含的信息构建的三种类型的hash表都会使用此参数。
+    ngx_uint_t        hsize;    	
 
-    ngx_pool_t       *pool;
-    ngx_pool_t       *temp_pool;
+	//构建这些hash表使用的pool
+    ngx_pool_t       *pool;		
+	//在构建这个类型以及最终的三个hash表过程中可能用到临时pool。该temp_pool可以在构建完成以后，被销毁掉。这里只是存放临时的一些内存消耗
+    ngx_pool_t       *temp_pool;	
 
-    ngx_array_t       keys;			/*array of ngx_hash_key_t, 以列表形式记录所有结点*/
-    ngx_array_t      *keys_hash;	/*完全匹配的key的临时hash表，用于重复key冲突检测*/
+	//ngx_hash_key_t类型的动态数组，存放所有非通配符key的数组。
+    ngx_array_t       keys;			
+   	//key的name字符串的散列表
+    //该值在调用的过程中用来保存和检测是否有冲突的key值，也就是是否有重复。
+    ngx_array_t      *keys_hash;	
 
-    ngx_array_t       dns_wc_head;			/* array of ngx_hash_key_t */
-    ngx_array_t      *dns_wc_head_hash;			/*前缀匹配散列表*/
+	//ngx_hash_key_t类型的动态数组，存放前向通配符key被处理完成以后的值。比如：“*.abc.com” 被处理完成以后，变成 “com.abc.” 被存放在此数组中。
+    ngx_array_t       dns_wc_head;	
+	//key的name字符串的散列表
+	//该值在调用的过程中用来保存和检测是否有冲突的前向通配符的key值，也就是是否有重复。
+    ngx_array_t      *dns_wc_head_hash;			
 
-    ngx_array_t       dns_wc_tail;			/* array of ngx_hash_key_t */
-    ngx_array_t      *dns_wc_tail_hash;		/*后缀匹配散列表*/
+	//ngx_hash_key_t类型的动态数组，存放后向通配符key被处理完成以后的值。比如：“mail.xxx.*” 被处理完成以后，变成 “mail.xxx.” 被存放在此数组中。
+    ngx_array_t       dns_wc_tail;	
+	//key的name字符串的散列表
+	//该值在调用的过程中用来保存和检测是否有冲突的后向通配符的key值，也就是是否有重复。
+    ngx_array_t      *dns_wc_tail_hash;		
 } ngx_hash_keys_arrays_t;
 
 

@@ -435,8 +435,7 @@ ngx_http_get_variable_index(ngx_conf_t *cf, ngx_str_t *name)
 
     v->name.len = name->len;
     v->name.data = ngx_pnalloc(cf->pool, name->len);
-    if (v->name.data == NULL) 
-	{
+    if (v->name.data == NULL) {
         return NGX_ERROR;
     }
 
@@ -701,8 +700,7 @@ ngx_http_variable_request_set_size(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_variable_header(ngx_http_request_t *r, ngx_http_variable_value_t *v,
-    uintptr_t data)
+ngx_http_variable_header(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
     ngx_table_elt_t  *h;
 
@@ -2420,38 +2418,36 @@ ngx_http_variables_add_core_vars(ngx_conf_t *cf)
 
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
+	//为variables_keys分配空间
     cmcf->variables_keys = ngx_pcalloc(cf->temp_pool, sizeof(ngx_hash_keys_arrays_t));
-    if (cmcf->variables_keys == NULL)
-	{
+    if (cmcf->variables_keys == NULL) {
         return NGX_ERROR;
     }
 
+	//设定内存池
     cmcf->variables_keys->pool = cf->pool;
     cmcf->variables_keys->temp_pool = cf->pool;
-
-    if (ngx_hash_keys_array_init(cmcf->variables_keys, NGX_HASH_SMALL) != NGX_OK)
-    {
+	
+	//初始化variables_keys
+    if (ngx_hash_keys_array_init(cmcf->variables_keys, NGX_HASH_SMALL) != NGX_OK) {
         return NGX_ERROR;
     }
 
-    for (cv = ngx_http_core_variables; cv->name.len; cv++) 
-	{
+	//将ngx_http_core_variables中所有定义的变量添加到variables_keys中
+    for (cv = ngx_http_core_variables; cv->name.len; cv++) {
         v = ngx_palloc(cf->pool, sizeof(ngx_http_variable_t));
-        if (v == NULL)
-		{
+        if (v == NULL) {
             return NGX_ERROR;
         }
 
         *v = *cv;
 
         rc = ngx_hash_add_key(cmcf->variables_keys, &v->name, v, NGX_HASH_READONLY_KEY);
-        if (rc == NGX_OK)
-		{
+        if (rc == NGX_OK) {
             continue;
         }
 
-        if (rc == NGX_BUSY) 
-		{
+        if (rc == NGX_BUSY) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "conflicting variable name \"%V\"", &v->name);
         }
 
@@ -2483,15 +2479,12 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
     v = cmcf->variables.elts;
     key = cmcf->variables_keys->keys.elts;
 
-    for (i = 0; i < cmcf->variables.nelts; i++) 
-	{
-        for (n = 0; n < cmcf->variables_keys->keys.nelts; n++)
-		{
+    for (i = 0; i < cmcf->variables.nelts; i++) {
+        for (n = 0; n < cmcf->variables_keys->keys.nelts; n++) {
 
             av = key[n].value;
 
-            if (v[i].name.len == key[n].key.len && ngx_strncmp(v[i].name.data, key[n].key.data, v[i].name.len) == 0)
-            {
+            if (v[i].name.len == key[n].key.len && ngx_strncmp(v[i].name.data, key[n].key.data, v[i].name.len) == 0) {
                 v[i].get_handler = av->get_handler;
                 v[i].data = av->data;
 
@@ -2545,8 +2538,7 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
             continue;
         }
 
-        if (v[i].name.len >= 4 && ngx_strncmp(v[i].name.data, "arg_", 4) == 0)
-        {
+        if (v[i].name.len >= 4 && ngx_strncmp(v[i].name.data, "arg_", 4) == 0) {
             v[i].get_handler = ngx_http_variable_argument;
             v[i].data = (uintptr_t) &v[i].name;
             v[i].flags = NGX_HTTP_VAR_NOCACHEABLE;
@@ -2554,8 +2546,7 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
             continue;
         }
 
-        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                      "unknown \"%V\" variable", &v[i].name);
+        ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "unknown \"%V\" variable", &v[i].name);
 
         return NGX_ERROR;
 
@@ -2581,10 +2572,7 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
     hash.pool = cf->pool;
     hash.temp_pool = NULL;
 
-    if (ngx_hash_init(&hash, cmcf->variables_keys->keys.elts,
-                      cmcf->variables_keys->keys.nelts)
-        != NGX_OK)
-    {
+    if (ngx_hash_init(&hash, cmcf->variables_keys->keys.elts, cmcf->variables_keys->keys.nelts) != NGX_OK) {
         return NGX_ERROR;
     }
 

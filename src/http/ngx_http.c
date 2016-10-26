@@ -301,7 +301,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    if (ngx_http_variables_init_vars(cf) != NGX_OK) {
+
+	/*检查用户在配置文件中使用的变量是否合法(都已经被定义)*/
+    if (ngx_http_variables_init_vars(cf) != NGX_OK) {  
         return NGX_CONF_ERROR;
     }
 
