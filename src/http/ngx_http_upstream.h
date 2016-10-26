@@ -225,7 +225,7 @@ typedef struct
 
     ngx_flag_t                       cache_revalidate;
 
-    ngx_array_t                     *cache_valid;
+    ngx_array_t                     *cache_valid;	//ngx_http_cache_valid_t类型的动态数组
     ngx_array_t                     *cache_bypass;
     ngx_array_t                     *no_cache;  	///ngx_http_complex_value_t类型的的动态数组
 #endif

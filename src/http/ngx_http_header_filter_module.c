@@ -193,8 +193,7 @@ ngx_http_header_filter(ngx_http_request_t *r)
         return NGX_OK;
     }
 
-    if (r->method == NGX_HTTP_HEAD)
-	{
+    if (r->method == NGX_HTTP_HEAD) {
         r->header_only = 1;
     }
 

@@ -2300,8 +2300,7 @@ ngx_http_send_response(ngx_http_request_t *r, ngx_uint_t status, ngx_str_t *ct, 
 ngx_int_t
 ngx_http_send_header(ngx_http_request_t *r)
 {
-    if (r->post_action)
-	{
+    if (r->post_action) {
         return NGX_OK;
     }
 

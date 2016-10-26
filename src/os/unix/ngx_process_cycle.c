@@ -224,8 +224,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             ngx_reconfigure = 0;
 
             if (ngx_new_binary) {
-                ngx_start_worker_processes(cycle, ccf->worker_processes,
-                                           NGX_PROCESS_RESPAWN);
+                ngx_start_worker_processes(cycle, ccf->worker_processes, NGX_PROCESS_RESPAWN);
                 ngx_start_cache_manager_processes(cycle, 0);
                 ngx_noaccepting = 0;
 
@@ -241,10 +240,8 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             }
 
             ngx_cycle = cycle;
-            ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx,
-                                                   ngx_core_module);
-            ngx_start_worker_processes(cycle, ccf->worker_processes,
-                                       NGX_PROCESS_JUST_RESPAWN);
+            ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
+            ngx_start_worker_processes(cycle, ccf->worker_processes, NGX_PROCESS_JUST_RESPAWN);
             ngx_start_cache_manager_processes(cycle, 1);
 
             /* allow new processes to start */
@@ -264,16 +261,14 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             live = 1;
         }
 
-        if (ngx_reopen) 
-		{
+        if (ngx_reopen) {
             ngx_reopen = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");
             ngx_reopen_files(cycle, ccf->user);
             ngx_signal_worker_processes(cycle, ngx_signal_value(NGX_REOPEN_SIGNAL));
         }
 
-        if (ngx_change_binary)
-		{
+        if (ngx_change_binary) {
             ngx_change_binary = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "changing binary");
             ngx_new_binary = ngx_exec_new_binary(cycle, ngx_argv);
@@ -793,18 +788,15 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
     ngx_core_conf_t  *ccf;
     ngx_listening_t  *ls;
 
-    if (ngx_set_environment(cycle, NULL) == NULL)
-	{
+    if (ngx_set_environment(cycle, NULL) == NULL) {
         /* fatal */
         exit(2);
     }
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
-    if (worker >= 0 && ccf->priority != 0) 
-	{
-        if (setpriority(PRIO_PROCESS, 0, ccf->priority) == -1) 
-		{
+    if (worker >= 0 && ccf->priority != 0) {
+        if (setpriority(PRIO_PROCESS, 0, ccf->priority) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "setpriority(%d) failed", ccf->priority);
         }
     }
@@ -1164,12 +1156,14 @@ ngx_cache_manager_process_handler(ngx_event_t *ev)
     next = 60 * 60;
 
     path = ngx_cycle->paths.elts;
+
+	//遍历所有的path
     for (i = 0; i < ngx_cycle->paths.nelts; i++) {
 
-        if (path[i]->manager) {
+        if (path[i]->manager) {		//调用path对应的manager函数
             n = path[i]->manager(path[i]->data);
 
-            next = (n <= next) ? n : next;
+            next = (n <= next) ? n : next;  //记录最小的定时时间
 
             ngx_time_update();
         }
@@ -1179,7 +1173,7 @@ ngx_cache_manager_process_handler(ngx_event_t *ev)
         next = 1;
     }
 
-    ngx_add_timer(ev, next * 1000);
+    ngx_add_timer(ev, next * 1000);  //将该事件重新添加都定时器中
 }
 
 
@@ -1193,17 +1187,19 @@ ngx_cache_loader_process_handler(ngx_event_t *ev)
     cycle = (ngx_cycle_t *) ngx_cycle;
 
     path = cycle->paths.elts;
+	
+	//遍历每一个path
     for (i = 0; i < cycle->paths.nelts; i++) {
 
         if (ngx_terminate || ngx_quit) {
             break;
         }
 
-        if (path[i]->loader) {
+        if (path[i]->loader) {  //调用path对应的函数
             path[i]->loader(path[i]->data);
             ngx_time_update();
         }
     }
 
-    exit(0);
+    exit(0);  //cache loader进程退出
 }

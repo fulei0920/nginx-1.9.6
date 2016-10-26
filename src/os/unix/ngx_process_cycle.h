@@ -29,8 +29,8 @@
 
 typedef struct {
     ngx_event_handler_pt       handler;
-    char                      *name;
-    ngx_msec_t                 delay;
+    char                      *name;	//进程名
+    ngx_msec_t                 delay;  	//延时执行的时长
 } ngx_cache_manager_ctx_t;
 
 

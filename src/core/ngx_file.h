@@ -47,12 +47,12 @@ typedef void (*ngx_path_loader_pt) (void *data);
 
 typedef struct 
 {
-    ngx_str_t                  name;   //Ä¿Â¼Ãû|Â·¾¶Ãûå
-    size_t                     len;
-    size_t                     level[3];
+    ngx_str_t                  name;   		//Ä¿Â¼Ãû|Â·¾¶Ãûå
+    size_t                     len;			//Ä¿Â¼ÏÂ×ÓÄ¿Â¼µÄËùÕ¼ÓÃÂ·¾¶µÄ×Ö·û³¤¶È
+    size_t                     level[3];	///Ä¿Â¼ÏÂ×ÓÄ¿Â¼µÄ»®·Ö·½·¨
 
-    ngx_path_manager_pt        manager;
-    ngx_path_loader_pt         loader;
+    ngx_path_manager_pt        manager;		//cache manager½ø³ÌÕë¶Ô¸ÃÄ¿Â¼Ö´ĞĞµÄº¯Êı
+    ngx_path_loader_pt         loader;		//cache loader½ø³ÌÕë¶Ô¸ÃÄ¿Â¼Ö´ĞĞµÄº¯Êı
     void                      *data;		//managerºÍloaderº¯ÊıµÄ²ÎÊı
 
     u_char                    *conf_file;

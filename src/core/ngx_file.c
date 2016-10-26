@@ -918,6 +918,7 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
 
     ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "walk tree \"%V\"", tree);
 
+	//打开目录
     if (ngx_open_dir(tree, &dir) == NGX_ERROR) {   
         ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno, ngx_open_dir_n " \"%s\" failed", tree->data);
         return NGX_ERROR;
@@ -945,6 +946,7 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
 
         ngx_set_errno(0);
 
+		//读取目录下的文件
         if (ngx_read_dir(&dir) == NGX_ERROR) {
             err = ngx_errno;
 
@@ -994,11 +996,11 @@ ngx_walk_tree(ngx_tree_ctx_t *ctx, ngx_str_t *tree)
         *p++ = '/';
         ngx_memcpy(p, name, len + 1);
         file.data = buf.data;
-		
 
         ngx_log_debug1(NGX_LOG_DEBUG_CORE, ctx->log, 0, "tree path \"%s\"", file.data);
 
-        if (!dir.valid_info) {  //获取子文件信息(stat)
+		//获取子文件信息(stat)
+        if (!dir.valid_info) {  
             if (ngx_de_info(file.data, &dir) == NGX_FILE_ERROR) {
                 ngx_log_error(NGX_LOG_CRIT, ctx->log, ngx_errno, ngx_de_info_n " \"%s\" failed", file.data);
                 continue;

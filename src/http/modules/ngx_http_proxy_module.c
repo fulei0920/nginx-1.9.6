@@ -621,6 +621,16 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       offsetof(ngx_http_proxy_main_conf_t, caches),
       &ngx_http_proxy_module },
 
+	/*
+	语法:	proxy_cache_bypass string ...;
+	默认值:	—
+	上下文:	http, server, location
+	定义nginx不从缓存取响应的条件。如果至少一个字符串条件非空而且非"0"，nginx就不会从缓存中去取响应：
+
+	proxy_cache_bypass $cookie_nocache $arg_nocache$arg_comment;
+	proxy_cache_bypass $http_pragma    $http_authorization;
+	本指令可和与proxy_no_cache一起使用
+	*/
     { ngx_string("proxy_cache_bypass"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
       ngx_http_set_predicate_slot,
@@ -644,6 +654,30 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       offsetof(ngx_http_proxy_loc_conf_t, upstream.no_cache),
       NULL },
 
+
+	/*
+	语法:	proxy_cache_valid [code ...] time;
+	默认值:	—
+	上下文:	http, server, location
+	为不同的响应状态码设置不同的缓存时间。比如，下面指令
+
+	proxy_cache_valid 200 302 10m;
+	proxy_cache_valid 404      1m;
+	设置状态码为200和302的响应的缓存时间为10分钟，状态码为404的响应的缓存时间为1分钟。
+
+	如果仅仅指定了time，
+	proxy_cache_valid 5m;
+	那么只有状态码为200、301和302的响应会被缓存。
+
+	如果使用了any参数，那么就可以缓存任何响应：
+
+	proxy_cache_valid 200 302 10m;
+	proxy_cache_valid 301      1h;
+	proxy_cache_valid any      1m;
+	缓存参数也可以直接在响应头中设定。这种方式的优先级高于使用这条指令设置缓存时间。 “X-Accel-Expires”响应头可以以秒为单位设置响应的缓存时间，
+	如果值为0，表示禁止缓存响应，如果值以@开始，表示自1970年1月1日以来的秒数，响应一直会被缓存到这个绝对时间点。 如果不含“X-Accel-Expires”响应头，
+	缓存参数仍可能被“Expires”或者“Cache-Control”响应头设置。 如果响应头含有“Set-Cookie”，响应将不能被缓存。 这些头的处理过程可以使用指令proxy_ignore_headers忽略。
+	*/
     { ngx_string("proxy_cache_valid"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
       ngx_http_file_cache_valid_set_slot,
@@ -1112,13 +1146,11 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     u->finalize_request = ngx_http_proxy_finalize_request;
     r->state = 0;
 
-    if (plcf->redirects) 
-	{
+    if (plcf->redirects) {
         u->rewrite_redirect = ngx_http_proxy_rewrite_redirect;
     }
 
-    if (plcf->cookie_domains || plcf->cookie_paths) 
-	{
+    if (plcf->cookie_domains || plcf->cookie_paths) {
         u->rewrite_cookie = ngx_http_proxy_rewrite_cookie;
     }
 
@@ -1139,15 +1171,13 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     u->accel = 1;
 
     if (!plcf->upstream.request_buffering && plcf->body_values == NULL && plcf->upstream.pass_request_body
-        && (!r->headers_in.chunked || plcf->http_version == NGX_HTTP_VERSION_11))
-    {
+        && (!r->headers_in.chunked || plcf->http_version == NGX_HTTP_VERSION_11)) {
         r->request_body_no_buffering = 1;
     }
 
     rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
 
-    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) 
-	{
+    if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         return rc;
     }
 

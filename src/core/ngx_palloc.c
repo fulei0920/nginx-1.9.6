@@ -401,8 +401,7 @@ ngx_pool_cleanup_file(void *data)
 
     ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, c->log, 0, "file cleanup: fd:%d", c->fd);
 
-    if (ngx_close_file(c->fd) == NGX_FILE_ERROR) 
-	{
+    if (ngx_close_file(c->fd) == NGX_FILE_ERROR)  {
         ngx_log_error(NGX_LOG_ALERT, c->log, ngx_errno, ngx_close_file_n " \"%s\" failed", c->name);
     }
 }
