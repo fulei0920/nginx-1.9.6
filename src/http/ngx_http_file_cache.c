@@ -11,8 +11,7 @@
 #include <ngx_md5.h>
 
 
-static ngx_int_t ngx_http_file_cache_lock(ngx_http_request_t *r,
-    ngx_http_cache_t *c);
+static ngx_int_t ngx_http_file_cache_lock(ngx_http_request_t *r, ngx_http_cache_t *c);
 static void ngx_http_file_cache_lock_wait_handler(ngx_event_t *ev);
 static void ngx_http_file_cache_lock_wait(ngx_http_request_t *r,
     ngx_http_cache_t *c);
@@ -406,9 +405,7 @@ ngx_http_file_cache_lock(ngx_http_request_t *r, ngx_http_cache_t *c)
 
     ngx_shmtx_unlock(&cache->shpool->mutex);
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http file cache lock u:%d wt:%M",
-                   c->updating, c->wait_time);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http file cache lock u:%d wt:%M", c->updating, c->wait_time);
 
     if (c->updating) {
         return NGX_DECLINED;
@@ -449,8 +446,7 @@ ngx_http_file_cache_lock_wait_handler(ngx_event_t *ev)
 
     ngx_http_set_log_request(c->log, r);
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
-                   "http file cache wait: \"%V?%V\"", &r->uri, &r->args);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0, "http file cache wait: \"%V?%V\"", &r->uri, &r->args);
 
     ngx_http_file_cache_lock_wait(r, r->cache);
 
@@ -470,8 +466,7 @@ ngx_http_file_cache_lock_wait(ngx_http_request_t *r, ngx_http_cache_t *c)
     timer = c->wait_time - now;
 
     if ((ngx_msec_int_t) timer <= 0) {
-        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                      "cache lock timeout");
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0, "cache lock timeout");
         c->lock_timeout = 0;
         goto wakeup;
     }
@@ -521,27 +516,23 @@ ngx_http_file_cache_read(ngx_http_request_t *r, ngx_http_cache_t *c)
     }
 
     if ((size_t) n < c->header_start) {
-        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0,
-                      "cache file \"%s\" is too small", c->file.name.data);
+        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0, "cache file \"%s\" is too small", c->file.name.data);
         return NGX_DECLINED;
     }
 
     h = (ngx_http_file_cache_header_t *) c->buf->pos;
 
     if (h->version != NGX_HTTP_CACHE_VERSION) {
-        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-                      "cache file \"%s\" version mismatch", c->file.name.data);
+        ngx_log_error(NGX_LOG_INFO, r->connection->log, 0, "cache file \"%s\" version mismatch", c->file.name.data);
         return NGX_DECLINED;
     }
 
     if (h->crc32 != c->crc32 || h->header_start != c->header_start) {
-        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0,
-                      "cache file \"%s\" has md5 collision", c->file.name.data);
+        ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0, "cache file \"%s\" has md5 collision", c->file.name.data);
         return NGX_DECLINED;
     }
 
-    p = c->buf->pos + sizeof(ngx_http_file_cache_header_t)
-        + sizeof(ngx_http_file_cache_key);
+    p = c->buf->pos + sizeof(ngx_http_file_cache_header_t) + sizeof(ngx_http_file_cache_key);
 
     key = c->keys.elts;
     for (i = 0; i < c->keys.nelts; i++) {

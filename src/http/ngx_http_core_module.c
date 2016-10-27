@@ -4711,8 +4711,7 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     value = cf->args->elts;
 
-    for (i = 1; i < cf->args->nelts; i++) 
-	{
+    for (i = 1; i < cf->args->nelts; i++) {
 
         ch = value[i].data[0];
 
@@ -4728,8 +4727,7 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
 
         sn = ngx_array_push(&cscf->server_names);
-        if (sn == NULL) 
-		{
+        if (sn == NULL) {
             return NGX_CONF_ERROR;
         }
 
@@ -4738,8 +4736,7 @@ ngx_http_core_server_name(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
         sn->server = cscf;
 
-        if (ngx_strcasecmp(value[i].data, (u_char *) "$hostname") == 0)
-		{
+        if (ngx_strcasecmp(value[i].data, (u_char *) "$hostname") == 0) {
             sn->name = cf->cycle->hostname;
 
         }

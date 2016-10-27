@@ -52,8 +52,7 @@ static ngx_command_t  ngx_http_rewrite_commands[] =
       NULL },
 
     { ngx_string("return"),
-      NGX_HTTP_SRV_CONF|NGX_HTTP_SIF_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF
-                       |NGX_CONF_TAKE12,
+      NGX_HTTP_SRV_CONF|NGX_HTTP_SIF_CONF|NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF |NGX_CONF_TAKE12,
       ngx_http_rewrite_return,
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
@@ -457,8 +456,7 @@ ngx_http_rewrite_return(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_script_return_code_t     *ret;
     ngx_http_compile_complex_value_t   ccv;
 
-    ret = ngx_http_script_start_code(cf->pool, &lcf->codes,
-                                     sizeof(ngx_http_script_return_code_t));
+    ret = ngx_http_script_start_code(cf->pool, &lcf->codes, sizeof(ngx_http_script_return_code_t));
     if (ret == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -492,8 +490,7 @@ ngx_http_rewrite_return(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     } else {
 
         if (ret->status > 999) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "invalid return code \"%V\"", &value[1]);
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid return code \"%V\"", &value[1]);
             return NGX_CONF_ERROR;
         }
 

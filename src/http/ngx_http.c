@@ -1487,15 +1487,13 @@ ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http_
     ngx_memzero(&ha, sizeof(ngx_hash_keys_arrays_t));
 
     ha.temp_pool = ngx_create_pool(NGX_DEFAULT_POOL_SIZE, cf->log);
-    if (ha.temp_pool == NULL) 
-	{
+    if (ha.temp_pool == NULL) {
         return NGX_ERROR;
     }
 
     ha.pool = cf->pool;
 
-    if (ngx_hash_keys_array_init(&ha, NGX_HASH_LARGE) != NGX_OK)
-	{
+    if (ngx_hash_keys_array_init(&ha, NGX_HASH_LARGE) != NGX_OK) {
         goto failed;
     }
 
@@ -1543,8 +1541,7 @@ ngx_http_server_names(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf, ngx_http_
     hash.name = "server_names_hash";
     hash.pool = cf->pool;
 
-    if (ha.keys.nelts)
-	{
+    if (ha.keys.nelts) {
         hash.hash = &addr->hash;  //事实上是个输出参数
         hash.temp_pool = NULL;
 
@@ -1750,8 +1747,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             break;
 #endif
         default: /* AF_INET */
-            if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) 
-			{
+            if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) {
                 return NGX_ERROR;
             }
             break;
@@ -1867,8 +1863,7 @@ ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport, ngx_http_conf_addr_t 
 
     addrs = hport->addrs;
 
-    for (i = 0; i < hport->naddrs; i++) 
-	{
+    for (i = 0; i < hport->naddrs; i++) {
 
         sin = &addr[i].opt.u.sockaddr_in;
         addrs[i].addr = sin->sin_addr.s_addr;
@@ -1895,8 +1890,7 @@ ngx_http_add_addrs(ngx_conf_t *cf, ngx_http_port_t *hport, ngx_http_conf_addr_t 
         }
 
         vn = ngx_palloc(cf->pool, sizeof(ngx_http_virtual_names_t));
-        if (vn == NULL)
-		{
+        if (vn == NULL) {
             return NGX_ERROR;
         }
 

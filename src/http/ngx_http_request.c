@@ -31,8 +31,7 @@ static ngx_int_t ngx_http_process_user_agent(ngx_http_request_t *r,
 static ngx_int_t ngx_http_validate_host(ngx_str_t *host, ngx_pool_t *pool,
     ngx_uint_t alloc);
 static ngx_int_t ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host);
-static ngx_int_t ngx_http_find_virtual_server(ngx_connection_t *c, ngx_http_virtual_names_t *virtual_names, 
-	ngx_str_t *host, ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp);
+static ngx_int_t ngx_http_find_virtual_server(ngx_connection_t *c, ngx_http_virtual_names_t *virtual_names, ngx_str_t *host, ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp);
 
 static void ngx_http_request_handler(ngx_event_t *ev);
 static void ngx_http_terminate_request(ngx_http_request_t *r, ngx_int_t rc);
@@ -215,14 +214,12 @@ ngx_http_init_connection(ngx_connection_t *c)
          * is an "*:port" wildcard so getsockname() in ngx_http_server_addr()
          * is required to determine a server address
          */
-        if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK)
-		{
+        if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK) {
             ngx_http_close_connection(c);
             return;
         }
 
-        switch (c->local_sockaddr->sa_family) 
-		{
+        switch (c->local_sockaddr->sa_family) {
 
 #if (NGX_HAVE_INET6)
         case AF_INET6:
@@ -232,10 +229,8 @@ ngx_http_init_connection(ngx_connection_t *c)
 
             /* the last address is "*" */
 
-            for (i = 0; i < port->naddrs - 1; i++) 
-			{
-                if (ngx_memcmp(&addr6[i].addr6, &sin6->sin6_addr, 16) == 0) 
-				{
+            for (i = 0; i < port->naddrs - 1; i++) {
+                if (ngx_memcmp(&addr6[i].addr6, &sin6->sin6_addr, 16) == 0)  {
                     break;
                 }
             }
@@ -252,14 +247,12 @@ ngx_http_init_connection(ngx_connection_t *c)
 
             /* the last address is "*" */
 
-            for (i = 0; i < port->naddrs - 1; i++)
-			{
+            for (i = 0; i < port->naddrs - 1; i++) {
 				//查找当前请求对应属于到端口上的哪个服务ip地址是通过对比目的ip来进行的。
 				//如果某端口上设置有任意ip监听，比如*:80，那么即便还有其他指定ip的监听，
 				//比如192.168.1.1:80,也只会创建一个监听套接字，所以对于该套接字上接收到
 				//的连接请求首先要进行目的ip地址匹配
-                if (addr[i].addr == sin->sin_addr.s_addr) 
-				{
+                if (addr[i].addr == sin->sin_addr.s_addr) {
                     break;
                 }
             }
@@ -294,8 +287,7 @@ ngx_http_init_connection(ngx_connection_t *c)
     hc->conf_ctx = hc->addr_conf->default_server->ctx;
 
     ctx = ngx_palloc(c->pool, sizeof(ngx_http_log_ctx_t));
-    if (ctx == NULL)
-	{
+    if (ctx == NULL) {
         ngx_http_close_connection(c);
         return;
     }
@@ -881,8 +873,7 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
     servername = SSL_get_servername(ssl_conn, TLSEXT_NAMETYPE_host_name);
 
-    if (servername == NULL) 
-	{
+    if (servername == NULL) {
         return SSL_TLSEXT_ERR_NOACK;
     }
 
@@ -899,15 +890,13 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
     host.data = (u_char *) servername;
 
-    if (ngx_http_validate_host(&host, c->pool, 1) != NGX_OK)
-	{
+    if (ngx_http_validate_host(&host, c->pool, 1) != NGX_OK) {
         return SSL_TLSEXT_ERR_NOACK;
     }
 
     hc = c->data;
 
-    if (ngx_http_find_virtual_server(c, hc->addr_conf->virtual_names, &host, NULL, &cscf) != NGX_OK)
-    {
+    if (ngx_http_find_virtual_server(c, hc->addr_conf->virtual_names, &host, NULL, &cscf) != NGX_OK) {
         return SSL_TLSEXT_ERR_NOACK;
     }
 
@@ -999,8 +988,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
 		//用状态机解析已经接收到的TCP字符流，确认其是否构成完整的HTTP请求行
         rc = ngx_http_parse_request_line(r, r->header_in);
 
-        if (rc == NGX_OK) 
-		{
+        if (rc == NGX_OK) {
 			//表示成功地解析到完整的HTTP请求行
 			//将请求行中的信息如方法名、URI及其参数、HTTP版本等信息设置到ngx_http_request_t结构体的相应成员中
             r->request_line.len = r->request_end - r->request_start;
@@ -1016,34 +1004,29 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 r->http_protocol.len = r->request_end - r->http_protocol.data;
             }
 
-            if (ngx_http_process_request_uri(r) != NGX_OK)
-			{
+            if (ngx_http_process_request_uri(r) != NGX_OK) {
                 return;
             }
 
-            if (r->host_start && r->host_end) 
-			{
+            if (r->host_start && r->host_end) {
 
                 host.len = r->host_end - r->host_start;
                 host.data = r->host_start;
 
                 rc = ngx_http_validate_host(&host, r->pool, 0);
 
-                if (rc == NGX_DECLINED)
-				{
+                if (rc == NGX_DECLINED) {
                     ngx_log_error(NGX_LOG_INFO, c->log, 0, "client sent invalid host in request line");
                     ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
                     return;
                 }
 
-                if (rc == NGX_ERROR) 
-				{
+                if (rc == NGX_ERROR) {
                     ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return;
                 }
 
-                if (ngx_http_set_virtual_server(r, &host) == NGX_ERROR)
-				{
+                if (ngx_http_set_virtual_server(r, &host) == NGX_ERROR) {
                     return;
                 }
 
@@ -1051,11 +1034,9 @@ ngx_http_process_request_line(ngx_event_t *rev)
             }
 
 			//用户请求的版本小于1.0，其处理过程将于HTTP1.0和HTTP1.1完全不同，它不会有接收HTTP头部这一步骤
-            if (r->http_version < NGX_HTTP_VERSION_10) 
-			{
+            if (r->http_version < NGX_HTTP_VERSION_10) {
 				//寻找相应的虚拟主机
-                if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r, &r->headers_in.server) == NGX_ERROR)
-                {
+                if (r->headers_in.server.len == 0 && ngx_http_set_virtual_server(r, &r->headers_in.server) == NGX_ERROR) {
                     return;
                 }
 
@@ -1064,8 +1045,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
             }
 
 			//初始化结构体中存放HTTP头部的一些容器，为下一步接收HTTP头部做好准备
-            if (ngx_list_init(&r->headers_in.headers, r->pool, 20, sizeof(ngx_table_elt_t)) != NGX_OK)
-            {
+            if (ngx_list_init(&r->headers_in.headers, r->pool, 20, sizeof(ngx_table_elt_t)) != NGX_OK) {
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
@@ -1078,8 +1058,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
             return;
         }
 
-        if (rc != NGX_AGAIN) 
-		{
+        if (rc != NGX_AGAIN)  {
 			//分析请求行时遇到错误
             ngx_log_error(NGX_LOG_INFO, c->log, 0, ngx_http_client_errors[rc - NGX_HTTP_CLIENT_ERROR]);
             ngx_http_finalize_request(r, NGX_HTTP_BAD_REQUEST);
@@ -1278,8 +1257,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
                 rv = ngx_http_alloc_large_header_buffer(r, 0);
 
-                if (rv == NGX_ERROR)
-				{
+                if (rv == NGX_ERROR){
                     ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return;
                 }
@@ -1312,8 +1290,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
             n = ngx_http_read_request_header(r);
 
-            if (n == NGX_AGAIN || n == NGX_ERROR)
-			{
+            if (n == NGX_AGAIN || n == NGX_ERROR) {
                 return;
             }
         }
@@ -1341,8 +1318,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             /* a header line has been parsed successfully */
 
             h = ngx_list_push(&r->headers_in.headers);
-            if (h == NULL) 
-			{
+            if (h == NULL) {
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
@@ -1358,25 +1334,21 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             h->value.data[h->value.len] = '\0';
 
             h->lowcase_key = ngx_pnalloc(r->pool, h->key.len);
-            if (h->lowcase_key == NULL) 
-			{
+            if (h->lowcase_key == NULL) {
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
 
-            if (h->key.len == r->lowcase_index)
-			{
+            if (h->key.len == r->lowcase_index) {
                 ngx_memcpy(h->lowcase_key, r->lowcase_header, h->key.len);
             } 
-			else 
-			{
+			else {
                 ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
             }
 
             hh = ngx_hash_find(&cmcf->headers_in_hash, h->hash, h->lowcase_key, h->key.len);
 
-            if (hh && hh->handler(r, h, hh->offset) != NGX_OK) 
-			{
+            if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
                 return;
             }
 
@@ -2148,8 +2120,7 @@ ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host)
 
     rc = ngx_http_find_virtual_server(r->connection, hc->addr_conf->virtual_names, host, r, &cscf);
 
-    if (rc == NGX_ERROR) 
-	{
+    if (rc == NGX_ERROR) {
         ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return NGX_ERROR;
     }
@@ -2194,9 +2165,7 @@ ngx_http_set_virtual_server(ngx_http_request_t *r, ngx_str_t *host)
 
 
 static ngx_int_t
-ngx_http_find_virtual_server(ngx_connection_t *c,
-    ngx_http_virtual_names_t *virtual_names, ngx_str_t *host,
-    ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp)
+ngx_http_find_virtual_server(ngx_connection_t *c, ngx_http_virtual_names_t *virtual_names, ngx_str_t *host, ngx_http_request_t *r, ngx_http_core_srv_conf_t **cscfp)
 {
     ngx_http_core_srv_conf_t  *cscf;
 
@@ -2204,9 +2173,7 @@ ngx_http_find_virtual_server(ngx_connection_t *c,
         return NGX_DECLINED;
     }
 
-    cscf = ngx_hash_find_combined(&virtual_names->names,
-                                  ngx_hash_key(host->data, host->len),
-                                  host->data, host->len);
+    cscf = ngx_hash_find_combined(&virtual_names->names, ngx_hash_key(host->data, host->len), host->data, host->len);
 
     if (cscf) {
         *cscfp = cscf;
@@ -2243,10 +2210,7 @@ ngx_http_find_virtual_server(ngx_connection_t *c,
                     return NGX_OK;
                 }
 
-                ngx_log_error(NGX_LOG_ALERT, c->log, 0,
-                              ngx_regex_exec_n " failed: %i "
-                              "on \"%V\" using \"%V\"",
-                              n, host, &sn[i].regex->name);
+                ngx_log_error(NGX_LOG_ALERT, c->log, 0, ngx_regex_exec_n " failed: %i on \"%V\" using \"%V\"", n, host, &sn[i].regex->name);
 
                 return NGX_ERROR;
             }

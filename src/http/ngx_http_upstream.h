@@ -219,7 +219,10 @@ typedef struct
     ngx_uint_t                       cache_use_stale;
     ngx_uint_t                       cache_methods;
 
+	//开启此功能时，对于相同的请求，同时只允许一个请求发往后端，并根据proxy_cache_key指令的设置在缓存中植入一个新条目。 
+	//其他请求相同条目的请求将一直等待，直到缓存中出现相应的内容，或者锁在proxy_cache_lock_timeout指令设置的超时后被释放。
     ngx_flag_t                       cache_lock;
+	//为proxy_cache_lock指令设置锁的超时
     ngx_msec_t                       cache_lock_timeout;
     ngx_msec_t                       cache_lock_age;
 

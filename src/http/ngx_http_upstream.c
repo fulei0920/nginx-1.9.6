@@ -2442,8 +2442,7 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
     status = u->headers_in.status_n;
 
-    for (un = ngx_http_upstream_next_errors; un->status; un++) 
-	{
+    for (un = ngx_http_upstream_next_errors; un->status; un++) {
 
         if (status != un->status) 
 		{
@@ -2457,9 +2456,7 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
 #if (NGX_HTTP_CACHE)
 
-        if (u->cache_status == NGX_HTTP_CACHE_EXPIRED
-            && (u->conf->cache_use_stale & un->mask))
-        {
+        if (u->cache_status == NGX_HTTP_CACHE_EXPIRED && (u->conf->cache_use_stale & un->mask)) {
             ngx_int_t  rc;
 
             rc = u->reinit_request(r);
@@ -2478,9 +2475,7 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
 #if (NGX_HTTP_CACHE)
 
-    if (status == NGX_HTTP_NOT_MODIFIED
-        && u->cache_status == NGX_HTTP_CACHE_EXPIRED
-        && u->conf->cache_revalidate)
+    if (status == NGX_HTTP_NOT_MODIFIED && u->cache_status == NGX_HTTP_CACHE_EXPIRED && u->conf->cache_revalidate)
     {
         time_t     now, valid;
         ngx_int_t  rc;
@@ -4262,9 +4257,7 @@ ngx_http_upstream_next(ngx_http_request_t *r, ngx_http_upstream_t *u, ngx_uint_t
         {
 #if (NGX_HTTP_CACHE)
 
-            if (u->cache_status == NGX_HTTP_CACHE_EXPIRED
-                && (u->conf->cache_use_stale & ft_type))
-            {
+            if (u->cache_status == NGX_HTTP_CACHE_EXPIRED && (u->conf->cache_use_stale & ft_type)) {
                 ngx_int_t  rc;
 
                 rc = u->reinit_request(r);

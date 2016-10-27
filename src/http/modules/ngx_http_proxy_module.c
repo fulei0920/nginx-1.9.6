@@ -697,7 +697,14 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_min_uses),
       NULL },
-
+	/*
+	语法:	proxy_cache_use_stale error | timeout | invalid_header | updating | http_500 | http_502 | http_503 | http_504 | http_404 | off ...;
+	默认值:	proxy_cache_use_stale off;
+	上下文:	http, server, location
+	如果后端服务器出现状况，nginx是可以使用过期的缓存作为响应的。这条指令就是定义何种条件下允许开启此机制。这条指令的参数与proxy_next_upstream指令的参数相同。
+	此外，updating参数允许nginx在正在更新缓存的情况下使用过期的缓存作为响应。这样做可以使更新缓存数据时，访问源服务器的次数最少。
+	在植入新的缓存条目时，如果想使访问源服务器的次数最少，可以使用proxy_cache_lock指令。
+	*/
     { ngx_string("proxy_cache_use_stale"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_1MORE,
       ngx_conf_set_bitmask_slot,
@@ -719,6 +726,12 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_methods),
       &ngx_http_upstream_cache_method_mask },
 
+	/*
+	语法:	proxy_cache_lock on | off;
+	默认值:	proxy_cache_lock off;
+	上下文:	http, server, location
+	开启此功能时，对于相同的请求，同时只允许一个请求发往后端，并根据proxy_cache_key指令的设置在缓存中植入一个新条目。 其他请求相同条目的请求将一直等待，直到缓存中出现相应的内容，或者锁在proxy_cache_lock_timeout指令设置的超时后被释放。
+	*/
     { ngx_string("proxy_cache_lock"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -726,13 +739,24 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_lock),
       NULL },
 
+	/*
+	语法:	proxy_cache_lock_timeout time;
+	默认值:	proxy_cache_lock_timeout 5s;
+	上下文:	http, server, location
+	为proxy_cache_lock指令设置锁的超时。
+	*/
     { ngx_string("proxy_cache_lock_timeout"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_lock_timeout),
       NULL },
-
+	/*
+	Syntax:	proxy_cache_lock_age time;
+	Default:	proxy_cache_lock_age 5s;
+	Context:	http, server, location
+	If the last request passed to the proxied server for populating a new cache element has not completed for the specified time, one more request may be passed to the proxied server.
+	*/
     { ngx_string("proxy_cache_lock_age"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_msec_slot,
@@ -740,6 +764,13 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       offsetof(ngx_http_proxy_loc_conf_t, upstream.cache_lock_age),
       NULL },
 
+	/*
+	Syntax:	proxy_cache_revalidate on | off;
+	Default:	proxy_cache_revalidate off;
+	Context:	http, server, location
+	Enables revalidation of expired cache items using conditional requests with the “If-Modified-Since” and “If-None-Match” header fields.
+	*/
+	
     { ngx_string("proxy_cache_revalidate"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -3393,14 +3424,10 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_uint_value(conf->upstream.cache_min_uses, prev->upstream.cache_min_uses, 1);
 
-    ngx_conf_merge_bitmask_value(conf->upstream.cache_use_stale,
-                              prev->upstream.cache_use_stale,
-                              (NGX_CONF_BITMASK_SET
-                               |NGX_HTTP_UPSTREAM_FT_OFF));
+    ngx_conf_merge_bitmask_value(conf->upstream.cache_use_stale, prev->upstream.cache_use_stale, (NGX_CONF_BITMASK_SET |NGX_HTTP_UPSTREAM_FT_OFF));
 
     if (conf->upstream.cache_use_stale & NGX_HTTP_UPSTREAM_FT_OFF) {
-        conf->upstream.cache_use_stale = NGX_CONF_BITMASK_SET
-                                         |NGX_HTTP_UPSTREAM_FT_OFF;
+        conf->upstream.cache_use_stale = NGX_CONF_BITMASK_SET |NGX_HTTP_UPSTREAM_FT_OFF;
     }
 
     if (conf->upstream.cache_use_stale & NGX_HTTP_UPSTREAM_FT_ERROR) {
@@ -3425,8 +3452,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->cache_key = prev->cache_key;
     }
 
-    ngx_conf_merge_value(conf->upstream.cache_lock,
-                              prev->upstream.cache_lock, 0);
+    ngx_conf_merge_value(conf->upstream.cache_lock, prev->upstream.cache_lock, 0);
 
     ngx_conf_merge_msec_value(conf->upstream.cache_lock_timeout,
                               prev->upstream.cache_lock_timeout, 5000);
