@@ -460,8 +460,7 @@ ngx_http_get_indexed_variable(ngx_http_request_t *r, ngx_uint_t index)
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
 
     if (cmcf->variables.nelts <= index) {
-        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0,
-                      "unknown variable index: %ui", index);
+        ngx_log_error(NGX_LOG_ALERT, r->connection->log, 0, "unknown variable index: %ui", index);
         return NULL;
     }
 
@@ -471,9 +470,7 @@ ngx_http_get_indexed_variable(ngx_http_request_t *r, ngx_uint_t index)
 
     v = cmcf->variables.elts;
 
-    if (v[index].get_handler(r, &r->variables[index], v[index].data)
-        == NGX_OK)
-    {
+    if (v[index].get_handler(r, &r->variables[index], v[index].data) == NGX_OK) {
         if (v[index].flags & NGX_HTTP_VAR_NOCACHEABLE) {
             r->variables[index].no_cacheable = 1;
         }
