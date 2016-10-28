@@ -615,8 +615,7 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 
     conf->ssl.log = cf->log;
 
-    if (conf->enable) 
-	{
+    if (conf->enable) {
 
         if (conf->certificate.len == 0) 
 		{
@@ -636,29 +635,23 @@ ngx_http_ssl_merge_srv_conf(ngx_conf_t *cf, void *parent, void *child)
 	else 
 	{
 
-        if (conf->certificate.len == 0) 
-		{
+        if (conf->certificate.len == 0) {
             return NGX_CONF_OK;
         }
 
-        if (conf->certificate_key.len == 0)
-		{
-            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                          "no \"ssl_certificate_key\" is defined "
-                          "for certificate \"%V\"", &conf->certificate);
+        if (conf->certificate_key.len == 0) {
+            ngx_log_error(NGX_LOG_EMERG, cf->log, 0,"no \"ssl_certificate_key\" is defined for certificate \"%V\"", &conf->certificate);
             return NGX_CONF_ERROR;
         }
     }
 
-    if (ngx_ssl_create(&conf->ssl, conf->protocols, conf) != NGX_OK)
-	{
+    if (ngx_ssl_create(&conf->ssl, conf->protocols, conf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
 
-    if (SSL_CTX_set_tlsext_servername_callback(conf->ssl.ctx, ngx_http_ssl_servername) == 0)
-    {
+    if (SSL_CTX_set_tlsext_servername_callback(conf->ssl.ctx, ngx_http_ssl_servername) == 0) {
         ngx_log_error(NGX_LOG_WARN, cf->log, 0, "nginx was built with SNI support, however, now it is linked "
             "dynamically to an OpenSSL library which has no tlsext support, therefore SNI is not available");
     }

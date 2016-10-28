@@ -322,13 +322,11 @@ ngx_http_init_connection(ngx_connection_t *c)
 
     	sscf = ngx_http_get_module_srv_conf(hc->conf_ctx, ngx_http_ssl_module);
 
-		if (sscf->enable || hc->addr_conf->ssl)
-		{
+		if (sscf->enable || hc->addr_conf->ssl) {
 
 			c->log->action = "SSL handshaking";
 
-			if (hc->addr_conf->ssl && sscf->ssl.ctx == NULL) 
-			{
+			if (hc->addr_conf->ssl && sscf->ssl.ctx == NULL) {
 				ngx_log_error(NGX_LOG_ERR, c->log, 0, "no \"ssl_certificate\" is defined in server listening on SSL port");
 				ngx_http_close_connection(c);
 				return;
@@ -664,15 +662,13 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http check ssl handshake");
 
-    if (rev->timedout) 
-	{
+    if (rev->timedout) {
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         ngx_http_close_connection(c);
         return;
     }
 
-    if (c->close) 
-	{
+    if (c->close) {
         ngx_http_close_connection(c);
         return;
     }
@@ -685,8 +681,7 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http recv(): %d", n);
 
-    if (n == -1)
-	{
+    if (n == -1) {
         if (err == NGX_EAGAIN)
 		{
             rev->ready = 0;

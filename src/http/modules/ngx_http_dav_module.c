@@ -565,8 +565,7 @@ ngx_http_dav_copy_move_handler(ngx_http_request_t *r)
 #if (NGX_HTTP_SSL)
 
     if (r->connection->ssl) {
-        if (ngx_strncmp(dest->value.data, "https://", sizeof("https://") - 1)
-            != 0)
+        if (ngx_strncmp(dest->value.data, "https://", sizeof("https://") - 1) != 0)
         {
             goto invalid_destination;
         }

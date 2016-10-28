@@ -1306,11 +1306,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf, ngx_http_
 
         /* check the duplicate "default" server for this address:port */
 
-        if (lsopt->default_server) 
-		{
+        if (lsopt->default_server) {
 
-            if (default_server) 
-			{
+            if (default_server) {
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "a duplicate default server for %s", addr[i].opt.addr);
                 return NGX_ERROR;
             }
