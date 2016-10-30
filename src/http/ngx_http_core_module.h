@@ -200,10 +200,13 @@ typedef struct
     ngx_http_phase_engine_t    phase_engine;
 
     ngx_hash_t                 headers_in_hash;
-
+	//´æ´¢±äÁ¿ÃûµÄÉ¢ÁĞ±í£¬ µ÷ÓÃngx_http_get_variable·½·¨»ñÈ¡Î´Ë÷ÒıµÄ±äÁ¿ÖµÊ±¾Í¿¿Õâ¸öÉ¢ÁĞ±íÕÒµ½±äÁ¿µÄ½âÎö·½·¨
+	//ÒÔhash±íµÄĞÎÊ½´æ´¢nginxÄ£¿éÄÚ²¿¶¨ÒåÌá¹©¸øÍâ²¿Ê¹ÓÃµÄ±äÁ¿(³ıÁËÒÔarg_,http_,sent_http_,cookie_,upstream_http_¿ªÍ·µÄ±äÁ¿ºÍÏÔÊ¾ÉèÖÃ²»ÒªhashµÄ±äÁ¿)
     ngx_hash_t                 variables_hash;
-	///´æ´¢ÓÃ»§ÔÚÅäÖÃÎÄ¼şÖĞÊ¹ÓÃµÄ±äÁ¿£
-	///ÓÃ»§ÔÚÅäÖÃÎÄ¼şÀïÊ¹ÓÃµÄ±äÁ¿»áÍ¨¹ıngx_http_get_variable_index()º¯Êı¶øÌí¼Óµ½variablesÖĞ
+	// ´æ´¢Ë÷Òı¹ıµÄ±äÁ¿µÄÊı×é£¬ Í¨³£¸÷Ä£¿éÊ¹ÓÃ±äÁ¿Ê±¶¼»áÔÚNginxÆô¶¯½×¶Î´Ó¸ÃÊı×éÖĞ»ñµÃË÷ÒıºÅ£¬
+	// ÕâÑù£¬ ÔÚNginxÔËĞĞÆÚÄÚ£¬ Èç¹û±äÁ¿ÖµÃ»ÓĞ±»»º´æ£¬ ¾Í»áÍ¨¹ıË÷ÒıºÅÔÚvariablesÊı×éÖĞÕÒµ½±äÁ¿µÄ¶¨Òå£¬ ÔÙ½âÎö³ö±äÁ¿Öµ
+	///ÒÔÊı×éµÄĞÎÊ½´æ´¢ÓÃ»§ÔÚÅäÖÃÎÄ¼şÖĞÊ¹ÓÃµÄ±äÁ¿(Í¨¹ıngx_http_get_variable_index()º¯Êı¶øÌí¼Óµ½variablesÖĞ)
+	///·½±ãÊ¹ÓÃ¸Ã±äÁ¿µÄÄ£¿é(Í¨¹ıÅäÖÃÎÄ¼ş)£¬Í¨¹ıÒÔË÷ÒıµÄ·½Ê½»ñÈ¡¸Ã±äÁ¿
     ngx_array_t                variables;       /* array of ngx_http_variable_t */
     ngx_uint_t                 ncaptures;
 	//±íÊ¾´æ´¢ËùÓĞserver_nameµÄÉ¢ÁĞ±íµÄÉ¢ÁĞÍ°µÄ¸öÊı
@@ -213,7 +216,9 @@ typedef struct
 
     ngx_uint_t                 variables_hash_max_size;
     ngx_uint_t                 variables_hash_bucket_size;
-	///´æ´¢nginxÄ£¿éÄÚ²¿¶¨ÒåÌá¹©¸øÍâ²¿Ê¹ÓÃµÄ±äÁ¿
+	//// ÓÃÓÚ¹¹Ôìvariables_hashÉ¢ÁĞ±íµÄ³õÊ¼½á¹¹Ìå
+	//ÁÙÊ±´æ´¢nginxÄ£¿éÄÚ²¿¶¨ÒåÌá¹©¸øÍâ²¿Ê¹ÓÃµÄ±äÁ¿
+	//ÓÃÓÚ¼ì²éÓÃ»§ÔÚÅäÖÃÎÄ¼şÖĞÊ¹ÓÃµÄ±äÁ¿ÊÇ·ñ¶¼ÒÑ¾­±»¶¨Òå
     ngx_hash_keys_arrays_t    *variables_keys;  /* ÒÔnameÎªkey£¬ÒÔngx_http_variable_tÎªvalueµÄ±í*/
 
     ngx_array_t               *ports;			//´æ·Å×Å¸Ãhttp{}ÅäÖÃ¿éÏÂ¼àÌıµÄËùÓĞngx_http_conf_port_t¶Ë¿Ú

@@ -491,6 +491,9 @@ struct ngx_http_request_s
 	//如果access_code为0，则表示请求具备访问权限，反之则说明请求不具备访问权限
     ngx_uint_t                        access_code;
 
+	//数组存储所有序列化了的变量值， 数组下标即为索引号
+	//变量值如果可以被缓存， 那么它一定只能缓存在每一个HTTP请求内， 对于Nginx这样一
+	//个Web服务器来说， 不可能为不同的HTTP请求缓存同一个值。 因此variables缓存的变量值
     ngx_http_variable_value_t        *variables;		/*array of ngx_http_variable_value_t*/
 
 #if (NGX_PCRE)

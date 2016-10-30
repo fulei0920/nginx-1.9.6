@@ -784,7 +784,7 @@ ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_ui
                 continue;
             }
 
-            if (ngx_strncmp(key->data, name[i].data, last) == 0) {   //相同的变量名，返回NGX_BUSY
+            if (ngx_strncmp(key->data, name[i].data, last) == 0) {   //相同的key，返回NGX_BUSY
                 return NGX_BUSY;
             }
         }

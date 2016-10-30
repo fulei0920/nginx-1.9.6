@@ -310,8 +310,7 @@ static ngx_http_variable_t  ngx_http_core_variables[] =
     { ngx_string("tcpinfo_snd_cwnd"), NULL, ngx_http_variable_tcpinfo,
       2, NGX_HTTP_VAR_NOCACHEABLE, 0 },
 
-    { ngx_string("tcpinfo_rcv_space"), NULL, ngx_http_variable_tcpinfo,
-      3, NGX_HTTP_VAR_NOCACHEABLE, 0 },
+    { ngx_string("tcpinfo_rcv_space"), NULL, ngx_http_variable_tcpinfo, 3, NGX_HTTP_VAR_NOCACHEABLE, 0 },
 #endif
 
     { ngx_null_string, NULL, NULL, 0, 0, 0 }
@@ -323,7 +322,7 @@ ngx_http_variable_value_t  ngx_http_variable_true_value = ngx_http_variable("1")
 
 
 /*
-创建变量
+定义变量
 name -- 创建的变量的变量名
 返回创建的变量名对应的变量(ngx_http_variable_t -- nginx中变量以该结构体表示)
 */
@@ -343,7 +342,7 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
 
-	//检测变量是否已经已创建
+	//检测变量是否已经已定义
     key = cmcf->variables_keys->keys.elts;
     for (i = 0; i < cmcf->variables_keys->keys.nelts; i++) {
         if (name->len != key[i].key.len || ngx_strncasecmp(name->data, key[i].key.data, name->len) != 0) {
@@ -352,12 +351,12 @@ ngx_http_add_variable(ngx_conf_t *cf, ngx_str_t *name, ngx_uint_t flags)
 
         v = key[i].value;
 
-        if (!(v->flags & NGX_HTTP_VAR_CHANGEABLE)) {  //变量已存在，且不可修改，返回错误
+        if (!(v->flags & NGX_HTTP_VAR_CHANGEABLE)) {  //变量已定义，且不可修改，返回错误
             ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the duplicate \"%V\" variable", name);
             return NULL;
         }
 
-        return v;  //变量已存在，且可修改，返回该变量
+        return v;  //变量已定义，且可修改，返回该变量
     }
 
     v = ngx_palloc(cf->pool, sizeof(ngx_http_variable_t));
@@ -2421,7 +2420,7 @@ ngx_http_variables_add_core_vars(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-	//设定内存池
+	//设定variables_keys的内存池
     cmcf->variables_keys->pool = cf->pool;
     cmcf->variables_keys->temp_pool = cf->pool;
 	
@@ -2460,6 +2459,12 @@ ngx_http_variables_add_core_vars(ngx_conf_t *cf)
 //那么这个变量就不能被找到，因而会被认为不存在。
 
 /*检查用户在配置文件中使用的变量是否合法(都已经被定义)*/
+
+/*
+首先要确保索引了的变量都是合法的： 索引过的变量必须是
+定义过的； 其次， 使用索引变量的模块只知道索引某个变量名， 此时需要把相应的变量值解
+析方法等属性也设置好
+*/
 ngx_int_t
 ngx_http_variables_init_vars(ngx_conf_t *cf)
 {
@@ -2552,6 +2557,7 @@ ngx_http_variables_init_vars(ngx_conf_t *cf)
     }
 
 
+	//将除表15-1的5类变量以外的、 没有显式设置不要hash的变量生成到一个静态的开散列表中
     for (n = 0; n < cmcf->variables_keys->keys.nelts; n++) {
         av = key[n].value;
 

@@ -39,8 +39,7 @@ typedef struct {
 } ngx_http_map_ctx_t;
 
 
-static int ngx_libc_cdecl ngx_http_map_cmp_dns_wildcards(const void *one,
-    const void *two);
+static int ngx_libc_cdecl ngx_http_map_cmp_dns_wildcards(const void *one, const void *two);
 static void *ngx_http_map_create_conf(ngx_conf_t *cf);
 static char *ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_map(ngx_conf_t *cf, ngx_command_t *dummy, void *conf);
@@ -187,8 +186,7 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         mcf->hash_bucket_size = ngx_cacheline_size;
 
     } else {
-        mcf->hash_bucket_size = ngx_align(mcf->hash_bucket_size,
-                                          ngx_cacheline_size);
+        mcf->hash_bucket_size = ngx_align(mcf->hash_bucket_size, ngx_cacheline_size);
     }
 
     map = ngx_pcalloc(cf->pool, sizeof(ngx_http_map_ctx_t));
@@ -211,8 +209,7 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     name = value[2];
 
     if (name.data[0] != '$') {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid variable name \"%V\"", &name);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid variable name \"%V\"", &name);
         return NGX_CONF_ERROR;
     }
 
@@ -246,8 +243,7 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_array_init(&ctx.var_values, cf->pool, 2,
-                       sizeof(ngx_http_variable_value_t))
+    if (ngx_array_init(&ctx.var_values, cf->pool, 2, sizeof(ngx_http_variable_value_t))
         != NGX_OK)
     {
         ngx_destroy_pool(pool);
@@ -546,8 +542,7 @@ found:
         value[0].data++;
     }
 
-    rv = ngx_hash_add_key(&ctx->keys, &value[0], var,
-                          (ctx->hostnames) ? NGX_HASH_WILDCARD_KEY : 0);
+    rv = ngx_hash_add_key(&ctx->keys, &value[0], var, (ctx->hostnames) ? NGX_HASH_WILDCARD_KEY : 0);
 
     if (rv == NGX_OK) {
         return NGX_CONF_OK;

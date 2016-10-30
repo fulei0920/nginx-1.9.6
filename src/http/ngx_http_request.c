@@ -549,8 +549,7 @@ ngx_http_create_request(ngx_connection_t *c)
 
 	//创建ngx_http_request_t结构体的内存池
     pool = ngx_create_pool(cscf->request_pool_size, c->log);
-    if (pool == NULL)
-	{
+    if (pool == NULL) {
         return NULL;
     }
 
@@ -595,16 +594,15 @@ ngx_http_create_request(ngx_connection_t *c)
 
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
 
+	//缓存变量值的variables数组下标， 与索引化的、 表示变量名的数组cmcf->variables下标是一一对应的
     r->variables = ngx_pcalloc(r->pool, cmcf->variables.nelts * sizeof(ngx_http_variable_value_t));
-    if (r->variables == NULL) 
-	{
+    if (r->variables == NULL) {
         ngx_destroy_pool(r->pool);
         return NULL;
     }
 
 #if (NGX_HTTP_SSL)
-    if (c->ssl) 
-	{
+    if (c->ssl) {
         r->main_filter_need_in_memory = 1;
     }
 #endif

@@ -12,7 +12,14 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
+/*
+变量由变量名和变量值组成。 对于同一个变量名， 随着场景的不同会具有多个不同的
+值， 如果认为变量值和变量名一一对应从而使用一个结构体表示， 毫无疑问会有大量内存浪
+费在相同的变量名的存储上。 因此， Nginx中有一个保存变量名的结构体， 叫做
+ngx_http_variable_t， 和一个保存变量值的结构体，叫做
 
+
+*/
 
 typedef ngx_variable_value_t  ngx_http_variable_value_t;
 
@@ -36,7 +43,9 @@ typedef ngx_int_t (*ngx_http_get_variable_pt) (ngx_http_request_t *r, ngx_http_v
 //表示这个变量不需要被hash
 #define NGX_HTTP_VAR_NOHASH       8
 
-//表示变量本身
+//表示变量名
+//指定一个变量名字符串，以及解析出相应变量值的方法
+//所有的变量名定义ngx_http_variable_t都会保存在全局唯一的ngx_http_core_main_conf_t对象中
 struct ngx_http_variable_s 
 {
 	//变量名称
@@ -87,10 +96,8 @@ typedef struct {
 } ngx_http_map_regex_t;
 
 
-ngx_http_regex_t *ngx_http_regex_compile(ngx_conf_t *cf,
-    ngx_regex_compile_t *rc);
-ngx_int_t ngx_http_regex_exec(ngx_http_request_t *r, ngx_http_regex_t *re,
-    ngx_str_t *s);
+ngx_http_regex_t *ngx_http_regex_compile(ngx_conf_t *cf, ngx_regex_compile_t *rc);
+ngx_int_t ngx_http_regex_exec(ngx_http_request_t *r, ngx_http_regex_t *re, ngx_str_t *s);
 
 #endif
 
@@ -104,8 +111,7 @@ typedef struct {
 } ngx_http_map_t;
 
 
-void *ngx_http_map_find(ngx_http_request_t *r, ngx_http_map_t *map,
-    ngx_str_t *match);
+void *ngx_http_map_find(ngx_http_request_t *r, ngx_http_map_t *map, ngx_str_t *match);
 
 
 ngx_int_t ngx_http_variables_add_core_vars(ngx_conf_t *cf);

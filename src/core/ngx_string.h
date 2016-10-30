@@ -27,19 +27,23 @@ typedef struct
 } ngx_keyval_t;
 
 //表示变量值
+//它既有可能是在读取变量值时被创建出来， 也有可能是在初始化一个HTTP请求时就预创建在ngx_http_request_t对象中， 
+//这将视描述变量名的ngx_http_variable_t结构体成员而定。
 typedef struct 
 {
-	//变量值数据长度
+	//变量值必须是在一段连续内存中的字符串， 值的长度就是len成员
     unsigned    len:28;
-	//该变量值是否可用
+	//valid为1时表示当前这个变量值已经解析过， 且数据是可用的
     unsigned    valid:1;
-	//该变量值是否不能缓存
+	// no_cacheable为1时表示变量值不可以被缓存， 它与ngx_http_variable_t结构体flags成员里的
+	//NGX_HTTP_VAR_NOCACHEABLE标志位是相关的， 即设置这个标志位后 no_cacheable就会为 1
     unsigned    no_cacheable:1;
-	//对应变量不存在
+	//not_found为1表示当前这个变量值已经解析过， 但没有解析到相应的值
     unsigned    not_found:1;
 	//变量值内容中的特殊字符是否进行了转义
+	//仅由ngx_http_log_module模块使用， 用于日志格式的字符转义， 其他模块通常忽略这个字段
     unsigned    escape:1;
-	//变量值的数据
+	//data就指向变量值所在内存的起始地址， 与len成员配合使用
     u_char     *data;
 } ngx_variable_value_t;
 

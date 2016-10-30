@@ -137,8 +137,7 @@ ngx_uint_t ngx_hash_strlow(u_char *dst, u_char *src, size_t n);
 
 
 ngx_int_t ngx_hash_keys_array_init(ngx_hash_keys_arrays_t *ha, ngx_uint_t type);
-ngx_int_t ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key,
-    void *value, ngx_uint_t flags);
+ngx_int_t ngx_hash_add_key(ngx_hash_keys_arrays_t *ha, ngx_str_t *key, void *value, ngx_uint_t flags);
 
 
 #endif /* _NGX_HASH_H_INCLUDED_ */
