@@ -19,13 +19,13 @@ typedef struct {
 typedef struct {
     ngx_hash_keys_arrays_t      keys;
 
-    ngx_array_t                *values_hash;
-    ngx_array_t                 var_values;
+    ngx_array_t                *values_hash;	//存储字符串类型的value值(以hash表的形式组织)
+    ngx_array_t                 var_values;  	//存储变量类型的value值(存储变量对应的index)
 #if (NGX_PCRE)
-    ngx_array_t                 regexes;
+    ngx_array_t                 regexes;		//存储正则表达式，及其对应的变量值
 #endif
 
-    ngx_http_variable_value_t  *default_value;
+    ngx_http_variable_value_t  *default_value;	//默认的变量值
     ngx_conf_t                 *cf;
     ngx_uint_t                  hostnames;      /* unsigned  hostnames:1 */
 } ngx_http_map_conf_ctx_t;
@@ -33,9 +33,9 @@ typedef struct {
 
 typedef struct {
     ngx_http_map_t              map;
-    ngx_http_complex_value_t    value;
-    ngx_http_variable_value_t  *default_value;
-    ngx_uint_t                  hostnames;      /* unsigned  hostnames:1 */
+    ngx_http_complex_value_t    value;				///存储变量名的关联变量名
+    ngx_http_variable_value_t  *default_value;		//变量的默认变量值
+    ngx_uint_t                  hostnames;      	/* unsigned  hostnames:1 */
 } ngx_http_map_ctx_t;
 
 
@@ -53,14 +53,25 @@ static ngx_command_t  ngx_http_map_commands[] = {
       NGX_HTTP_MAIN_CONF_OFFSET,
       0,
       NULL },
+    /*
+	语法:	map_hash_max_size size;
+	默认值:	map_hash_max_size 2048;
+	上下文:	http
+	设置 map 变量哈稀表大小的上限。
 
+	*/
     { ngx_string("map_hash_max_size"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
       NGX_HTTP_MAIN_CONF_OFFSET,
       offsetof(ngx_http_map_conf_t, hash_max_size),
       NULL },
-
+	/*
+	语法:	map_hash_bucket_size size;
+	默认值:	map_hash_bucket_size 32|64|128;
+	上下文:	http
+	为 map 的变量哈稀表设置桶大小。 默认值取决于处理器cache line的大小。
+	*/
     { ngx_string("map_hash_bucket_size"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
@@ -104,16 +115,14 @@ ngx_module_t  ngx_http_map_module = {
 
 
 static ngx_int_t
-ngx_http_map_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
-    uintptr_t data)
+ngx_http_map_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
     ngx_http_map_ctx_t  *map = (ngx_http_map_ctx_t *) data;
 
     ngx_str_t                   val;
     ngx_http_variable_value_t  *value;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http map started");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http map started");
 
     if (ngx_http_complex_value(r, &map->value, &val) != NGX_OK) {
         return NGX_ERROR;
@@ -139,8 +148,7 @@ ngx_http_map_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
 
     *v = *value;
 
-    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http map: \"%v\" \"%v\"", &val, v);
+    ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http map: \"%v\" \"%v\"", &val, v);
 
     return NGX_OK;
 }
@@ -243,17 +251,13 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (ngx_array_init(&ctx.var_values, cf->pool, 2, sizeof(ngx_http_variable_value_t))
-        != NGX_OK)
-    {
+    if (ngx_array_init(&ctx.var_values, cf->pool, 2, sizeof(ngx_http_variable_value_t)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NGX_CONF_ERROR;
     }
 
 #if (NGX_PCRE)
-    if (ngx_array_init(&ctx.regexes, cf->pool, 2, sizeof(ngx_http_map_regex_t))
-        != NGX_OK)
-    {
+    if (ngx_array_init(&ctx.regexes, cf->pool, 2, sizeof(ngx_http_map_regex_t)) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NGX_CONF_ERROR;
     }
@@ -278,8 +282,7 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return rv;
     }
 
-    map->default_value = ctx.default_value ? ctx.default_value:
-                                             &ngx_http_variable_null_value;
+    map->default_value = ctx.default_value ? ctx.default_value: &ngx_http_variable_null_value;
 
     map->hostnames = ctx.hostnames;
 
@@ -293,9 +296,7 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         hash.hash = &map->map.hash.hash;
         hash.temp_pool = NULL;
 
-        if (ngx_hash_init(&hash, ctx.keys.keys.elts, ctx.keys.keys.nelts)
-            != NGX_OK)
-        {
+        if (ngx_hash_init(&hash, ctx.keys.keys.elts, ctx.keys.keys.nelts) != NGX_OK) {
             ngx_destroy_pool(pool);
             return NGX_CONF_ERROR;
         }
@@ -303,17 +304,12 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     if (ctx.keys.dns_wc_head.nelts) {
 
-        ngx_qsort(ctx.keys.dns_wc_head.elts,
-                  (size_t) ctx.keys.dns_wc_head.nelts,
-                  sizeof(ngx_hash_key_t), ngx_http_map_cmp_dns_wildcards);
+        ngx_qsort(ctx.keys.dns_wc_head.elts, (size_t) ctx.keys.dns_wc_head.nelts, sizeof(ngx_hash_key_t), ngx_http_map_cmp_dns_wildcards);
 
         hash.hash = NULL;
         hash.temp_pool = pool;
 
-        if (ngx_hash_wildcard_init(&hash, ctx.keys.dns_wc_head.elts,
-                                   ctx.keys.dns_wc_head.nelts)
-            != NGX_OK)
-        {
+        if (ngx_hash_wildcard_init(&hash, ctx.keys.dns_wc_head.elts, ctx.keys.dns_wc_head.nelts) != NGX_OK) {
             ngx_destroy_pool(pool);
             return NGX_CONF_ERROR;
         }
@@ -323,17 +319,12 @@ ngx_http_map_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     if (ctx.keys.dns_wc_tail.nelts) {
 
-        ngx_qsort(ctx.keys.dns_wc_tail.elts,
-                  (size_t) ctx.keys.dns_wc_tail.nelts,
-                  sizeof(ngx_hash_key_t), ngx_http_map_cmp_dns_wildcards);
+        ngx_qsort(ctx.keys.dns_wc_tail.elts, (size_t) ctx.keys.dns_wc_tail.nelts, sizeof(ngx_hash_key_t), ngx_http_map_cmp_dns_wildcards);
 
         hash.hash = NULL;
         hash.temp_pool = pool;
 
-        if (ngx_hash_wildcard_init(&hash, ctx.keys.dns_wc_tail.elts,
-                                   ctx.keys.dns_wc_tail.nelts)
-            != NGX_OK)
-        {
+        if (ngx_hash_wildcard_init(&hash, ctx.keys.dns_wc_tail.elts, ctx.keys.dns_wc_tail.nelts) != NGX_OK) {
             ngx_destroy_pool(pool);
             return NGX_CONF_ERROR;
         }
@@ -381,22 +372,23 @@ ngx_http_map(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
 
     value = cf->args->elts;
 
-    if (cf->args->nelts == 1
-        && ngx_strcmp(value[0].data, "hostnames") == 0)
-    {
+    if (cf->args->nelts == 1 && ngx_strcmp(value[0].data, "hostnames") == 0) {
         ctx->hostnames = 1;
         return NGX_CONF_OK;
 
     } else if (cf->args->nelts != 2) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid number of the map parameters");
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid number of the map parameters");
         return NGX_CONF_ERROR;
     }
 
+	//解析特殊的inclue
     if (ngx_strcmp(value[0].data, "include") == 0) {
         return ngx_conf_include(cf, dummy, conf);
     }
 
+	//解析第二个参数
+	//变量类型的值 -- 将索引存储到var_values中
+	//字符串类型的值 -- 以该字符串为key，存储到values_hash
     if (value[1].data[0] == '$') {
         name = value[1];
         name.len--;
@@ -453,10 +445,7 @@ ngx_http_map(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
         }
 
     } else {
-        if (ngx_array_init(&ctx->values_hash[key], cf->pool, 4,
-                           sizeof(ngx_http_variable_value_t *))
-            != NGX_OK)
-        {
+        if (ngx_array_init(&ctx->values_hash[key], cf->pool, 4, sizeof(ngx_http_variable_value_t *)) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
     }
@@ -484,12 +473,13 @@ ngx_http_map(ngx_conf_t *cf, ngx_command_t *dummy, void *conf)
     *vp = var;
 
 found:
+	//解析第一个参数
 
+	//如果是特殊的default字符串，将对应的value存储到default_value
     if (ngx_strcmp(value[0].data, "default") == 0) {
 
         if (ctx->default_value) {
-            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                               "duplicate default map parameter");
+            ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "duplicate default map parameter");
             return NGX_CONF_ERROR;
         }
 
@@ -499,7 +489,7 @@ found:
     }
 
 #if (NGX_PCRE)
-
+	//如果是正则表达式字符串，将对应的key-value 存储到regexes中
     if (value[0].len && value[0].data[0] == '~') {
         ngx_regex_compile_t    rc;
         ngx_http_map_regex_t  *regex;
@@ -536,7 +526,7 @@ found:
     }
 
 #endif
-
+	//一般的字符串，存储到keys(hash表辅助结构)中
     if (value[0].len && value[0].data[0] == '\\') {
         value[0].len--;
         value[0].data++;
@@ -549,13 +539,11 @@ found:
     }
 
     if (rv == NGX_DECLINED) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "invalid hostname or wildcard \"%V\"", &value[0]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid hostname or wildcard \"%V\"", &value[0]);
     }
 
     if (rv == NGX_BUSY) {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                           "conflicting parameter \"%V\"", &value[0]);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "conflicting parameter \"%V\"", &value[0]);
     }
 
     return NGX_CONF_ERROR;

@@ -11,8 +11,11 @@
 
 
 typedef struct {
+	// 保存着所属location下的所有编译后的脚本（ 按照顺序）
     ngx_array_t  *codes;        /* uintptr_t */
 
+	// 每一个请求的ngx_http_script_engine_t脚本引擎中都会有一个变量值栈，
+	// 即上面提到的ngx_http_variable_value_t *sp， 它的大小就是stack_size
     ngx_uint_t    stack_size;
 
     ngx_flag_t    log;
@@ -200,8 +203,7 @@ ngx_http_rewrite_handler(ngx_http_request_t *r)
 
 
 static ngx_int_t
-ngx_http_rewrite_var(ngx_http_request_t *r, ngx_http_variable_value_t *v,
-    uintptr_t data)
+ngx_http_rewrite_var(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
     ngx_http_variable_t          *var;
     ngx_http_core_main_conf_t    *cmcf;
@@ -224,8 +226,7 @@ ngx_http_rewrite_var(ngx_http_request_t *r, ngx_http_variable_value_t *v,
      * so the handler is called only if the variable is not initialized
      */
 
-    ngx_log_error(NGX_LOG_WARN, r->connection->log, 0,
-                  "using uninitialized \"%V\" variable", &var[data].name);
+    ngx_log_error(NGX_LOG_WARN, r->connection->log, 0, "using uninitialized \"%V\" variable", &var[data].name);
 
     *v = ngx_http_variable_null_value;
 
@@ -869,8 +870,7 @@ ngx_http_rewrite_if_condition(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf)
 
 
 static char *
-ngx_http_rewrite_variable(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf,
-    ngx_str_t *value)
+ngx_http_rewrite_variable(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf, ngx_str_t *value)
 {
     ngx_int_t                    index;
     ngx_http_script_var_code_t  *var_code;
@@ -944,8 +944,7 @@ ngx_http_rewrite_set(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     if (v->set_handler) {
-        vhcode = ngx_http_script_start_code(cf->pool, &lcf->codes,
-                                   sizeof(ngx_http_script_var_handler_code_t));
+        vhcode = ngx_http_script_start_code(cf->pool, &lcf->codes, sizeof(ngx_http_script_var_handler_code_t));
         if (vhcode == NULL) {
             return NGX_CONF_ERROR;
         }
@@ -957,8 +956,7 @@ ngx_http_rewrite_set(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_OK;
     }
 
-    vcode = ngx_http_script_start_code(cf->pool, &lcf->codes,
-                                       sizeof(ngx_http_script_var_code_t));
+    vcode = ngx_http_script_start_code(cf->pool, &lcf->codes, sizeof(ngx_http_script_var_code_t));
     if (vcode == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -971,8 +969,7 @@ ngx_http_rewrite_set(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
 static char *
-ngx_http_rewrite_value(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf,
-    ngx_str_t *value)
+ngx_http_rewrite_value(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf, ngx_str_t *value)
 {
     ngx_int_t                              n;
     ngx_http_script_compile_t              sc;
@@ -982,8 +979,7 @@ ngx_http_rewrite_value(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf,
     n = ngx_http_script_variables_count(value);
 
     if (n == 0) {
-        val = ngx_http_script_start_code(cf->pool, &lcf->codes,
-                                         sizeof(ngx_http_script_value_code_t));
+        val = ngx_http_script_start_code(cf->pool, &lcf->codes, sizeof(ngx_http_script_value_code_t));
         if (val == NULL) {
             return NGX_CONF_ERROR;
         }
@@ -1002,8 +998,7 @@ ngx_http_rewrite_value(ngx_conf_t *cf, ngx_http_rewrite_loc_conf_t *lcf,
         return NGX_CONF_OK;
     }
 
-    complex = ngx_http_script_start_code(cf->pool, &lcf->codes,
-                                 sizeof(ngx_http_script_complex_value_code_t));
+    complex = ngx_http_script_start_code(cf->pool, &lcf->codes, sizeof(ngx_http_script_complex_value_code_t));
     if (complex == NULL) {
         return NGX_CONF_ERROR;
     }

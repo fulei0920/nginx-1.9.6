@@ -21,8 +21,7 @@ static ngx_int_t ngx_http_variable_request_get_size(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 static void ngx_http_variable_request_set_size(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
-static ngx_int_t ngx_http_variable_header(ngx_http_request_t *r,
-    ngx_http_variable_value_t *v, uintptr_t data);
+static ngx_int_t ngx_http_variable_header(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data);
 
 static ngx_int_t ngx_http_variable_cookies(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
@@ -699,10 +698,12 @@ static ngx_int_t
 ngx_http_variable_header(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
     ngx_table_elt_t  *h;
-
+	
+	//data偏移量就是解析过的ngx_table_elt_t类型的成员， 在ngx_http_request_t结构体中的偏移量
     h = *(ngx_table_elt_t **) ((char *) r + data);
 
     if (h) {
+		// 将len和data指向字符串值
         v->len = h->value.len;
         v->valid = 1;
         v->no_cacheable = 0;
@@ -807,28 +808,21 @@ ngx_http_variable_headers_internal(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_variable_unknown_header_in(ngx_http_request_t *r,
-    ngx_http_variable_value_t *v, uintptr_t data)
+ngx_http_variable_unknown_header_in(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
-    return ngx_http_variable_unknown_header(v, (ngx_str_t *) data,
-                                            &r->headers_in.headers.part,
-                                            sizeof("http_") - 1);
+    return ngx_http_variable_unknown_header(v, (ngx_str_t *) data, &r->headers_in.headers.part, sizeof("http_") - 1);
 }
 
 
 static ngx_int_t
-ngx_http_variable_unknown_header_out(ngx_http_request_t *r,
-    ngx_http_variable_value_t *v, uintptr_t data)
+ngx_http_variable_unknown_header_out(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
-    return ngx_http_variable_unknown_header(v, (ngx_str_t *) data,
-                                            &r->headers_out.headers.part,
-                                            sizeof("sent_http_") - 1);
+    return ngx_http_variable_unknown_header(v, (ngx_str_t *) data, &r->headers_out.headers.part, sizeof("sent_http_") - 1);
 }
 
-
+//遍历ngx_list_t链表类型的headers数组， 找到符合变量名的头部后， 将其值作为变量值返回
 ngx_int_t
-ngx_http_variable_unknown_header(ngx_http_variable_value_t *v, ngx_str_t *var,
-    ngx_list_part_t *part, size_t prefix)
+ngx_http_variable_unknown_header(ngx_http_variable_value_t *v, ngx_str_t *var, ngx_list_part_t *part, size_t prefix)
 {
     u_char            ch;
     ngx_uint_t        i, n;
@@ -1600,12 +1594,12 @@ ngx_http_variable_bytes_sent(ngx_http_request_t *r,
 
 
 static ngx_int_t
-ngx_http_variable_body_bytes_sent(ngx_http_request_t *r,
-    ngx_http_variable_value_t *v, uintptr_t data)
+ngx_http_variable_body_bytes_sent(ngx_http_request_t *r, ngx_http_variable_value_t *v, uintptr_t data)
 {
     off_t    sent;
     u_char  *p;
 
+	//发送的总响应值减去响应头部即可
     sent = r->connection->sent - r->header_size;
 
     if (sent < 0) {

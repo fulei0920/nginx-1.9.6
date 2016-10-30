@@ -13,11 +13,12 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-
+//同一段脚本被编译进Nginx中， 在不同的请求里执行时效果是完全不同的， 
+//所以， 每一个请求都必须有其独有的脚本执行上下文， 或者称为脚本引擎
 typedef struct {
-    u_char                     *ip;
+    u_char                     *ip;				// 指向待执行的脚本指令
     u_char                     *pos;
-    ngx_http_variable_value_t  *sp;
+    ngx_http_variable_value_t  *sp;				// 变量值构成的栈
 
     ngx_str_t                   buf;
     ngx_str_t                   line;
@@ -31,8 +32,8 @@ typedef struct {
     unsigned                    is_args:1;
     unsigned                    log:1;
 
-    ngx_int_t                   status;
-    ngx_http_request_t         *request;
+    ngx_int_t                   status;			// 脚本引擎执行状态
+    ngx_http_request_t         *request;		// 指向当前脚本引擎所属的HTTP请求
 } ngx_http_script_engine_t;
 
 
@@ -93,9 +94,11 @@ typedef struct {
     uintptr_t                   len;
 } ngx_http_script_copy_code_t;
 
-
+//表示外部变量名的脚本代码
 typedef struct {
     ngx_http_script_code_pt     code;
+	// 表示ngx_http_request_t中被索引、 缓存的变量值数组variables中， 当前解析的、
+	//set设置的外部变量所在的索引号
     uintptr_t                   index;
 } ngx_http_script_var_code_t;
 
@@ -197,10 +200,14 @@ typedef struct {
 } ngx_http_script_complex_value_code_t;
 
 
+//表还变量指定脚本代码
 typedef struct {
     ngx_http_script_code_pt     code;
+	// 若外部变量值是整数， 则转为整型号赋给value， 否则value为0
     uintptr_t                   value;
+	// 外部变量值（set的第2个参数） 的长度
     uintptr_t                   text_len;
+	// 外部变量值的起始地址
     uintptr_t                   text_data;
 } ngx_http_script_value_code_t;
 

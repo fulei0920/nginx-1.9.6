@@ -124,8 +124,7 @@ ngx_http_compile_complex_value(ngx_http_compile_complex_value_t *ccv)
         }
     }
 
-    if ((v->len == 0 || v->data[0] != '$') && (ccv->conf_prefix || ccv->root_prefix))
-    {
+    if ((v->len == 0 || v->data[0] != '$') && (ccv->conf_prefix || ccv->root_prefix)) {
         if (ngx_conf_full_name(ccv->cf->cycle, v, ccv->conf_prefix) != NGX_OK) {
             return NGX_ERROR;
         }
@@ -307,10 +306,8 @@ ngx_http_script_variables_count(ngx_str_t *value)
 {
     ngx_uint_t  i, n;
 
-    for (n = 0, i = 0; i < value->len; i++) 
-	{
-        if (value->data[i] == '$')
-		{
+    for (n = 0, i = 0; i < value->len; i++) {
+        if (value->data[i] == '$') {
             n++;
         }
     }
@@ -1645,8 +1642,7 @@ ngx_http_script_value_code(ngx_http_script_engine_t *e)
     e->sp->len = code->text_len;
     e->sp->data = (u_char *) code->text_data;
 
-    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, e->request->connection->log, 0,
-                   "http script value: \"%v\"", e->sp);
+    ngx_log_debug1(NGX_LOG_DEBUG_HTTP, e->request->connection->log, 0, "http script value: \"%v\"", e->sp);
 
     e->sp++;
 }
@@ -1693,8 +1689,7 @@ ngx_http_script_var_set_handler_code(ngx_http_script_engine_t *e)
 {
     ngx_http_script_var_handler_code_t  *code;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, e->request->connection->log, 0,
-                   "http script set var handler");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, e->request->connection->log, 0, "http script set var handler");
 
     code = (ngx_http_script_var_handler_code_t *) e->ip;
 

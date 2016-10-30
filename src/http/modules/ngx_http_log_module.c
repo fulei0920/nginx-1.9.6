@@ -233,10 +233,8 @@ static ngx_http_log_var_t  ngx_http_log_vars[] = {
                           ngx_http_log_request_time },
     { ngx_string("status"), NGX_INT_T_LEN, ngx_http_log_status },
     { ngx_string("bytes_sent"), NGX_OFF_T_LEN, ngx_http_log_bytes_sent },
-    { ngx_string("body_bytes_sent"), NGX_OFF_T_LEN,
-                          ngx_http_log_body_bytes_sent },
-    { ngx_string("request_length"), NGX_SIZE_T_LEN,
-                          ngx_http_log_request_length },
+    { ngx_string("body_bytes_sent"), NGX_OFF_T_LEN, ngx_http_log_body_bytes_sent },
+    { ngx_string("request_length"), NGX_SIZE_T_LEN, ngx_http_log_request_length },
 
     { ngx_null_string, 0, NULL }
 };
