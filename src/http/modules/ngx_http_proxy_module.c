@@ -730,7 +730,8 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
 	语法:	proxy_cache_lock on | off;
 	默认值:	proxy_cache_lock off;
 	上下文:	http, server, location
-	开启此功能时，对于相同的请求，同时只允许一个请求发往后端，并根据proxy_cache_key指令的设置在缓存中植入一个新条目。 其他请求相同条目的请求将一直等待，直到缓存中出现相应的内容，或者锁在proxy_cache_lock_timeout指令设置的超时后被释放。
+	开启此功能时，对于相同的请求，同时只允许一个请求发往后端，并根据proxy_cache_key指令的设置在缓存中植入一个新条目。 
+	其他请求相同条目的请求将一直等待，直到缓存中出现相应的内容，或者锁在proxy_cache_lock_timeout指令设置的超时后被释放。
 	*/
     { ngx_string("proxy_cache_lock"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,

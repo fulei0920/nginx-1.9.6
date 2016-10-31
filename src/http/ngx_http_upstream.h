@@ -215,7 +215,7 @@ typedef struct
     ngx_http_complex_value_t        *cache_value;
 
 	//响应被缓存的最小请求次数
-    ngx_uint_t                       cache_min_uses;   
+    ngx_uint_t                       cache_min_uses;
     ngx_uint_t                       cache_use_stale;
     ngx_uint_t                       cache_methods;
 

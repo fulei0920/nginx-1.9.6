@@ -1437,15 +1437,9 @@ ngx_http_file_cache_update_header(ngx_http_request_t *r)
         goto done;
     }
 
-    if (h.version != NGX_HTTP_CACHE_VERSION
-        || h.last_modified != c->last_modified
-        || h.crc32 != c->crc32
-        || h.header_start != c->header_start
-        || h.body_start != c->body_start)
-    {
-        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http file cache \"%s\" content changed",
-                       file.name.data);
+    if (h.version != NGX_HTTP_CACHE_VERSION || h.last_modified != c->last_modified
+        || h.crc32 != c->crc32 || h.header_start != c->header_start || h.body_start != c->body_start) {
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http file cache \"%s\" content changed", file.name.data);
         goto done;
     }
 

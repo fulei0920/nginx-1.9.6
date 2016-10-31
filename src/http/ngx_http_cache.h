@@ -94,7 +94,7 @@ struct ngx_http_cache_s
 
     ngx_buf_t                       *buf;
 
-    ngx_http_file_cache_t           *file_cache;
+    ngx_http_file_cache_t           *file_cache;	//请求对应的文件缓存管理节点
     ngx_http_file_cache_node_t      *node;    	///请求对应的缓存文件节点
 
 #if (NGX_THREADS)

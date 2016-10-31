@@ -828,13 +828,15 @@ ngx_http_upstream_cache(ngx_http_request_t *r, ngx_http_upstream_t *u)
             return NGX_ERROR;
         }
 
+		//获取对应的key值
         if (u->create_key(r) != NGX_OK) {	//ngx_http_proxy_create_key 将 `proxy_cache_key` 配置指令定义的缓存 key 根据请求信息进行取值
             return NGX_ERROR;
         }
 
         /* TODO: add keys */
 
-        ngx_http_file_cache_create_key(r);  //构造数字key
+		//计算key值的crc32和MD5值
+        ngx_http_file_cache_create_key(r);  
 
         if (r->cache->header_start + 256 >= u->conf->buffer_size) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "%V_buffer_size %uz is not enough for cache key, it should be increased to at least %uz",
@@ -2475,13 +2477,11 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
 
 #if (NGX_HTTP_CACHE)
 
-    if (status == NGX_HTTP_NOT_MODIFIED && u->cache_status == NGX_HTTP_CACHE_EXPIRED && u->conf->cache_revalidate)
-    {
+    if (status == NGX_HTTP_NOT_MODIFIED && u->cache_status == NGX_HTTP_CACHE_EXPIRED && u->conf->cache_revalidate) {
         time_t     now, valid;
         ngx_int_t  rc;
 
-        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                       "http upstream not modified");
+        ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http upstream not modified");
 
         now = ngx_time();
         valid = r->cache->valid_sec;
