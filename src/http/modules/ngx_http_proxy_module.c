@@ -549,7 +549,7 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 	默认值:	proxy_cache_key $scheme$proxy_host$request_uri;
 	上下文:	http, server, location
 	定义如何生成缓存的键，比如
-		proxy_cache_key "$host$request_uri $cookie_user";
+		proxy_cache_key "$host$request_uri$cookie_user";
 	这条指令的默认值类似于下面字符串
 		proxy_cache_key $scheme$proxy_host$uri$is_args$args;
 	*/

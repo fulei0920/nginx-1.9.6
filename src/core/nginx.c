@@ -167,9 +167,12 @@ static ngx_command_t  ngx_core_commands[] =
 		0,
 		NULL 
     },
-      
-	//语法: worker_rlimit_nofile limit;
-	//设置一个worker进程可以打开的最大句柄描述符个数
+    /*
+	语法:	worker_rlimit_nofile number;
+	默认值:	—
+	上下文:	main
+	修改工作进程的打开文件数的最大值限制(RLIMIT_NOFILE)，用于在不重启主进程的情况下增大该限制。
+	*/
     { 
     	ngx_string("worker_rlimit_nofile"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,

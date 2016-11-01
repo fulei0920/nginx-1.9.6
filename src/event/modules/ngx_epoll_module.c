@@ -148,7 +148,7 @@ static ngx_str_t      epoll_name = ngx_string("epoll");
 
 static ngx_command_t  ngx_epoll_commands[] = 
 {
-
+	//这个配置项表示调用一次epoll_wait最多可以返回的事件数
     { ngx_string("epoll_events"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
@@ -157,12 +157,14 @@ static ngx_command_t  ngx_epoll_commands[] =
       NULL 
 	},
 
+	//指明在开启异步I/O且使用io_setup系统调用初始化异步I/O上下文环境时，初始分配的异步I/O事件个数  
     { ngx_string("worker_aio_requests"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_num_slot,
       0,
       offsetof(ngx_epoll_conf_t, aio_requests),
-      NULL },
+      NULL 
+   	},
 
       ngx_null_command
 };

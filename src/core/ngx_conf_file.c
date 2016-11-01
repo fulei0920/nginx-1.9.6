@@ -979,10 +979,8 @@ ngx_conf_set_flag_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     } else if (ngx_strcasecmp(value[1].data, (u_char *) "off") == 0) {
         *fp = 0;
     } else {
-        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                     "invalid value \"%s\" in \"%s\" directive, "
-                     "it must be \"on\" or \"off\"",
-                     value[1].data, cmd->name.data);
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid value \"%s\" in \"%s\" directive, "
+                     "it must be \"on\" or \"off\"", value[1].data, cmd->name.data);
         return NGX_CONF_ERROR;
     }
 

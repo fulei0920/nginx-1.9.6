@@ -347,8 +347,7 @@ ngx_http_file_cache_open(ngx_http_request_t *r)
             goto done;
 
         default:
-            ngx_log_error(NGX_LOG_CRIT, r->connection->log, of.err,
-                          ngx_open_file_n " \"%s\" failed", c->file.name.data);
+            ngx_log_error(NGX_LOG_CRIT, r->connection->log, of.err, ngx_open_file_n " \"%s\" failed", c->file.name.data);
             return NGX_ERROR;
         }
     }
@@ -788,18 +787,20 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
     fcn = c->node;
 
     if (fcn == NULL) {
-        fcn = ngx_http_file_cache_lookup(cache, c->key);  //根据key查找对应的缓存文件结点
+        fcn = ngx_http_file_cache_lookup(cache, c->key);  //根据c->key查找对应的缓存文件结点
     }
 
     if (fcn) {  //查找到该key对应的缓存文件结点
         ngx_queue_remove(&fcn->queue);
 
 		//如果该请求第一次使用此缓存节点，则增加相关引用和使用次数
-        if (c->node == NULL) {  
+        if (c->node == NULL) {  	
             fcn->uses++;	
             fcn->count++;	
         }
 
+		//如果proxy_cache_valid 配置指令对此节点过期时间做了特殊设定，检查节点是否过期。
+		//如果过期，重置节点，并返回 NGX_DECLINED ; 如果未过期，返回 NGX_OK
         if (fcn->error) {
             if (fcn->valid_sec < ngx_time()) {
                 goto renew;
@@ -827,7 +828,7 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
         goto done;
     }
 
-	///没有找到key对应的缓存文件结点, 创建并创始化新的缓存文件节点，同时返回NGX_DECLINED
+	///没有找到c->key对应的缓存文件结点, 创建并创始化新的缓存文件节点，同时返回NGX_DECLINED
     fcn = ngx_slab_calloc_locked(cache->shpool, sizeof(ngx_http_file_cache_node_t));  //从共享内存中分配一个 file cache node
     if (fcn == NULL) {	//分配失败，强制检查过期时间后，再次尝试分配
         ngx_shmtx_unlock(&cache->shpool->mutex);
@@ -1375,8 +1376,7 @@ ngx_http_file_cache_update_header(ngx_http_request_t *r)
     ngx_http_cache_t              *c;
     ngx_http_file_cache_header_t   h;
 
-    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                   "http file cache update header");
+    ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http file cache update header");
 
     c = r->cache;
 
@@ -1392,14 +1392,11 @@ ngx_http_file_cache_update_header(ngx_http_request_t *r)
         /* cache file may have been deleted */
 
         if (err == NGX_ENOENT) {
-            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                           "http file cache \"%s\" not found",
-                           file.name.data);
+            ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http file cache \"%s\" not found", file.name.data);
             return;
         }
 
-        ngx_log_error(NGX_LOG_CRIT, r->connection->log, err,
-                      ngx_open_file_n " \"%s\" failed", file.name.data);
+        ngx_log_error(NGX_LOG_CRIT, r->connection->log, err, ngx_open_file_n " \"%s\" failed", file.name.data);
         return;
     }
 
@@ -1409,8 +1406,7 @@ ngx_http_file_cache_update_header(ngx_http_request_t *r)
      */
 
     if (ngx_fd_info(file.fd, &fi) == NGX_FILE_ERROR) {
-        ngx_log_error(NGX_LOG_CRIT, r->connection->log, ngx_errno,
-                      ngx_fd_info_n " \"%s\" failed", file.name.data);
+        ngx_log_error(NGX_LOG_CRIT, r->connection->log, ngx_errno, ngx_fd_info_n " \"%s\" failed", file.name.data);
         goto done;
     }
 
@@ -2425,6 +2421,7 @@ ngx_http_file_cache_valid_set_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *con
 
     for (i = 1; i < n; i++) {
 
+		//获取对应的响应码
         if (ngx_strcmp(value[i].data, "any") == 0) {
             status = 0;
         } else {
@@ -2435,6 +2432,7 @@ ngx_http_file_cache_valid_set_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *con
             }
         }
 
+		//将响应码机器对应的缓存事件添加到数组中
         v = ngx_array_push(*a);
         if (v == NULL) {
             return NGX_CONF_ERROR;

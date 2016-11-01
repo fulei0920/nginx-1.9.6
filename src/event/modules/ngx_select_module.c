@@ -12,12 +12,9 @@
 
 static ngx_int_t ngx_select_init(ngx_cycle_t *cycle, ngx_msec_t timer);
 static void ngx_select_done(ngx_cycle_t *cycle);
-static ngx_int_t ngx_select_add_event(ngx_event_t *ev, ngx_int_t event,
-    ngx_uint_t flags);
-static ngx_int_t ngx_select_del_event(ngx_event_t *ev, ngx_int_t event,
-    ngx_uint_t flags);
-static ngx_int_t ngx_select_process_events(ngx_cycle_t *cycle, ngx_msec_t timer,
-    ngx_uint_t flags);
+static ngx_int_t ngx_select_add_event(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+static ngx_int_t ngx_select_del_event(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
+static ngx_int_t ngx_select_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags);
 static void ngx_select_repair_fd_sets(ngx_cycle_t *cycle);
 static char *ngx_select_init_conf(ngx_cycle_t *cycle, void *conf);
 
@@ -83,12 +80,8 @@ ngx_select_init(ngx_cycle_t *cycle, ngx_msec_t timer)
         nevents = 0;
     }
 
-    if (ngx_process >= NGX_PROCESS_WORKER
-        || cycle->old_cycle == NULL
-        || cycle->old_cycle->connection_n < cycle->connection_n)
-    {
-        index = ngx_alloc(sizeof(ngx_event_t *) * 2 * cycle->connection_n,
-                          cycle->log);
+    if (ngx_process >= NGX_PROCESS_WORKER || cycle->old_cycle == NULL || cycle->old_cycle->connection_n < cycle->connection_n) {
+        index = ngx_alloc(sizeof(ngx_event_t *) * 2 * cycle->connection_n, cycle->log);
         if (index == NULL) {
             return NGX_ERROR;
         }
@@ -408,15 +401,13 @@ ngx_select_init_conf(ngx_cycle_t *cycle, void *conf)
 
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
 
-    if (ecf->use != ngx_select_module.ctx_index) 
-	{
+    if (ecf->use != ngx_select_module.ctx_index) {
         return NGX_CONF_OK;
     }
 
     /* disable warning: the default FD_SETSIZE is 1024U in FreeBSD 5.x */
 
-    if (cycle->connection_n > FD_SETSIZE) 
-	{
+    if (cycle->connection_n > FD_SETSIZE) {
         ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "the maximum number of files supported by select() is %ud", FD_SETSIZE);
         return NGX_CONF_ERROR;
     }

@@ -31,8 +31,8 @@
 
 
 typedef struct {
-    ngx_uint_t                       status;
-    time_t                           valid;
+    ngx_uint_t                       status;  	//响应码
+    time_t                           valid;		//缓存时间
 } ngx_http_cache_valid_t;
 
 ///保存每个缓存文件在内存中的描述信息。
@@ -46,7 +46,7 @@ typedef struct {
     u_char                           key[NGX_HTTP_CACHE_KEY_LEN - sizeof(ngx_rbtree_key_t)];
 
     unsigned                         count:20;			//引用计数
-    unsigned                         uses:10;			///多少请求在使用
+    unsigned                         uses:10;			///已经被多少请求使用
     unsigned                         valid_msec:10;
     unsigned                         error:10;			//
     unsigned                         exists:1;			//是否存在对应的cache文件
@@ -95,7 +95,7 @@ struct ngx_http_cache_s
     ngx_buf_t                       *buf;
 
     ngx_http_file_cache_t           *file_cache;	//请求对应的文件缓存管理节点
-    ngx_http_file_cache_node_t      *node;    	///请求对应的缓存文件节点
+    ngx_http_file_cache_node_t      *node;    		///请求对应的缓存文件节点
 
 #if (NGX_THREADS)
     ngx_thread_task_t               *thread_task;

@@ -29,8 +29,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 	//若是非keepalive upstream，该钩子是ngx_http_upstream_get_round_robin_peer。
 
     rc = pc->get(pc, pc->data);
-    if (rc != NGX_OK) 
-	{
+    if (rc != NGX_OK) {
         return rc;
     }
 
@@ -39,8 +38,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, 0, "socket %d", s);
 
-    if (s == (ngx_socket_t) -1) 
-	{
+    if (s == (ngx_socket_t) -1) {
         ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_socket_n " failed");
         return NGX_ERROR;
     }
@@ -48,35 +46,28 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 	//由于Nginx的事件框架要求每个连接都由一个ngx_connection_t结构体来承载，因此这一步调用ngx_get_connection
 	//方法获取到一个结构体，作为承载Nginx与上游服务器间的TCP连接
     c = ngx_get_connection(s, pc->log);
-    if (c == NULL)
-	{
-        if (ngx_close_socket(s) == -1) 
-		{
+    if (c == NULL) {
+        if (ngx_close_socket(s) == -1) {
             ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_close_socket_n "failed");
         }
 
         return NGX_ERROR;
     }
 
-    if (pc->rcvbuf)
-	{
-        if (setsockopt(s, SOL_SOCKET, SO_RCVBUF, (const void *) &pc->rcvbuf, sizeof(int)) == -1)
-        {
+    if (pc->rcvbuf) {
+        if (setsockopt(s, SOL_SOCKET, SO_RCVBUF, (const void *) &pc->rcvbuf, sizeof(int)) == -1) {
             ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, "setsockopt(SO_RCVBUF) failed");
             goto failed;
         }
     }
 
-    if (ngx_nonblocking(s) == -1) 
-	{
+    if (ngx_nonblocking(s) == -1) {
         ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno, ngx_nonblocking_n " failed");
         goto failed;
     }
 
-    if (pc->local)
-	{
-        if (bind(s, pc->local->sockaddr, pc->local->socklen) == -1) 
-		{
+    if (pc->local) {
+        if (bind(s, pc->local->sockaddr, pc->local->socklen) == -1) {
             ngx_log_error(NGX_LOG_CRIT, pc->log, ngx_socket_errno, "bind(%V) failed", &pc->local->name);
 
             goto failed;
@@ -92,8 +83,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     c->log_error = pc->log_error;
 
-    if (pc->sockaddr->sa_family == AF_UNIX) 
-	{
+    if (pc->sockaddr->sa_family == AF_UNIX) {
         c->tcp_nopush = NGX_TCP_NOPUSH_DISABLED;
         c->tcp_nodelay = NGX_TCP_NODELAY_DISABLED;
 
@@ -115,10 +105,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
 	//把套接字以期待EPOLLIN|EPOLLOUT事件的方式加入epoll中，表示如果这个套接字上出现了预期的网络事件，
 	//则希望epoll能够回调它的handler方法
-    if (ngx_add_conn)
-	{
-        if (ngx_add_conn(c) == NGX_ERROR) 
-		{
+    if (ngx_add_conn) {
+        if (ngx_add_conn(c) == NGX_ERROR) {
             goto failed;
         }
     }
@@ -129,8 +117,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 	//也可能告诉用户继续等待上游服务器的响应
     rc = connect(s, pc->sockaddr, pc->socklen);
 
-    if (rc == -1) 
-	{
+    if (rc == -1) {
         err = ngx_socket_errno;
 
 
@@ -166,10 +153,8 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         }
     }
 
-    if (ngx_add_conn) 
-	{
-        if (rc == -1) 
-		{
+    if (ngx_add_conn) {
+        if (rc == -1) {
             /* NGX_EINPROGRESS */
             return NGX_AGAIN;
         }

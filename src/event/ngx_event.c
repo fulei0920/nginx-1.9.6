@@ -127,6 +127,14 @@ static ngx_command_t  ngx_event_core_commands[] =
 {
 	//语法: worker_connections number;
 	//每个worker进程可以同时处理的最大连接数，也是连接池的大小
+	/*
+	语法:	worker_connections number;
+	默认值:	worker_connections 512;
+	上下文:	events
+	设置每个工作进程可以打开的最大并发连接数。
+	需要记住，这个数量包含所有连接(比如，和后端服务器建立的连接，还有其他的）， 而不仅仅是和客户端的连接。 
+	另外需要考虑的是，实际的并发连接数是不能超过打开文件的最大数量限制的，这个限制可以用worker_rlimit_nofile指令修改
+	*/
     { 
 		ngx_string("worker_connections"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -136,8 +144,14 @@ static ngx_command_t  ngx_event_core_commands[] =
 		NULL 
     },
 	//语法: use [kqueue | rtsig | epoll | /dev/poll | select | poll | eventport];
-	//默认: Nginx会自动使用最适合的事件模型
+
+	/*
+	语法:	use method;
+	默认值:	—
+	上下文:	events
 	//确定选择哪一个事件模块作为事件驱动机制
+	指定使用的连接处理method(方式)。 通常不需要明确设置，因为nginx默认会使用最高效的方法。
+	*/
     { 
 		ngx_string("use"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -146,9 +160,15 @@ static ngx_command_t  ngx_event_core_commands[] =
 		0,
 		NULL 
     },
-	//语法: multi_accept [on | off];
-	//默认: multi_accept off;
-	//当事件模型通知有新连接时，尽可能地对本次调度中客户端发起的所有TCP请求都建立连接
+
+	/*
+	语法:	multi_accept on | off;
+	默认值:	multi_accept off;
+	上下文:	events
+	关闭时，工作进程一次只会接入一个新连接。否则，工作进程一次会将所有新连接全部接入。
+	使用kqueue连接处理方式时，可忽略这条指令，因为kqueue可以报告有多少新连接等待接入。
+	使用rtsig连接处理方式将自动开启multi_accept。
+	*/
     { 
 		ngx_string("multi_accept"),
 		NGX_EVENT_CONF|NGX_CONF_FLAG,
@@ -161,6 +181,13 @@ static ngx_command_t  ngx_event_core_commands[] =
 	//语法: accept_mutex [on | off];
 	//默认: accept_mutex on;
 	//确定是否使用accept_mutex负载均衡锁
+	/*
+	语法:	accept_mutex on | off;
+	默认值:	accept_mutex on;
+	上下文:	events
+	如果使用，nginx的多个工作进程将以串行方式接入新连接。否则，新连接将通报给所有工作进程，
+	而且如果新连接数量较少，某些工作进程可能只是在浪费系统资源。必须开启accept_mutex才能使用rtsig连接处理方式。
+	*/
 	{ 
 		ngx_string("accept_mutex"),
 		NGX_EVENT_CONF|NGX_CONF_FLAG,
@@ -172,6 +199,12 @@ static ngx_command_t  ngx_event_core_commands[] =
 	//语法: accept_mutex_delay Nms;
 	//默认: accept_mutex_delay 500ms;
 	//启用accept_mutex负载均衡锁后，worker进程在拿不到锁时至少延迟accept_mutex_delay毫秒再重新获取负载均衡锁
+	/*
+	语法:	accept_mutex_delay time;
+	默认值:	accept_mutex_delay 500ms;
+	上下文:	events
+	使用accept_mutex时，可以指定某个工作进程检测到其它工作进程正在接入新连接时，自身等待直到重新开始尝试接入新连接的最大时间间隔。
+	*/
     { 
     	ngx_string("accept_mutex_delay"),
 		NGX_EVENT_CONF|NGX_CONF_TAKE1,
@@ -1058,14 +1091,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-/*
 
-配置例子:
-events {
-    worker_connections  1024;  
-}
-
-*/
 static char *
 ngx_event_connections(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1073,15 +1099,13 @@ ngx_event_connections(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     ngx_str_t  *value;
 
-    if (ecf->connections != NGX_CONF_UNSET_UINT) 
-	{
+    if (ecf->connections != NGX_CONF_UNSET_UINT) {
         return "is duplicate";
     }
 
     value = cf->args->elts;
     ecf->connections = ngx_atoi(value[1].data, value[1].len);
-    if (ecf->connections == (ngx_uint_t) NGX_ERROR)
-	{
+    if (ecf->connections == (ngx_uint_t) NGX_ERROR) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid number \"%V\"", &value[1]);
         return NGX_CONF_ERROR;
     }
@@ -1091,14 +1115,7 @@ ngx_event_connections(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-/*
 
-配置例子:
-events {
-    use  epoll;  
-}
-
-*/
 static char *
 ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1109,40 +1126,31 @@ ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_event_conf_t     *old_ecf;
     ngx_event_module_t   *module;
 
-    if (ecf->use != NGX_CONF_UNSET_UINT) 
-	{
+    if (ecf->use != NGX_CONF_UNSET_UINT) {
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    if (cf->cycle->old_cycle->conf_ctx)
-	{
+    if (cf->cycle->old_cycle->conf_ctx) {
         old_ecf = ngx_event_get_conf(cf->cycle->old_cycle->conf_ctx, ngx_event_core_module);
-    } 
-	else 
-	{
+    } else {
         old_ecf = NULL;
     }
 
 
-    for (m = 0; ngx_modules[m]; m++) 
-	{
-        if (ngx_modules[m]->type != NGX_EVENT_MODULE) 
-		{
+    for (m = 0; ngx_modules[m]; m++) {
+        if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
             continue;
         }
 
         module = ngx_modules[m]->ctx;
-        if (module->name->len == value[1].len) 
-		{
-            if (ngx_strcmp(module->name->data, value[1].data) == 0)
-			{
+        if (module->name->len == value[1].len) {
+            if (ngx_strcmp(module->name->data, value[1].data) == 0) {
                 ecf->use = ngx_modules[m]->ctx_index;
                 ecf->name = module->name->data;
 
-                if (ngx_process == NGX_PROCESS_SINGLE && old_ecf && old_ecf->use != ecf->use)
-                {
+                if (ngx_process == NGX_PROCESS_SINGLE && old_ecf && old_ecf->use != ecf->use) {
                     ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "when the server runs without a master process "
                                "the \"%V\" event type must be the same as in previous configuration - \"%s\" "
                                "and it cannot be changed on the fly, to change it you need to stop server "
@@ -1273,8 +1281,7 @@ ngx_event_core_create_conf(ngx_cycle_t *cycle)
     ngx_event_conf_t  *ecf;
 
     ecf = ngx_palloc(cycle->pool, sizeof(ngx_event_conf_t));
-    if (ecf == NULL) 
-	{
+    if (ecf == NULL) {
         return NULL;
     }
 
@@ -1287,8 +1294,7 @@ ngx_event_core_create_conf(ngx_cycle_t *cycle)
 
 #if (NGX_DEBUG)
 
-    if (ngx_array_init(&ecf->debug_connection, cycle->pool, 4, sizeof(ngx_cidr_t)) == NGX_ERROR)
-    {
+    if (ngx_array_init(&ecf->debug_connection, cycle->pool, 4, sizeof(ngx_cidr_t)) == NGX_ERROR) {
         return NULL;
     }
 
@@ -1310,6 +1316,8 @@ ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
     ngx_module_t        *module;
     ngx_event_module_t  *event_module;
 
+
+	/*检测用哪个事件驱动模块*/
     module = NULL;
 
 #if (NGX_HAVE_EPOLL) && !(NGX_TEST_BUILD_EPOLL)
@@ -1321,8 +1329,8 @@ ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf)
         module = &ngx_epoll_module;
 
     }
-	else if (ngx_errno != NGX_ENOSYS) {
-        module = &ngx_epoll_module;
+	else if (ngx_errno != NGX_ENOSYS) {   //	#define ENOSYS 38 /* Function not implemented */
+        module = &ngx_epoll_module; 
     }
 
 #endif

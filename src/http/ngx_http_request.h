@@ -60,7 +60,9 @@
 
 
 /* unused                                  1 */
-#define NGX_HTTP_SUBREQUEST_IN_MEMORY      2      	//结果数据是否可以可存放于内存中
+//表示发起的子请求，访问的网络资源返回的响应将全部放在内存中，我们可以从upstream->buffer里取到响应内容。
+//所以这里如果用了这个flag，一定要确保返回内容不可以很大，例如不能去下载一个大文件。
+#define NGX_HTTP_SUBREQUEST_IN_MEMORY      2      	//结果数据存放于内存中
 #define NGX_HTTP_SUBREQUEST_WAITED         4		//先结束的子请求是否需要等待前面子请求的结束才设置done标记
 #define NGX_HTTP_LOG_UNSAFE                8
 

@@ -108,8 +108,10 @@ typedef struct
 	//如果设置了debug_points为NGX_DEBUG_POINTS_ABORT，那么Nginx执行到这些调试点时就会产生一个coredump文件，
 	//可以使用gdb来查看Nginx当时的各种信息
 	ngx_int_t                debug_points;
-	//一个worker进程可以打开的最大句柄描述符个数
+	
+	//每个工作进程的打开文件数的最大值限制(RLIMIT_NOFILE)
 	ngx_int_t                rlimit_nofile;  	
+	
 	//限制coredump核心转储文件的大小
 	//在Linux系统中，当进程发生错误或收到信号而终止时，系统会将进程执行时的内存内容(核心映像)写入一个文件(core文件)，
 	//以作调试之用，这就是所谓的核心转储(core dump)

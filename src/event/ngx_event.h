@@ -196,7 +196,7 @@ typedef struct
     ngx_int_t  (*disable)(ngx_event_t *ev, ngx_int_t event, ngx_uint_t flags);
 	//向事件驱动机制中添加一个新的连接，这意味着连接上的读写事件都添加到事件驱动机制中了
     ngx_int_t  (*add_conn)(ngx_connection_t *c);
-	//从事件驱动机制中移除一个连接的读写事件
+	//从事件驱动机制中移除一个连接，这意味着连接上的读写事件都从事件驱动机制中移除了
     ngx_int_t  (*del_conn)(ngx_connection_t *c, ngx_uint_t flags);
 
     ngx_int_t  (*notify)(ngx_event_handler_pt handler);
