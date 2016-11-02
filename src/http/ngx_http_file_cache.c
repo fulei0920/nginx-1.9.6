@@ -155,7 +155,7 @@ ngx_http_file_cache_init(ngx_shm_zone_t *shm_zone, void *data)
     return NGX_OK;
 }
 
-
+//分配并初始化一个ngx_http_cache_t结构体
 ngx_int_t
 ngx_http_file_cache_new(ngx_http_request_t *r)
 {
@@ -802,7 +802,7 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
 		//如果proxy_cache_valid 配置指令对此节点过期时间做了特殊设定，检查节点是否过期。
 		//如果过期，重置节点，并返回 NGX_DECLINED ; 如果未过期，返回 NGX_OK
         if (fcn->error) {
-            if (fcn->valid_sec < ngx_time()) {
+            if (fcn->valid_sec < ngx_time()) {  //缓存已经超过了最大缓存时间
                 goto renew;
             }
 
@@ -823,6 +823,7 @@ ngx_http_file_cache_exists(ngx_http_file_cache_t *cache, ngx_http_cache_t *c)
             goto done;
         }
 
+		//缓存文件不存在，且使用次数小于缓存要求的最小使用次数
         rc = NGX_AGAIN;
 
         goto done;
@@ -1630,10 +1631,12 @@ ngx_http_file_cache_forced_expire(ngx_http_file_cache_t *cache)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, ngx_cycle->log, 0, "http file cache forced expire");
 
+	//计算缓存文件绝对路径的长度
     path = cache->path;
-    len = path->name.len + 1 + path->len + 2 * NGX_HTTP_CACHE_KEY_LEN;    //获取缓存文件绝对路径的长度
+    len = path->name.len + 1 + path->len + 2 * NGX_HTTP_CACHE_KEY_LEN;   
 
-    name = ngx_alloc(len + 1, ngx_cycle->log);    //分配存储缓存文件绝对路径的空间
+	//分配存储缓存文件绝对路径的空间
+    name = ngx_alloc(len + 1, ngx_cycle->log);    
     if (name == NULL) {
         return 10;
     }

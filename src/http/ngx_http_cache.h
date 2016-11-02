@@ -18,9 +18,20 @@
 #define NGX_HTTP_CACHE_BYPASS        2
 #define NGX_HTTP_CACHE_EXPIRED       3
 #define NGX_HTTP_CACHE_STALE         4
+/*
+    - 缓存内容过期，同时己有同样使用该缓存节点的其它请求正在请求新的响应数据。
+    - 如果 fastcgi_cache_use_stale 启用了 "updating"，设置 `cache_status` 为
+      `NGX_HTTP_CACHE_UPDATING`，然后向客户端发送过期缓存内容。否则，将返回
+      值重设为 `NGX_HTTP_CACHE_STALE`。
+*/
 #define NGX_HTTP_CACHE_UPDATING      5
 #define NGX_HTTP_CACHE_REVALIDATED   6
 #define NGX_HTTP_CACHE_HIT           7
+
+/*
+    - 因缓存节点被查询次数还未达 `min_uses`，对此请求禁用缓存机制
+    - 继续请求处理，但是不再缓存其响应数据 (`u->cacheable = 0`)。
+*/
 #define NGX_HTTP_CACHE_SCARCE        8
 
 #define NGX_HTTP_CACHE_KEY_LEN       16
@@ -35,7 +46,7 @@ typedef struct {
     time_t                           valid;		//缓存时间
 } ngx_http_cache_valid_t;
 
-///保存每个缓存文件在内存中的描述信息。
+//保存磁盘缓存文件在内存中的描述信息
 //这些信息需要存储于共享内存中，以便多个 worker 进程共享。
 //所以，为了提高利用率，此结构体多个字段使用了位域 (Bit field)，
 //同时，缓存 key 中用作查询树键值( ngx_rbtree_key_t ) 的部分字节不再重复存储
@@ -48,6 +59,9 @@ typedef struct {
     unsigned                         count:20;			//引用计数
     unsigned                         uses:10;			///已经被多少请求使用
     unsigned                         valid_msec:10;
+	//当后端响应码 >= NGX_HTTP_SPECIAL_RESPONSE, 并且打开了 fastcgi_intercept_errors 配置，
+	//同时 fastcgi_cache_valid 配置指令和 error_page 配置指令也对该响应码做了设定的情部下，
+	//该字段记录响应码， 并列的 valid_sec 字段记录该响应码的持续时间。这种 error 节点并不对 应实际的缓存文件。
     unsigned                         error:10;			//
     unsigned                         exists:1;			//是否存在对应的cache文件
     unsigned                         updating:1;		//是否在更新
@@ -83,7 +97,7 @@ struct ngx_http_cache_s
     ngx_str_t                        vary;
     u_char                           variant[NGX_HTTP_CACHE_KEY_LEN];
 
-    size_t                           header_start;
+    size_t                           header_start;	//head 相对于起始的偏移量
     size_t                           body_start;	//httpbody相对http请求的偏移位置--http头的长度
     off_t                            length;		//文件大小
     off_t                            fs_size;		//文件占用系统块的个数	

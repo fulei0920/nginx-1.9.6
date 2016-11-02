@@ -356,11 +356,13 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     path->name = value[1];
 
-    if (path->name.data[path->name.len - 1] == '/') {
+	//去掉路径末端的'/'字符
+    if (path->name.data[path->name.len - 1] == '/') {  
         path->name.len--;
     }
 
-    if (ngx_conf_full_name(cf->cycle, &path->name, 0) != NGX_OK) {
+	//获取路径的绝对路径
+    if (ngx_conf_full_name(cf->cycle, &path->name, 0) != NGX_OK) {  
         return NGX_CONF_ERROR;
     }
 
@@ -369,8 +371,7 @@ ngx_conf_set_path_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     for (i = 0, n = 2; n < cf->args->nelts; i++, n++) {
         level = ngx_atoi(value[n].data, value[n].len);
-        if (level == NGX_ERROR || level == 0)
-		{
+        if (level == NGX_ERROR || level == 0) {
             return "invalid value";
         }
 
@@ -493,7 +494,9 @@ invalid:
     return NGX_CONF_ERROR;
 }
 
-
+//添加一个目录到cycle->paths中
+//若该目录已存在，检查是否目录配置冲突
+//
 ngx_int_t
 ngx_add_path(ngx_conf_t *cf, ngx_path_t **slot)
 {
@@ -504,7 +507,9 @@ ngx_add_path(ngx_conf_t *cf, ngx_path_t **slot)
 
     p = cf->cycle->paths.elts;
     for (i = 0; i < cf->cycle->paths.nelts; i++) {
+		//检查是否之前配置过相同的路径
         if (p[i]->name.len == path->name.len && ngx_strcmp(p[i]->name.data, path->name.data) == 0) {
+
             if (p[i]->data != path->data) {
                 ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the same path name \"%V\" used in %s:%ui and", &p[i]->name, p[i]->conf_file, p[i]->line);
                 return NGX_ERROR;
@@ -519,19 +524,12 @@ ngx_add_path(ngx_conf_t *cf, ngx_path_t **slot)
                             return NGX_ERROR;
                         }
 
-                        ngx_log_error(NGX_LOG_EMERG, cf->log, 0,
-                                      "the path name \"%V\" in %s:%ui has "
-                                      "the same name as default path, but "
-                                      "the different levels, you need to "
-                                      "define default path in http section",
-                                      &p[i]->name, p[i]->conf_file, p[i]->line);
+                        ngx_log_error(NGX_LOG_EMERG, cf->log, 0, "the path name \"%V\" in %s:%ui has the same name as default path, but "
+                                      "the different levels, you need to define default path in http section", &p[i]->name, p[i]->conf_file, p[i]->line);
                         return NGX_ERROR;
                     }
 
-                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
-                                      "the same path name \"%V\" in %s:%ui "
-                                      "has the different levels than",
-                                      &p[i]->name, p[i]->conf_file, p[i]->line);
+                    ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "the same path name \"%V\" in %s:%ui has the different levels than", &p[i]->name, p[i]->conf_file, p[i]->line);
                     return NGX_ERROR;
                 }
 

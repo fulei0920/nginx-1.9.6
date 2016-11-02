@@ -818,6 +818,8 @@ ngx_conf_include(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 /*
 获取路径的全路径名
+
+conf_prefix -- 布尔值，true表示以cycle->conf_prefix作为前缀，false表示以cycle->prefix作为前缀
 */
 ngx_int_t
 ngx_conf_full_name(ngx_cycle_t *cycle, ngx_str_t *name, ngx_uint_t conf_prefix)

@@ -44,19 +44,19 @@ struct ngx_file_s
 typedef time_t (*ngx_path_manager_pt) (void *data);
 typedef void (*ngx_path_loader_pt) (void *data);
 
-
+//Ä¿Â¼µÄÂ·¾¶
 typedef struct 
 {
-    ngx_str_t                  name;   		//Ä¿Â¼Ãû|Â·¾¶Ãûå
-    size_t                     len;			//Ä¿Â¼ÏÂ×ÓÄ¿Â¼µÄËùÕ¼ÓÃÂ·¾¶µÄ×Ö·û³¤¶È
-    size_t                     level[3];	///Ä¿Â¼ÏÂ×ÓÄ¿Â¼µÄ»®·Ö·½·¨
+    ngx_str_t                  name;   		//Ä¿Â¼µÄ¾ø¶ÔÂ·¾¶Ãû
+    size_t                     len;			//levelÖ¸¶¨µÄ¸ÃÄ¿Â¼ÏÂËùÓĞ×ÓÄ¿Â¼µÄ×Ü¹²ËùÕ¼ÓÃÂ·¾¶µÄ×Ö·û³¤¶È(°üº¬Â·¾¶¼äµÄ'/'×Ö·û)
+    size_t                     level[3];	///¸ÃÄ¿Â¼ÏÂÃ¿Ò»¼¶×ÓÄ¿Â¼µÄÄ¿Â¼ÃûÕ¼ÓÃ×Ö·ûµÄ¸öÊı
 
     ngx_path_manager_pt        manager;		//cache manager½ø³ÌÕë¶Ô¸ÃÄ¿Â¼Ö´ĞĞµÄº¯Êı
     ngx_path_loader_pt         loader;		//cache loader½ø³ÌÕë¶Ô¸ÃÄ¿Â¼Ö´ĞĞµÄº¯Êı
     void                      *data;		//managerºÍloaderº¯ÊıµÄ²ÎÊı
 
-    u_char                    *conf_file;
-    ngx_uint_t                 line;
+    u_char                    *conf_file;	//Ö¸¶¨¸ÃÄ¿Â¼µÄÅäÖÃÎÄ¼şÃû
+    ngx_uint_t                 line;		//Ö¸¶¨¸ÃÄ¿Â¼µÄÅäÖÃÎÄ¼şµÄĞĞºÅ
 } ngx_path_t;
 
 

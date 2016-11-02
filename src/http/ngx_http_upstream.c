@@ -35,8 +35,7 @@ static void ngx_http_upstream_read_request_handler(ngx_http_request_t *r);
 static void ngx_http_upstream_process_header(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static ngx_int_t ngx_http_upstream_test_next(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
-static ngx_int_t ngx_http_upstream_intercept_errors(ngx_http_request_t *r,
-    ngx_http_upstream_t *u);
+static ngx_int_t ngx_http_upstream_intercept_errors(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static ngx_int_t ngx_http_upstream_test_connect(ngx_connection_t *c);
 static ngx_int_t ngx_http_upstream_process_headers(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static void ngx_http_upstream_process_body_in_memory(ngx_http_request_t *r,
@@ -96,8 +95,7 @@ static ngx_int_t ngx_http_upstream_process_accel_expires(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
 static ngx_int_t ngx_http_upstream_process_limit_rate(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
-static ngx_int_t ngx_http_upstream_process_buffering(ngx_http_request_t *r,
-    ngx_table_elt_t *h, ngx_uint_t offset);
+static ngx_int_t ngx_http_upstream_process_buffering(ngx_http_request_t *r, ngx_table_elt_t *h, ngx_uint_t offset);
 static ngx_int_t ngx_http_upstream_process_charset(ngx_http_request_t *r,
     ngx_table_elt_t *h, ngx_uint_t offset);
 static ngx_int_t ngx_http_upstream_process_connection(ngx_http_request_t *r,
@@ -408,7 +406,7 @@ static ngx_http_variable_t  ngx_http_upstream_vars[] =
     { ngx_null_string, NULL, NULL, 0, 0, 0 }
 };
 
-
+//响应码对应的标志位
 static ngx_http_upstream_next_t  ngx_http_upstream_next_errors[] = {
     { 500, NGX_HTTP_UPSTREAM_FT_HTTP_500 },
     { 502, NGX_HTTP_UPSTREAM_FT_HTTP_502 },
@@ -453,15 +451,13 @@ ngx_http_upstream_create(ngx_http_request_t *r)
      * 若已经创建过ngx_http_upstream_t 且定义了cleanup成员，
      * 则调用cleanup清理方法将原始结构体清除；
      */
-    if (u && u->cleanup) 
-	{
+    if (u && u->cleanup) {
         r->main->count++;
         ngx_http_upstream_cleanup(r);
     }
 
     u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));
-    if (u == NULL) 
-	{
+    if (u == NULL) {
         return NGX_ERROR;
     }
 
@@ -2425,12 +2421,11 @@ ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u)
     ngx_uint_t                 status;
     ngx_http_upstream_next_t  *un;
 
-    status = u->headers_in.status_n;
+    status = u->headers_in.status_n;  
 
     for (un = ngx_http_upstream_next_errors; un->status; un++) {
 
-        if (status != un->status) 
-		{
+        if (status != un->status) {
             continue;
         }
 
@@ -2538,14 +2533,11 @@ ngx_http_upstream_intercept_errors(ngx_http_request_t *r, ngx_http_upstream_t *u
 
         if (err_page[i].status == status) {
 
-            if (status == NGX_HTTP_UNAUTHORIZED
-                && u->headers_in.www_authenticate)
-            {
+            if (status == NGX_HTTP_UNAUTHORIZED && u->headers_in.www_authenticate) {
                 h = ngx_list_push(&r->headers_out.headers);
 
                 if (h == NULL) {
-                    ngx_http_upstream_finalize_request(r, u,
-                                               NGX_HTTP_INTERNAL_SERVER_ERROR);
+                    ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return NGX_OK;
                 }
 
@@ -4392,8 +4384,7 @@ ngx_http_upstream_finalize_request(ngx_http_request_t *r, ngx_http_upstream_t *u
 
 #if (NGX_HTTP_CACHE)
 
-    if (r->cache) 
-	{
+    if (r->cache) {
 
         if (u->cacheable) {
 
@@ -4776,8 +4767,7 @@ ngx_http_upstream_process_limit_rate(ngx_http_request_t *r, ngx_table_elt_t *h,
 
 
 static ngx_int_t
-ngx_http_upstream_process_buffering(ngx_http_request_t *r, ngx_table_elt_t *h,
-    ngx_uint_t offset)
+ngx_http_upstream_process_buffering(ngx_http_request_t *r, ngx_table_elt_t *h, ngx_uint_t offset)
 {
     u_char                c0, c1, c2;
     ngx_http_upstream_t  *u;
@@ -6345,12 +6335,10 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 	//遍历upstream数组。upstream的来源包括显性的配置upstream模式（ngx_http_upstream）
 	//和隐性的proxy_pass指令（ngx_http_proxy_pass），upstream的添加是通过
 	//ngx_http_upstream_add函数，需要注意的是proxy_pass指令携带变量参数时不会添加upstream
-    for (i = 0; i < umcf->upstreams.nelts; i++) 
-	{
+    for (i = 0; i < umcf->upstreams.nelts; i++) {
         init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream: ngx_http_upstream_init_round_robin;
 
-        if (init(cf, uscfp[i]) != NGX_OK)
-		{
+        if (init(cf, uscfp[i]) != NGX_OK) {
             return NGX_CONF_ERROR;
         }
     }
@@ -6358,16 +6346,13 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 
     /* upstream_headers_in_hash */
 
-    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t)) != NGX_OK)
-    {
+    if (ngx_array_init(&headers_in, cf->temp_pool, 32, sizeof(ngx_hash_key_t)) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
-    for (header = ngx_http_upstream_headers_in; header->name.len; header++)
-	{
+    for (header = ngx_http_upstream_headers_in; header->name.len; header++) {
         hk = ngx_array_push(&headers_in);
-        if (hk == NULL)
-		{
+        if (hk == NULL) {
             return NGX_CONF_ERROR;
         }
 

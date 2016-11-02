@@ -395,7 +395,12 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.send_lowat),
       &ngx_http_proxy_lowat_post },
-
+    /*
+	语法:	proxy_intercept_errors on | off;
+	默认值:	proxy_intercept_errors off;
+	上下文:	http, server, location
+	当后端服务器的响应状态码大于等于400时，决定是否直接将响应发送给客户端，亦或将响应转发给nginx由error_page指令来处理。
+	*/
     { ngx_string("proxy_intercept_errors"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -780,7 +785,15 @@ Sets a pause between iterations (1.7.12). By default, purger_sleep is set to 50 
       NULL },
 
 #endif
-
+	/*
+	语法:	proxy_temp_path path [level1 [level2 [level3]]];
+	默认值:	proxy_temp_path proxy_temp;
+	上下文:	http, server, location
+	定义从后端服务器接收的临时文件的存放路径，可以为临时文件路径定义至多三层子目录的目录树。 比如，下面配置
+		proxy_temp_path /spool/nginx/proxy_temp 1 2;
+	那么临时文件的路径看起来会是这样：
+		/spool/nginx/proxy_temp/7/45/00000123457
+	*/
     { ngx_string("proxy_temp_path"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1234,
       ngx_conf_set_path_slot,
@@ -1153,8 +1166,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
         u->ssl = (plcf->upstream.ssl != NULL);
 #endif
 
-    } 
-	else {
+    } else {
         if (ngx_http_proxy_eval(r, ctx, plcf) != NGX_OK) {
             return NGX_HTTP_INTERNAL_SERVER_ERROR;
         }
@@ -3446,8 +3458,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_ptr_value(conf->upstream.no_cache, prev->upstream.no_cache, NULL);
 
-    ngx_conf_merge_ptr_value(conf->upstream.cache_valid,
-                             prev->upstream.cache_valid, NULL);
+    ngx_conf_merge_ptr_value(conf->upstream.cache_valid, prev->upstream.cache_valid, NULL);
 
     if (conf->cache_key.value.data == NULL) {
         conf->cache_key = prev->cache_key;
@@ -3477,11 +3488,9 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     ngx_conf_merge_value(conf->upstream.pass_request_headers,
                               prev->upstream.pass_request_headers, 1);
-    ngx_conf_merge_value(conf->upstream.pass_request_body,
-                              prev->upstream.pass_request_body, 1);
+    ngx_conf_merge_value(conf->upstream.pass_request_body, prev->upstream.pass_request_body, 1);
 
-    ngx_conf_merge_value(conf->upstream.intercept_errors,
-                              prev->upstream.intercept_errors, 0);
+    ngx_conf_merge_value(conf->upstream.intercept_errors, prev->upstream.intercept_errors, 0);
 
 #if (NGX_HTTP_SSL)
 
