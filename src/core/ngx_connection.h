@@ -122,6 +122,7 @@ typedef enum
 #define NGX_HTTP_V2_BUFFERED   0x02
 
 //(被动连接)表示客户端主动发起的，Nginx服务器被动接受的TCP连接
+//不可以随意创建， 必须从连接池中获取该对象
 struct ngx_connection_s 
 {
 	//连接未使用时，data成员用于充当连接池中空闲连接链表中的next指针。
@@ -132,7 +133,8 @@ struct ngx_connection_s
 	//连接对应的写事件
     ngx_event_t        *write;		
 	//连接对应的套接字句柄
-    ngx_socket_t        fd;    
+    ngx_socket_t        fd;   
+	/*下面4个成员以方法指针的形式出现， 说明每个连接都可以采用不同的接收方法， 每个事件消费模块都可以灵活地决定其行为。*/
 	//直接接受网络字符流的方法，根据系统环境的不同指向不同的函数
     ngx_recv_pt         recv;	
 	//直接发送网络字符流的方法，根据系统环境的不同指向不同的函数
@@ -148,7 +150,10 @@ struct ngx_connection_s
     off_t               sent;			
 	//可以记录日志的ngx_log_t对象
     ngx_log_t          *log;			
-
+	/*内存池。 一般在accept一个新连接时， 会创建一个内存池， 而在这个连接结束时会销毁内存池。 
+	注意， 这里所说的连接是指成功建立的TCP连接， 所有的ngx_connection_t结构体都是预分配的。 
+	这个内存池的大小将由上面的listening监听对象中的pool_size成员决定
+	*/
     ngx_pool_t         *pool;
 	//连接客户端的sockaddr结构体		
     struct sockaddr    *sockaddr;	
@@ -161,21 +166,48 @@ struct ngx_connection_s
 #if (NGX_SSL)
     ngx_ssl_connection_t  *ssl;
 #endif
-
-    struct sockaddr    *local_sockaddr;		//本机的监听端口对应的sockaddr结构体，也就是listening监听对象中的sockaddr成员
+	//本机的监听端口对应的sockaddr结构体，也就是listening监听对象中的sockaddr成员
+    struct sockaddr    *local_sockaddr;		
     socklen_t           local_socklen;
 	//用于接收、缓存客户端发来的字节流，每个事件消费模块可自由决定从连接池中分配多大的空间给该字段。
 	//例如，在HTTP模块中，它的大小决定于client_header_buffer_size配置项	
     ngx_buf_t          *buffer;		
 	//用来将连接以双向链表元素的形式添加到ngx_cycle_t核心结构体的reuseable_connections_queue双向链表中，表示可以重用的连接
     ngx_queue_t         queue;		
-
-    ngx_atomic_uint_t   number;		//连接使用次数。ngx_connection_t结构体每次建立一条来自客户端的连接，或者用于主动向后端服务器发起连接时(ngx_peer_connection_s也使用它)，number都会加 1
+	//连接使用次数。ngx_connection_t结构体每次建立一条来自客户端的连接，或者用于主动向后端服务器发起连接时(ngx_peer_connection_s也使用它)，number都会加 1
+    ngx_atomic_uint_t   number;		
 	//处理的请求次数
     ngx_uint_t          requests;	
-
+	/*缓存中的业务类型。 任何事件消费模块都可以自定义需要的标志位。 
+	这个buffered字段有8位， 最多可以同时表示8个不同的业务。 第三方模块在自定义
+	buffered标志位时注意不要与可能使用的模块定义的标志位冲突。 
+	目前openssl模块定义了一个标志位：
+#define NGX_SSL_BUFFERED 0x01
+	HTTP官方模块定义了以下标志位：
+#define NGX_HTTP_LOWLEVEL_BUFFERED 0xf0
+#define NGX_HTTP_WRITE_BUFFERED 0x10
+#define NGX_HTTP_GZIP_BUFFERED 0x20
+#define NGX_HTTP_SSI_BUFFERED 0x01
+#define NGX_HTTP_SUB_BUFFERED 0x02
+#define NGX_HTTP_COPY_BUFFERED 0x04
+#define NGX_HTTP_IMAGE_BUFFERED 0x08
+	同时， 对于HTTP模块而言，buffered的低4位要慎用，在实际发送响应的
+	ngx_http_write_filter_module过滤模块中， 低4位标志位为1则意味着
+	Nginx会一直认为有HTTP模块还需要处理这个请求， 必须等待HTTP模块将低
+	4位全置为0才会正常结束请求。 检查低4位的宏如下：
+#define NGX_LOWLEVEL_BUFFERED 0x0f
+	*/
     unsigned            buffered:8;
-
+	/*本连接记录日志时的级别， 它占用了3位， 取值范围是0~7， 但实际上目前只定义了
+	5个值， 由ngx_connection_log_error_e枚举表示， 如下：
+	typedef enum {
+	NGX_ERROR_ALERT = 0,
+	NGX_ERROR_ERR,
+	NGX_ERROR_INFO,
+	NGX_ERROR_IGNORE_ECONNRESET,
+	NGX_ERROR_IGNORE_EINVAL
+	} ngx_connection_log_error_e;
+	*/
     unsigned            log_error:3;     		/* ngx_connection_log_error_e */
 	//标志位，为 1时表示不期待字符流结束，目前无意义
     unsigned            unexpected_eof:1;	
@@ -187,18 +219,40 @@ struct ngx_connection_s
 	//当destroyed为 1时，结构体仍然存在，但其对应的套接字、内存池等已经不可用
     unsigned            destroyed:1;		
 	//标志位，为 1时表示连接处于空闲状态，如keepalive请求中两次请求之间的状态
-    unsigned            idle:1;				
-    unsigned            reusable:1;			//标志位，为 1时表示连接可重用，它与上面的queue字段时对应使用的
+    unsigned            idle:1;		
+	//标志位，为 1时表示连接可重用，它与上面的queue字段是对应使用的
+    unsigned            reusable:1;			
     //标志位，为 1时表示连接关闭
     unsigned            close:1;			
 	//标志位，为 1时表示正将文件中的数据发往连接的另一端
     unsigned            sendfile:1;			
     //标志位，为 1时表示只有在连接套接字对应的发送缓冲区必须满足最低设置的大小阈值时，事件驱动模块才会分发该事件。
     //与ngx_handle_write_event函数中的lowat参数是对应的
+    /*
+	是否设置该连接的发送低水位标志，若设置过将不再重复设置
+	*/
     unsigned            sndlowat:1;
-	//标志位，表示如何使用TCP的nodelay特性。取值范围是枚举类型 ngx_connection_tcp_nodelay_e
+	/*标志位， 表示如何使用
+TCP的
+nodelay特性。 它的取值范围是下面这个枚举类型
+ngx_connection_tcp_nodelay_e：
+typedef enum {
+NGX_TCP_NODELAY_UNSET = 0,
+NGX_TCP_NODELAY_SET,
+NGX_TCP_NODELAY_DISABLED
+} ngx_connection_tcp_nodelay_e;
+*/
     unsigned            tcp_nodelay:2;   
-	//标志位，表示如何使用TCP的nodelay特性。取值范围是枚举类型 ngx_connection_tcp_nopush_e
+	/*标志位， 表示如何使用
+TCP的
+nopush特性。 它的取值范围是下面这个枚举类型
+ngx_connection_tcp_nopush_e：
+typedef enum {
+NGX_TCP_NOPUSH_UNSET = 0,
+NGX_TCP_NOPUSH_SET,
+NGX_TCP_NOPUSH_DISABLED
+} ngx_connection_tcp_nopush_e;
+*/
     unsigned            tcp_nopush:2;    	
 
     unsigned            need_last_buf:1;

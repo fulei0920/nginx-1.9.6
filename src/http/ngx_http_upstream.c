@@ -65,8 +65,7 @@ static ngx_int_t ngx_http_upstream_non_buffered_filter(void *data,
 static void ngx_http_upstream_process_downstream(ngx_http_request_t *r);
 static void ngx_http_upstream_process_upstream(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
-static void ngx_http_upstream_process_request(ngx_http_request_t *r,
-    ngx_http_upstream_t *u);
+static void ngx_http_upstream_process_request(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static void ngx_http_upstream_store(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
 static void ngx_http_upstream_dummy_handler(ngx_http_request_t *r,
@@ -492,8 +491,7 @@ ngx_http_upstream_init(ngx_http_request_t *r)
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0, "http init upstream, client timer: %d", c->read->timer_set);
 
 #if (NGX_HTTP_V2)
-    if (r->stream) 
-	{
+    if (r->stream) {
         ngx_http_upstream_init_request(r);
         return;
     }
@@ -505,8 +503,7 @@ ngx_http_upstream_init(ngx_http_request_t *r)
         ngx_del_timer(c->read);
     }
 
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT)
-	{
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) {
         if (!c->write->active) 
 		{
             if (ngx_add_event(c->write, NGX_WRITE_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR)
@@ -621,8 +618,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     u->output.bufs.num = 1;
     u->output.bufs.size = clcf->client_body_buffer_size;
 
-    if (u->output.output_filter == NULL) 
-	{
+    if (u->output.output_filter == NULL) {
         u->output.output_filter = ngx_chain_writer;
         u->output.filter_ctx = &u->writer;
     }
@@ -666,8 +662,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 		/* 若没有实现u->resolved标志位，则定义上游服务器的配置 */ 
         uscf = u->conf->upstream;
     } 
-	else 
-	{
+	else {
 		/* 若实现了u->resolved标志位，则解析主机域名，指定上游服务器的地址； */
 #if (NGX_HTTP_SSL)
         u->ssl_name = u->resolved->host;
@@ -727,14 +722,12 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 
 		// 开始进行域名解析
         ctx = ngx_resolve_start(clcf->resolver, &temp);
-        if (ctx == NULL)
-		{
+        if (ctx == NULL) {
             ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
         }
 
-        if (ctx == NGX_NO_RESOLVER)
-		{
+        if (ctx == NGX_NO_RESOLVER) {
             ngx_log_error(NGX_LOG_ERR, r->connection->log, 0, "no resolver defined to resolve %V", host);
             ngx_http_upstream_finalize_request(r, u, NGX_HTTP_BAD_GATEWAY);
             return;
@@ -749,8 +742,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
         u->resolved->ctx = ctx;
 
 		 // 开始处理DNS解析域名
-        if (ngx_resolve_name(ctx) != NGX_OK) 
-		{
+        if (ngx_resolve_name(ctx) != NGX_OK) {
             u->resolved->ctx = NULL;
             ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
             return;
@@ -774,16 +766,14 @@ found:
     u->ssl_name = uscf->host;
 #endif
 
-    if (uscf->peer.init(r, uscf) != NGX_OK)
-	{
+    if (uscf->peer.init(r, uscf) != NGX_OK) {
         ngx_http_upstream_finalize_request(r, u, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
     }
 
     u->peer.start_time = ngx_current_msec;
 
-    if (u->conf->next_upstream_tries && u->peer.tries > u->conf->next_upstream_tries)
-    {
+    if (u->conf->next_upstream_tries && u->peer.tries > u->conf->next_upstream_tries) {
         u->peer.tries = u->conf->next_upstream_tries;
     }
 
@@ -1178,8 +1168,7 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
     u = r->upstream;
 	
 	//如果连接已经出现错误。
-    if (c->error) 
-	{
+    if (c->error) {
         if ((ngx_event_flags & NGX_USE_LEVEL_EVENT) && ev->active)
 		{
             event = ev->write ? NGX_WRITE_EVENT : NGX_READ_EVENT;
@@ -1200,8 +1189,7 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
     }
 
 #if (NGX_HTTP_V2)
-    if (r->stream) 
-	{
+    if (r->stream) {
         return;
     }
 #endif
@@ -1246,8 +1234,7 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r, ngx_event_t *ev
 
 #if (NGX_HAVE_EPOLLRDHUP)
 
-    if ((ngx_event_flags & NGX_USE_EPOLL_EVENT) && ev->pending_eof)
-	{
+    if ((ngx_event_flags & NGX_USE_EPOLL_EVENT) && ev->pending_eof) {
         socklen_t  len;
 
         ev->eof = 1;
@@ -1766,8 +1753,7 @@ ngx_http_upstream_reinit(ngx_http_request_t *r, ngx_http_upstream_t *u)
     off_t         file_pos;
     ngx_chain_t  *cl;
 
-    if (u->reinit_request(r) != NGX_OK) 
-	{
+    if (u->reinit_request(r) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -4037,8 +4023,7 @@ ngx_http_upstream_process_request(ngx_http_request_t *r, ngx_http_upstream_t *u)
     if (p->downstream_error) {
         ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http upstream downstream error");
 
-        if (!u->cacheable && !u->store && u->peer.connection) 
-		{
+        if (!u->cacheable && !u->store && u->peer.connection)  {
             ngx_http_upstream_finalize_request(r, u, NGX_ERROR);
         }
     }
@@ -6097,8 +6082,7 @@ ngx_http_upstream_get_local(ngx_http_request_t *r, ngx_http_upstream_local_t *lo
     ngx_str_t    val;
     ngx_addr_t  *addr;
 
-    if (local == NULL) 
-	{
+    if (local == NULL) {
         return NULL;
     }
 

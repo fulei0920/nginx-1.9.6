@@ -36,6 +36,7 @@ typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc, void *
 struct ngx_peer_connection_s 
 {
 	//一个主动连接实际上也需要ngx_connection_t结构体中的大部分成员，并且出于重用的考虑而定义了connection成员
+	////不可以随意创建， 必须从连接池中获取该对象
     ngx_connection_t                *connection;	
 	//远端服务器socket地址
     struct sockaddr                 *sockaddr;	

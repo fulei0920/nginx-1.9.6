@@ -319,7 +319,53 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
+	/*
+	语法:	proxy_store on | off | string;
+	默认值:	
+	proxy_store off;
+	上下文:	http, server, location
+	开启将文件保存到磁盘上的功能。如果设置为on，nginx将文件保存在alias指令或root指令设置的路径中。
+	如果设置为off，nginx将关闭文件保存的功能。此外，保存的文件名也可以使用含变量的string参数来指定：
+		proxy_store /data/www$original_uri;
+	保存文件的修改时间根据接收到的“Last-Modified”响应头来设置。响应都是先写到临时文件，然后进行重命名来生成的。
+	从0.8.9版本开始，临时文件和持久化存储可以放在不同的文件系统，但是需要注意这时文件执行的是在两个文件系统间拷贝操作，
+	而不是廉价的重命名操作。因此建议保存文件的路径和proxy_temp_path指令设置的临时文件的路径在同一个文件系统中。
+	这条指令可以用于创建静态无更改文件的本地拷贝，比如：
 
+	location /images/ {
+	    root                   /data/www;
+	    open_file_cache_errors off;
+	    error_page             404 = /fetch$uri;
+	}
+
+	location /fetch/ {
+	    internal;
+
+	    proxy_pass             http://backend/;
+	    proxy_store            on;
+	    proxy_store_access     user:rw group:rw all:r;
+	    proxy_temp_path        /data/temp;
+
+	    alias                  /data/www/;
+	}
+	或者像这样：
+
+	location /images/ {
+	    root               /data/www;
+	    error_page         404 = @fetch;
+	}
+
+	location @fetch {
+	    internal;
+
+	    proxy_pass         http://backend;
+	    proxy_store        on;
+	    proxy_store_access user:rw group:rw all:r;
+	    proxy_temp_path    /data/temp;
+
+	    root               /data/www;
+	}
+	*/
     { ngx_string("proxy_store"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_http_proxy_store,
@@ -407,9 +453,29 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_proxy_loc_conf_t, upstream.intercept_errors),
       NULL },
-	//语法: proxy_set_header Host host;
-	//例如:
-	//	proxy_set_header Host $host; 转发请求中的host头部
+	/*
+	语法:	proxy_set_header field value;
+	默认值:	
+	proxy_set_header Host $proxy_host;
+	proxy_set_header Connection close;
+	上下文:	http, server, location
+	允许重新定义或者添加发往后端服务器的请求头。value可以包含文本、变量或者它们的组合。 当且仅当当前配置级别中没有定义proxy_set_header指令时，会从上面的级别继承配置。 默认情况下，只有两个请求头会被重新定义：
+
+	proxy_set_header Host       $proxy_host;
+	proxy_set_header Connection close;
+	如果不想改变请求头“Host”的值，可以这样来设置：
+
+	proxy_set_header Host       $http_host;
+	但是，如果客户端请求头中没有携带这个头部，那么传递到后端服务器的请求也不含这个头部。 这种情况下，更好的方式是使用$host变量——它的值在请求包含“Host”请求头时为“Host”字段的值，在请求未携带“Host”请求头时为虚拟主机的主域名：
+
+	proxy_set_header Host       $host;
+	此外，服务器名可以和后端服务器的端口一起传送：
+
+	proxy_set_header Host       $host:$proxy_port;
+	如果某个请求头的值为空，那么这个请求头将不会传送给后端服务器：
+
+	proxy_set_header Accept-Encoding "";
+	*/
     { 
 		ngx_string("proxy_set_header"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE2,
@@ -442,6 +508,12 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 	//语法: proxy_method method;
 	//设置转发时的协议方法名
 	//例如: proxy_mehod POST;  那么客户端发来的GET请求在转发时方法名会改为POST
+	/*
+	Syntax:	proxy_method method;
+	Default:	—
+	Context:	http, server, location
+	Specifies the HTTP method to use in requests forwarded to the proxied server instead of the method from the client request.
+	*/
     { 
 		ngx_string("proxy_method"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -450,7 +522,22 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 		offsetof(ngx_http_proxy_loc_conf_t, method),
 		NULL 
    	},
+	/*
+	Syntax:	proxy_pass_request_headers on | off;
+	Default:	
+	proxy_pass_request_headers on;
+	Context:	http, server, location
+	Indicates whether the header fields of the original request are passed to the proxied server.
 
+	location /x-accel-redirect-here/ {
+	    proxy_method GET;
+	    proxy_pass_request_headers off;
+	    proxy_pass_request_body off;
+
+	    proxy_pass ...
+	}
+	See also the proxy_set_header and proxy_pass_request_body directives.
+	*/
     { ngx_string("proxy_pass_request_headers"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
@@ -458,9 +545,22 @@ static ngx_command_t  ngx_http_proxy_commands[] =
       offsetof(ngx_http_proxy_loc_conf_t, upstream.pass_request_headers),
       NULL },
 
-	//语法: proxy_pass_request_body on | off;
-	//默认: proxy_pass_request_body on;
-	//确定是否向上游服务器发送HTTP包体部分
+	/*
+	Syntax:	proxy_pass_request_body on | off;
+	Default:	
+	proxy_pass_request_body on;
+	Context:	http, server, location
+	Indicates whether the original request body is passed to the proxied server.
+
+	location /x-accel-redirect-here/ {
+	    proxy_method GET;
+	    proxy_pass_request_body off;
+	    proxy_set_header Content-Length "";
+
+	    proxy_pass ...
+	}
+	See also the proxy_set_header and proxy_pass_request_headers directives.
+	*/
 	{ 
 		ngx_string("proxy_pass_request_body"),
 		NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
@@ -1144,10 +1244,12 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     ngx_http_proxy_main_conf_t  *pmcf;
 #endif
 
+	//创建upstream数据结构
     if (ngx_http_upstream_create(r) != NGX_OK)  {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
+	//创建并设置upstream环境数据结构。
     ctx = ngx_pcalloc(r->pool, sizeof(ngx_http_proxy_ctx_t));
     if (ctx == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -1159,6 +1261,8 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 
     u = r->upstream;
 
+
+	//设置模块的tag和schema。schema现在只会用于日志，tag会用于buf_chain管理
     if (plcf->proxy_lengths == NULL) {
         ctx->vars = plcf->vars;
         u->schema = plcf->vars.schema;
@@ -1174,6 +1278,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 
     u->output.tag = (ngx_buf_tag_t) &ngx_http_proxy_module;
 
+	//设置upstream的后端服务器列表数据结构。
     u->conf = &plcf->upstream;
 
 #if (NGX_HTTP_CACHE)
@@ -1224,7 +1329,11 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
         return rc;
     }
-
+	/*
+	NGX_DONE， 这是在要求HTTP框架不要按阶段继续向下处理请求了， 同时它告诉HTTP框架请求必须停留在当前阶段， 
+	等待某个HTTP模块主动地继续处理这个请求（ 例如， 在上游服务器主动关闭连接时， upstream模块就会主动地继
+	续处理这个请求， 很可能会向客户端发送502响应码） 。
+	*/
     return NGX_DONE;
 }
 
@@ -1461,26 +1570,23 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
     headers = &plcf->headers;
 #endif
 
-    if (u->method.len)
-	{
+    if (u->method.len) {
         /* HEAD was changed to GET to cache response */
         method = u->method;
         method.len++;
-    }
-	else if (plcf->method.len)
-   	{
+		
+    } else if (plcf->method.len) {
         method = plcf->method;
-    } 
-	else 
-	{
+		
+    } else {
         method = r->method_name;
         method.len++;
+		
     }
 
     ctx = ngx_http_get_module_ctx(r, ngx_http_proxy_module);
 
-    if (method.len == 5 && ngx_strncasecmp(method.data, (u_char *) "HEAD ", 5) == 0)
-    {
+    if (method.len == 5 && ngx_strncasecmp(method.data, (u_char *) "HEAD ", 5) == 0) {
         ctx->head = 1;
     }
 
@@ -1598,14 +1704,12 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
 
 
     b = ngx_create_temp_buf(r->pool, len);
-    if (b == NULL)
-	{
+    if (b == NULL) {
         return NGX_ERROR;
     }
 
     cl = ngx_alloc_chain_link(r->pool);
-    if (cl == NULL)
-	{
+    if (cl == NULL) {
         return NGX_ERROR;
     }
 
@@ -1617,8 +1721,7 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
 
     u->uri.data = b->last;
 
-    if (plcf->proxy_lengths && ctx->vars.uri.len) 
-	{
+    if (plcf->proxy_lengths && ctx->vars.uri.len)  {
         b->last = ngx_copy(b->last, ctx->vars.uri.data, ctx->vars.uri.len);
 
     } 
@@ -1654,13 +1757,11 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
 
     u->uri.len = b->last - u->uri.data;
 
-    if (plcf->http_version == NGX_HTTP_VERSION_11) 
-	{
+    if (plcf->http_version == NGX_HTTP_VERSION_11)  {
         b->last = ngx_cpymem(b->last, ngx_http_proxy_version_11, sizeof(ngx_http_proxy_version_11) - 1);
 
     } 
-	else
-	{
+	else {
         b->last = ngx_cpymem(b->last, ngx_http_proxy_version, sizeof(ngx_http_proxy_version) - 1);
     }
 
@@ -3115,8 +3216,7 @@ ngx_http_proxy_create_loc_conf(ngx_conf_t *cf)
     ngx_http_proxy_loc_conf_t  *conf;
 
     conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_proxy_loc_conf_t));
-    if (conf == NULL) 
-	{
+    if (conf == NULL) {
         return NULL;
     }
 
@@ -3959,8 +4059,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_OK;
     }
 
-    if (ngx_strncasecmp(url->data, (u_char *) "http://", 7) == 0) 
-	{
+    if (ngx_strncasecmp(url->data, (u_char *) "http://", 7) == 0) {
         add = 7;
         port = 80;
 
@@ -3978,8 +4077,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 #endif
 
     } 
-	else 
-	{
+	else {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid URL prefix");
         return NGX_CONF_ERROR;
     }
@@ -3993,8 +4091,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     u.no_resolve = 1;
 
     plcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
-    if (plcf->upstream.upstream == NULL) 
-	{
+    if (plcf->upstream.upstream == NULL) {
         return NGX_CONF_ERROR;
     }
 

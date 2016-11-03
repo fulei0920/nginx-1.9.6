@@ -2802,8 +2802,7 @@ ngx_http_gzip_quantity(u_char *p, u_char *last)
 //返回值:
 //	NGX_OK -- 表示成功建立子请求 	NGX_ERROR -- 表示建立子请求失败
 ngx_int_t
-ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_http_request_t **psr,
-    ngx_http_post_subrequest_t *ps, ngx_uint_t flags)
+ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_http_request_t **psr, ngx_http_post_subrequest_t *ps, ngx_uint_t flags)
 {
     ngx_time_t                    *tp;
     ngx_connection_t              *c;
@@ -2920,13 +2919,11 @@ ngx_http_subrequest(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args, ngx_
     pr->next = NULL;
 
 	//把该子请求挂载在其父请求的postponed链表的队尾
-    if (r->postponed) 
-	{
+    if (r->postponed) {
         for (p = r->postponed; p->next; p = p->next) { /* void */ }
         p->next = pr;
     }
-	else 
-	{
+	else {
         r->postponed = pr;
     }
 

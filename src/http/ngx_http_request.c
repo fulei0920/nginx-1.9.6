@@ -195,8 +195,7 @@ ngx_http_init_connection(ngx_connection_t *c)
 #endif
 
     hc = ngx_pcalloc(c->pool, sizeof(ngx_http_connection_t));
-    if (hc == NULL) 
-	{
+    if (hc == NULL) {
         ngx_http_close_connection(c);
         return;
     }

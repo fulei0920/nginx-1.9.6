@@ -337,60 +337,50 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     ngx_event_process_posted(cycle, &ngx_posted_events);
 }
 
-//将读事件添加到事件驱动模块中
-//参数:
-//	rev -- 要操作的事件
-//	flags -- 指定事件驱动的方式，对于不同的事件驱动模块，flags的取值范围并不同
-//返回值:
-//	NGX_OK -- 成功
-// 	NGX_ERROR -- 失败
+
+/*
+将读事件添加到事件驱动模块中， 使用ngx_handle_read_event方法则可以屏蔽与具体的事件驱动机制间差异
+rev -- 要操作的事件
+flags -- 指定事件驱动的方式，对于不同的事件驱动模块，flags的取值范围并不同。
+		对于ngx_epoll_module来说， flags的取值范围可以是0或者NGX_CLOSE_EVENT（ NGX_CLOSE_EVENT仅
+		在epoll的LT水平触发模式下有效） ， Nginx主要工作在ET模式下， 一般可以忽略flags这个参数。
+*/
 ngx_int_t
 ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
 {
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) 
-	{
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) {
 
         /* kqueue, epoll */
 
-        if (!rev->active && !rev->ready)
-		{
-            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR)
-            {
+        if (!rev->active && !rev->ready) {
+            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_CLEAR_EVENT) == NGX_ERROR) {
                 return NGX_ERROR;
             }
         }
 
         return NGX_OK;
 
-    } 
-	else if (ngx_event_flags & NGX_USE_LEVEL_EVENT) 
-	{
+    } else if (ngx_event_flags & NGX_USE_LEVEL_EVENT) {
 
         /* select, poll, /dev/poll */
 
-        if (!rev->active && !rev->ready) 
-		{
-            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT) == NGX_ERROR)
-            {
+        if (!rev->active && !rev->ready) {
+            if (ngx_add_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT) == NGX_ERROR) {
                 return NGX_ERROR;
             }
 
             return NGX_OK;
         }
 
-        if (rev->active && (rev->ready || (flags & NGX_CLOSE_EVENT))) 
-		{
-            if (ngx_del_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT | flags) == NGX_ERROR)
-            {
+        if (rev->active && (rev->ready || (flags & NGX_CLOSE_EVENT))) {
+            if (ngx_del_event(rev, NGX_READ_EVENT, NGX_LEVEL_EVENT | flags) == NGX_ERROR) {
                 return NGX_ERROR;
             }
 
             return NGX_OK;
         }
 
-    } 
-	else if (ngx_event_flags & NGX_USE_EVENTPORT_EVENT) 
-	{
+    } else if (ngx_event_flags & NGX_USE_EVENTPORT_EVENT) {
         /* event ports */
         if (!rev->active && !rev->ready) 
 		{
@@ -418,31 +408,28 @@ ngx_handle_read_event(ngx_event_t *rev, ngx_uint_t flags)
     return NGX_OK;
 }
 
-//将写事件添加到事件驱动模块中
-//参数:
-//	rev -- 要操作的事件
-//	lowat -- 表示只有当连接对应的套接字缓冲区中必须有lowat大小的可用空间时，事件收集器(如select或者epoll_wait调用)
-//				才能处理这个可写事件(lowat参数为0时表示不考虑可写缓冲区的大小)
-//返回值:
-//	NGX_OK -- 成功
-// 	NGX_ERROR -- 失败
+
+/*
+将写事件添加到事件驱动模块中，使用ngx_handle_write_event方法则可以屏蔽与具体的事件驱动机制间差异
+wev -- 要操作的事件
+lowat -- 表示只有当连接对应的套接字缓冲区中必须有lowat大小的可用空间时，
+		事件收集器(如select或者epoll_wait调用)才能处理这个可写事件(lowat参数为0时表示不考虑可写缓冲区的大小)
+return -- NGX_OK表示成功， NGX_ERROR表示失败
+*/
 ngx_int_t
 ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 {
     ngx_connection_t  *c;
 
-    if (lowat)
-	{
+    if (lowat) {
         c = wev->data;
 
-        if (ngx_send_lowat(c, lowat) == NGX_ERROR) 
-		{
+        if (ngx_send_lowat(c, lowat) == NGX_ERROR) {
             return NGX_ERROR;
         }
     }
 
-    if (ngx_event_flags & NGX_USE_CLEAR_EVENT)
-	{
+    if (ngx_event_flags & NGX_USE_CLEAR_EVENT) {
 
         /* kqueue, epoll */
 
@@ -456,9 +443,7 @@ ngx_handle_write_event(ngx_event_t *wev, size_t lowat)
 
         return NGX_OK;
 
-    } 
-	else if (ngx_event_flags & NGX_USE_LEVEL_EVENT) 
-   	{
+    } else if (ngx_event_flags & NGX_USE_LEVEL_EVENT) {
 
         /* select, poll, /dev/poll */
 
@@ -963,7 +948,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+///设置发送低水位标志
 ngx_int_t
 ngx_send_lowat(ngx_connection_t *c, size_t lowat)
 {
@@ -984,11 +969,8 @@ ngx_send_lowat(ngx_connection_t *c, size_t lowat)
 
     sndlowat = (int) lowat;
 
-    if (setsockopt(c->fd, SOL_SOCKET, SO_SNDLOWAT, (const void *) &sndlowat, sizeof(int))
-        == -1)
-    {
-        ngx_connection_error(c, ngx_socket_errno,
-                             "setsockopt(SO_SNDLOWAT) failed");
+    if (setsockopt(c->fd, SOL_SOCKET, SO_SNDLOWAT, (const void *) &sndlowat, sizeof(int)) == -1) {
+        ngx_connection_error(c, ngx_socket_errno, "setsockopt(SO_SNDLOWAT) failed");
         return NGX_ERROR;
     }
 

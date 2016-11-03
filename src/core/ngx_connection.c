@@ -522,12 +522,9 @@ ngx_open_listening_sockets(ngx_cycle_t *cycle)
                                   "chmod() \"%s\" failed", name);
                 }
 
-                if (ngx_test_config) 
-				{
-                    if (ngx_delete_file(name) == NGX_FILE_ERROR)
-					{
-                        ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                                      ngx_delete_file_n " %s failed", name);
+                if (ngx_test_config) {
+                    if (ngx_delete_file(name) == NGX_FILE_ERROR) {
+                        ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, ngx_delete_file_n " %s failed", name);
                     }
                 }
             }

@@ -582,7 +582,10 @@ struct ngx_http_request_s
     unsigned                          request_body_file_log_level:3;
     unsigned                          request_body_no_buffering:1;
 
-	//标志位，为1时表示不转发响应，为0时表示转发响应
+
+	
+	//标志位，为1时表示upstream不转发响应包体到下游，由HTTP模块实现的input_filter方法处理包体； 
+	//为0时， upstream会转发响应包体。
     unsigned                          subrequest_in_memory:1;
     unsigned                          waited:1;
 
