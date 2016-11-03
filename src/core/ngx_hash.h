@@ -90,9 +90,9 @@ typedef struct
 	//在构建这个类型以及最终的三个hash表过程中可能用到临时pool。该temp_pool可以在构建完成以后，被销毁掉。这里只是存放临时的一些内存消耗
     ngx_pool_t       *temp_pool;	
 
-	//ngx_hash_key_t类型的动态数组，存放所有非通配符key的数组。
+	//ngx_hash_key_t类型的动态数组，存放所有非通配符key,value对的数组，用于构建非通配符的hash表
     ngx_array_t       keys;			
-   	//key的name字符串的散列表
+   	//key字符串的散列表
     //该值在调用的过程中用来保存和检测是否有冲突的key值，也就是是否有重复。
     ngx_array_t      *keys_hash;	
 

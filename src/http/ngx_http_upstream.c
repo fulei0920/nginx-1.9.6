@@ -5210,11 +5210,9 @@ ngx_http_upstream_add_variables(ngx_conf_t *cf)
 {
     ngx_http_variable_t  *var, *v;
 
-    for (v = ngx_http_upstream_vars; v->name.len; v++) 
-	{
+    for (v = ngx_http_upstream_vars; v->name.len; v++) {
         var = ngx_http_add_variable(cf, &v->name, v->flags);
-        if (var == NULL)
-		{
+        if (var == NULL) {
             return NGX_ERROR;
         }
 
@@ -6369,8 +6367,7 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
     hash.pool = cf->pool;
     hash.temp_pool = NULL;
 
-    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK)
-	{
+    if (ngx_hash_init(&hash, headers_in.elts, headers_in.nelts) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 

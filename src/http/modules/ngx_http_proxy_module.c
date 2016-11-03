@@ -2102,19 +2102,16 @@ ngx_http_proxy_process_header(ngx_http_request_t *r)
 
     umcf = ngx_http_get_module_main_conf(r, ngx_http_upstream_module);
 
-    for ( ;; ) 
-	{
+    for ( ;; ) {
 
         rc = ngx_http_parse_header_line(r, &r->upstream->buffer, 1);
 
-        if (rc == NGX_OK)
-		{
+        if (rc == NGX_OK) {
 
             /* a header line has been parsed successfully */
 
             h = ngx_list_push(&r->upstream->headers_in.headers);
-            if (h == NULL)
-			{
+            if (h == NULL) {
                 return NGX_ERROR;
             }
 
@@ -2124,8 +2121,7 @@ ngx_http_proxy_process_header(ngx_http_request_t *r)
             h->value.len = r->header_end - r->header_start;
 
             h->key.data = ngx_pnalloc(r->pool, h->key.len + 1 + h->value.len + 1 + h->key.len);
-            if (h->key.data == NULL)
-			{
+            if (h->key.data == NULL) {
                 return NGX_ERROR;
             }
 
@@ -2144,16 +2140,13 @@ ngx_http_proxy_process_header(ngx_http_request_t *r)
                 ngx_strlow(h->lowcase_key, h->key.data, h->key.len);
             }
 
-            hh = ngx_hash_find(&umcf->headers_in_hash, h->hash,
-                               h->lowcase_key, h->key.len);
+            hh = ngx_hash_find(&umcf->headers_in_hash, h->hash, h->lowcase_key, h->key.len);
 
             if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
                 return NGX_ERROR;
             }
 
-            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                           "http proxy header: \"%V: %V\"",
-                           &h->key, &h->value);
+            ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http proxy header: \"%V: %V\"", &h->key, &h->value);
 
             continue;
         }
@@ -2162,8 +2155,7 @@ ngx_http_proxy_process_header(ngx_http_request_t *r)
 
             /* a whole header has been parsed successfully */
 
-            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
-                           "http proxy header done");
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0, "http proxy header done");
 
             /*
              * if no "Server" and "Date" in header line,
@@ -3926,8 +3918,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     ngx_http_core_loc_conf_t   *clcf;
     ngx_http_script_compile_t   sc;
 
-    if (plcf->upstream.upstream || plcf->proxy_lengths)
-	{
+    if (plcf->upstream.upstream || plcf->proxy_lengths) {
         return "is duplicate";
     }
 
@@ -3974,8 +3965,7 @@ ngx_http_proxy_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         port = 80;
 
     } 
-	else if (ngx_strncasecmp(url->data, (u_char *) "https://", 8) == 0) 
-	{
+	else if (ngx_strncasecmp(url->data, (u_char *) "https://", 8) == 0) {
 
 #if (NGX_HTTP_SSL)
         plcf->ssl = 1;
