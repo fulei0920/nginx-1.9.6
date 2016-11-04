@@ -885,22 +885,19 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
     ngx_connection_t  *c;
 
     /* disable warning: Win32 SOCKET is u_int while UNIX socket is int */
-    if (ngx_cycle->files && (ngx_uint_t) s >= ngx_cycle->files_n)
-	{
+    if (ngx_cycle->files && (ngx_uint_t) s >= ngx_cycle->files_n) {
         ngx_log_error(NGX_LOG_ALERT, log, 0, "the new socket has number %d, but only %ui files are available", s, ngx_cycle->files_n);
         return NULL;
     }
 
     c = ngx_cycle->free_connections;
 
-    if (c == NULL) 
-	{
+    if (c == NULL) {
         ngx_drain_connections();
         c = ngx_cycle->free_connections;
     }
 
-    if (c == NULL) 
-	{
+    if (c == NULL) {
         ngx_log_error(NGX_LOG_ALERT, log, 0, "%ui worker_connections are not enough", ngx_cycle->connection_n);
         return NULL;
     }
@@ -908,8 +905,7 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
     ngx_cycle->free_connections = c->data;
     ngx_cycle->free_connection_n--;
 
-    if (ngx_cycle->files) 
-	{
+    if (ngx_cycle->files) {
         ngx_cycle->files[s] = c;
     }
 
@@ -1056,8 +1052,10 @@ ngx_close_connection(ngx_connection_t *c)
 
 
 /*
+将连接设置为reuseable或unreusable
 if ngx_connection_t is reuseable, link it into the queue (ngx_cycle->reusable_connections_queue)
 or remove it from the queue
+
 resuable -- 1 means reusable, 0 means unreusable
 */
 void
@@ -1065,8 +1063,7 @@ ngx_reusable_connection(ngx_connection_t *c, ngx_uint_t reusable)
 {
     ngx_log_debug1(NGX_LOG_DEBUG_CORE, c->log, 0, "reusable connection: %ui", reusable);
 
-    if (c->reusable)
-	{
+    if (c->reusable) {
         ngx_queue_remove(&c->queue);
 
 #if (NGX_STAT_STUB)
@@ -1076,8 +1073,7 @@ ngx_reusable_connection(ngx_connection_t *c, ngx_uint_t reusable)
 
     c->reusable = reusable;
 
-    if (reusable) 
-	{
+    if (reusable) {
         /* need cast as ngx_cycle is volatile */
         ngx_queue_insert_head((ngx_queue_t *) &ngx_cycle->reusable_connections_queue, &c->queue);
 
@@ -1095,18 +1091,23 @@ ngx_drain_connections(void)
     ngx_queue_t       *q;
     ngx_connection_t  *c;
 
-    for (i = 0; i < 32; i++) 
-	{
-        if (ngx_queue_empty(&ngx_cycle->reusable_connections_queue)) 
-		{
+	// 清理至多32个keepalive连接，以回收一些连接池供新连接使用  
+    for (i = 0; i < 32; i++) {
+        if (ngx_queue_empty(&ngx_cycle->reusable_connections_queue)) {
             break;
         }
 
+		//resuable连接队列是从头插入的，意味着越靠近队列尾部的连接，
+		//空闲未被使用的时间就越长，这种情况下，优先回收它，类似LRU
         q = ngx_queue_last(&ngx_cycle->reusable_connections_queue);
         c = ngx_queue_data(q, ngx_connection_t, queue);
 
         ngx_log_debug0(NGX_LOG_DEBUG_CORE, c->log, 0, "reusing connection");
 
+		
+		// 这里的handler是ngx_http_keepalive_handler，这函数里，由于close被置1，  
+		// 所以会执行ngx_http_close_connection来释放连接，这样也就发生了keepalive  
+		// 连接被强制断掉的现象了。  
         c->close = 1;
         c->read->handler(c->read);
     }

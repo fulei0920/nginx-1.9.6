@@ -497,8 +497,7 @@ ngx_devpoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer,
             rev->ready = 1;
 
             if (flags & NGX_POST_EVENTS) {
-                queue = rev->accept ? &ngx_posted_accept_events
-                                    : &ngx_posted_events;
+                queue = rev->accept ? &ngx_posted_accept_events : &ngx_posted_events;
 
                 ngx_post_event(rev, queue);
 

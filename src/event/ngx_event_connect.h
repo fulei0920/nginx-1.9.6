@@ -67,7 +67,11 @@ struct ngx_peer_connection_s
     ngx_log_t                       *log;			
 	//标志位，为 1时表示上面的connection连接已经缓存
     unsigned                         cached:1;		
-                                    
+    /*与
+	ngx_connection_t里的log_error意义是相同的， 区别在于这里的
+	log_error只有两位， 只能表达4种错误，
+	NGX_ERROR_IGNORE_EINVAL错误无法表达
+	*/                               
     unsigned                         log_error:2;		 /* ngx_connection_log_error_e */
 };
 

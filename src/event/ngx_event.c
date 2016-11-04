@@ -125,13 +125,11 @@ static ngx_str_t  event_core_name = ngx_string("event_core");
 
 static ngx_command_t  ngx_event_core_commands[] = 
 {
-	//语法: worker_connections number;
-	//每个worker进程可以同时处理的最大连接数，也是连接池的大小
 	/*
 	语法:	worker_connections number;
 	默认值:	worker_connections 512;
 	上下文:	events
-	设置每个工作进程可以打开的最大并发连接数。
+	设置每个工作进程可以打开的最大并发连接数，也是连接池的大小
 	需要记住，这个数量包含所有连接(比如，和后端服务器建立的连接，还有其他的）， 而不仅仅是和客户端的连接。 
 	另外需要考虑的是，实际的并发连接数是不能超过打开文件的最大数量限制的，这个限制可以用worker_rlimit_nofile指令修改
 	*/
@@ -168,6 +166,7 @@ static ngx_command_t  ngx_event_core_commands[] =
 	关闭时，工作进程一次只会接入一个新连接。否则，工作进程一次会将所有新连接全部接入。
 	使用kqueue连接处理方式时，可忽略这条指令，因为kqueue可以报告有多少新连接等待接入。
 	使用rtsig连接处理方式将自动开启multi_accept。
+	对应于ngx_event_t事件的available字段
 	*/
     { 
 		ngx_string("multi_accept"),
@@ -1012,7 +1011,8 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         ngx_modules[i]->ctx_index = ngx_event_max_module++;
     }
 	
-	//为所有的NGX_EVENT_MODULE模块分配指向对应上下文空间的索引空间 void***--->void **--->array of void*     
+	//为所有的NGX_EVENT_MODULE模块分配指向对应上下文空间的索引空间 void***--->void **--->array of void*    
+	//分配指针数组，存储所有事件模块生成的配置项结构体指针
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;

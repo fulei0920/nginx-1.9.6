@@ -69,9 +69,13 @@ struct ngx_cycle_s
     ngx_uint_t                connection_n;		
     //与上面的files成员配合使用，指出files数组里元素的总数
     ngx_uint_t                files_n;			
-
+	//预分配的connection_n个连接
+	//每个连接所需要的读/写事件都以相同的数组序号对应着read_events、write_events读/写事件数组，
+	//相同序号下这3个数组中的元素是配合使用的
     ngx_connection_t         *connections;     	//指向当前进程中的所有连接对象，与connection_n成员配合使用
+    //预分配的connection_n个读事件
     ngx_event_t              *read_events;		//指向当前进程中的所有读事件对象，connection_n同时表示所有写事件的总数
+    //预分配的connection_n个写事件
     ngx_event_t              *write_events;		//指向当前进程中的所有写事件对象，connection_n同时表示所有写事件的总数
 	//旧的ngx_cycle_t对象用于引用上一个ngx_cycle_t对象中的成员。
 	//例如，ngx_init_cycle方法，在启动初期，需要建立一个临时的ngx_cycle_t对象保存一些变量，

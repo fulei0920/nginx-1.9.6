@@ -367,8 +367,7 @@ ngx_http_init_connection(ngx_connection_t *c)
     ngx_reusable_connection(c, 1);
 
 	/* 将当前连接的读事件注册到epoll事件机制中 */
-    if (ngx_handle_read_event(rev, 0) != NGX_OK) 
-	{
+    if (ngx_handle_read_event(rev, 0) != NGX_OK) {
         ngx_http_close_connection(c);
         return;
     }
@@ -446,38 +445,34 @@ ngx_http_wait_request_handler(ngx_event_t *rev)
 
     n = c->recv(c, b->last, size);
 
-    if (n == NGX_AGAIN)  /*表示客户端发起连接请求，但是暂时还没发送实际的数据*/
-	{
-
-        if (!rev->timer_set) 
-		{
+    if (n == NGX_AGAIN) {  /*表示客户端发起连接请求，但是暂时还没发送实际的数据*/
+	
+        if (!rev->timer_set) {
             ngx_add_timer(rev, c->listening->post_accept_timeout);
             ngx_reusable_connection(c, 1);
         }
 
-        if (ngx_handle_read_event(rev, 0) != NGX_OK) 
-		{
+        if (ngx_handle_read_event(rev, 0) != NGX_OK) {
             ngx_http_close_connection(c);
             return;
         }
 
         /* We are trying to not hold c->buffer's memory for an idle connection. */
-        if (ngx_pfree(c->pool, b->start) == NGX_OK) 
-		{
+        if (ngx_pfree(c->pool, b->start) == NGX_OK) {
             b->start = NULL;
         }
 
         return;
     }
 
-    if (n == NGX_ERROR)  /*表示当前连接出错*/
-	{
+    if (n == NGX_ERROR) { /*表示当前连接出错*/
+	
         ngx_http_close_connection(c);
         return;
     }
 
-    if (n == 0)  /*表示客户端已经主动关闭当前连接*/
-	{
+    if (n == 0) {  /*表示客户端已经主动关闭当前连接*/
+	
         ngx_log_error(NGX_LOG_INFO, c->log, 0, "client closed connection");
         ngx_http_close_connection(c);
         return;
@@ -679,18 +674,15 @@ ngx_http_ssl_handshake(ngx_event_t *rev)
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, rev->log, 0, "http recv(): %d", n);
 
     if (n == -1) {
-        if (err == NGX_EAGAIN)
-		{
+        if (err == NGX_EAGAIN) {
             rev->ready = 0;
 
-            if (!rev->timer_set) 
-			{
+            if (!rev->timer_set) {
                 ngx_add_timer(rev, c->listening->post_accept_timeout);
                 ngx_reusable_connection(c, 1);
             }
 
-            if (ngx_handle_read_event(rev, 0) != NGX_OK)
-			{
+            if (ngx_handle_read_event(rev, 0) != NGX_OK) {
                 ngx_http_close_connection(c);
             }
 
@@ -2663,8 +2655,7 @@ ngx_http_finalize_connection(ngx_http_request_t *r)
     }
 
 	//检查请求的keepalive成员，如果keepalive为1，则说明这个请求需要释放，但TCP连接还是要复用的
-    if (!ngx_terminate && !ngx_exiting && r->keepalive && clcf->keepalive_timeout > 0)
-    {
+    if (!ngx_terminate && !ngx_exiting && r->keepalive && clcf->keepalive_timeout > 0) {
     	//将当前连接设为keepalive状态。它实际上会把表示请求的ngx_http_request_t结构体释放，却又不会调用
     	//ngx_http_close_connection方法关闭连接，同时也在检测keepalive连接是否超时
         ngx_http_set_keepalive(r);
@@ -2998,8 +2989,7 @@ ngx_http_set_keepalive(ngx_http_request_t *r)
 
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "set http keepalive handler");
 
-    if (r->discard_body) 
-	{
+    if (r->discard_body) {
         r->write_event_handler = ngx_http_request_empty_handler;
         r->lingering_time = ngx_time() + (time_t) (clcf->lingering_time / 1000);
         ngx_add_timer(rev, clcf->lingering_timeout);
@@ -3237,16 +3227,14 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, c->log, 0, "http keepalive handler");
 
 	//超时则关闭连接退出
-    if (rev->timedout || c->close)
-	{
+    if (rev->timedout || c->close) {
         ngx_http_close_connection(c);
         return;
     }
 
 #if (NGX_HAVE_KQUEUE)
 
-    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) 
-	{
+    if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
         if (rev->pending_eof) 
 		{
             c->log->handler = NULL;
@@ -3297,8 +3285,7 @@ ngx_http_keepalive_handler(ngx_event_t *rev)
     n = c->recv(c, b->last, size);
     c->log_error = NGX_ERROR_INFO;
 
-    if (n == NGX_AGAIN) 
-	{
+    if (n == NGX_AGAIN) {
         if (ngx_handle_read_event(rev, 0) != NGX_OK)
 		{
             ngx_http_close_connection(c);
@@ -3726,10 +3713,8 @@ ngx_http_close_connection(ngx_connection_t *c)
 
 #if (NGX_HTTP_SSL)
 
-    if (c->ssl) 
-	{
-        if (ngx_ssl_shutdown(c) == NGX_AGAIN) 
-		{
+    if (c->ssl) {
+        if (ngx_ssl_shutdown(c) == NGX_AGAIN) {
             c->ssl->handler = ngx_http_close_connection;
             return;
         }

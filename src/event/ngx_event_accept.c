@@ -44,8 +44,7 @@ ngx_event_accept(ngx_event_t *ev)
 
     ecf = ngx_event_get_conf(ngx_cycle->conf_ctx, ngx_event_core_module);
 
-    if (!(ngx_event_flags & NGX_USE_KQUEUE_EVENT))
-	{
+    if (!(ngx_event_flags & NGX_USE_KQUEUE_EVENT)) {
         ev->available = ecf->multi_accept;
     }
 
