@@ -96,12 +96,9 @@ epoll事件驱动模块则是无意义的， 限于篇幅， 不再详细说明
 	//在定时器到期时才开始处理
 	/*标志位，为1表明响应需要延迟发送*/
     unsigned         delayed:1;
-	/*标志位， 为
-1时表示延迟建立
-TCP连接， 也就是说， 经过
-TCP三次握手后并不建立连接， 而是要等到真正收到数据包后才会建立
-TCP连接
-*/
+	/*标志位， 为1时表示延迟建立TCP连接， 也就是说， 经过
+	TCP三次握手后并不建立连接， 而是要等到真正收到数据包后才会建立TCP连接
+	*/
     unsigned         deferred_accept:1;
 
     /* the pending eof reported by kqueue, epoll or in aio chain operation */
@@ -563,8 +560,7 @@ extern ngx_module_t           ngx_events_module;
 extern ngx_module_t           ngx_event_core_module;
 
 
-#define ngx_event_get_conf(conf_ctx, module)                                  \
-             (*(ngx_get_conf(conf_ctx, ngx_events_module))) [module.ctx_index];
+#define ngx_event_get_conf(conf_ctx, module)  (*(ngx_get_conf(conf_ctx, ngx_events_module))) [module.ctx_index];
 
 
 

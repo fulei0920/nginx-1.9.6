@@ -12,8 +12,7 @@
 
 
 static void ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type);
-static void ngx_start_cache_manager_processes(ngx_cycle_t *cycle,
-    ngx_uint_t respawn);
+static void ngx_start_cache_manager_processes(ngx_cycle_t *cycle, ngx_uint_t respawn);
 static void ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch);
 static void ngx_signal_worker_processes(ngx_cycle_t *cycle, int signo);
 static ngx_uint_t ngx_reap_children(ngx_cycle_t *cycle);
@@ -27,7 +26,8 @@ static void ngx_cache_manager_process_handler(ngx_event_t *ev);
 static void ngx_cache_loader_process_handler(ngx_event_t *ev);
 
 //进程类型
-ngx_uint_t    ngx_process;  
+//初始值是0，也就是NGX_PROCESS_SINGLE
+ngx_uint_t    ngx_process;    
 ngx_uint_t    ngx_worker;	
 //当前进程的pid
 ngx_pid_t     ngx_pid;		
@@ -896,12 +896,9 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_int_t worker)
         ls[i].previous = NULL;
     }
 
-    for (i = 0; ngx_modules[i]; i++) 
-	{
-        if (ngx_modules[i]->init_process) 
-		{
-            if (ngx_modules[i]->init_process(cycle) == NGX_ERROR) 
-			{
+    for (i = 0; ngx_modules[i]; i++) {
+        if (ngx_modules[i]->init_process) {
+            if (ngx_modules[i]->init_process(cycle) == NGX_ERROR) {
                 /* fatal */
                 exit(2);
             }

@@ -97,7 +97,7 @@ struct io_event
 
 typedef struct 
 {
-    ngx_uint_t  events;
+    ngx_uint_t  events;       	//调用一次epoll_wait最多可以返回的事件数
     ngx_uint_t  aio_requests;
 } ngx_epoll_conf_t;
 
@@ -125,7 +125,9 @@ static void *ngx_epoll_create_conf(ngx_cycle_t *cycle);
 static char *ngx_epoll_init_conf(ngx_cycle_t *cycle, void *conf);
 
 static int                  ep = -1;
+//存储每次调用epoll_wait返回的事件的数组
 static struct epoll_event  *event_list;
+//event_list数组元素的个数
 static ngx_uint_t           nevents;
 
 #if (NGX_HAVE_EVENTFD)
@@ -318,15 +320,16 @@ static ngx_int_t
 ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
 {
     ngx_epoll_conf_t  *epcf;
+	
+	//取得epoll模块的配置结构
+    epcf = ngx_event_get_conf(cycle->conf_ctx, ngx_epoll_module);  
 
-    epcf = ngx_event_get_conf(cycle->conf_ctx, ngx_epoll_module);
-
+	//创建epoll
     if (ep == -1) {
         ep = epoll_create(cycle->connection_n / 2);
 
         if (ep == -1) {
-            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
-                          "epoll_create() failed");
+            ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno, "epoll_create() failed");
             return NGX_ERROR;
         }
 
@@ -343,13 +346,13 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
 #endif
     }
 
+	//分配存储每次调用epoll_wait返回的事件的数组
     if (nevents < epcf->events) {
         if (event_list) {
             ngx_free(event_list);
         }
 
-        event_list = ngx_alloc(sizeof(struct epoll_event) * epcf->events,
-                               cycle->log);
+        event_list = ngx_alloc(sizeof(struct epoll_event) * epcf->events, cycle->log);
         if (event_list == NULL) {
             return NGX_ERROR;
         }
@@ -357,6 +360,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
 
     nevents = epcf->events;
 
+	//指定I/O读写的方法  
     ngx_io = ngx_os_io;
 
     ngx_event_actions = ngx_epoll_module_ctx.actions;
