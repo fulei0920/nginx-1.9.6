@@ -684,18 +684,14 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
     args = ngx_strlchr(host, last, '?');
 
-    if (args)
-	{
-        if (uri == NULL || args < uri)
-		{
+    if (args) {
+        if (uri == NULL || args < uri) {
             uri = args;
         }
     }
 
-    if (uri) 
-	{
-        if (u->listen || !u->uri_part) 
-		{
+    if (uri) {
+        if (u->listen || !u->uri_part) {
             u->err = "invalid host";
             return NGX_ERROR;
         }
@@ -705,8 +701,7 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
         last = uri;
 
-        if (uri < port) 
-		{
+        if (uri < port) {
             port = NULL;
         }
     }
@@ -773,8 +768,7 @@ ngx_parse_inet_url(ngx_pool_t *pool, ngx_url_t *u)
 
     len = last - host;
 
-    if (len == 0) 
-	{
+    if (len == 0) {
         u->err = "no host";
         return NGX_ERROR;
     }

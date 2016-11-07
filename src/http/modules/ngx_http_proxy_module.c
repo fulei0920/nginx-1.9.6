@@ -669,7 +669,7 @@ static ngx_command_t  ngx_http_proxy_commands[] =
 	/*
 	proxy_cache_path：缓存的存储路径和索引信息；
 	path  缓存目录的根路径
-	level=N:N在目录的第几级hash目录缓存数据；
+	levels=N:N在目录的第几级hash目录缓存数据；
 	keys_zone=name:size 缓存索引重建进程建立索引时用于存放索引的内存区域名和大小；
 	interval=time 强制更新缓存时间，规定时间内没有访问则从内存删除，默认10s；
 	max_size=size 硬盘中缓存数据的上限，由cache manager管理，超出则根据LRU策略删除；

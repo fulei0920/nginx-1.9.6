@@ -33,8 +33,7 @@ static void ngx_http_upstream_send_request_handler(ngx_http_request_t *r,
     ngx_http_upstream_t *u);
 static void ngx_http_upstream_read_request_handler(ngx_http_request_t *r);
 static void ngx_http_upstream_process_header(ngx_http_request_t *r, ngx_http_upstream_t *u);
-static ngx_int_t ngx_http_upstream_test_next(ngx_http_request_t *r,
-    ngx_http_upstream_t *u);
+static ngx_int_t ngx_http_upstream_test_next(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static ngx_int_t ngx_http_upstream_intercept_errors(ngx_http_request_t *r, ngx_http_upstream_t *u);
 static ngx_int_t ngx_http_upstream_test_connect(ngx_connection_t *c);
 static ngx_int_t ngx_http_upstream_process_headers(ngx_http_request_t *r, ngx_http_upstream_t *u);
@@ -405,7 +404,7 @@ static ngx_http_variable_t  ngx_http_upstream_vars[] =
     { ngx_null_string, NULL, NULL, 0, 0, 0 }
 };
 
-//响应码对应的标志位
+//响应码及其对应的标志位的数组
 static ngx_http_upstream_next_t  ngx_http_upstream_next_errors[] = {
     { 500, NGX_HTTP_UPSTREAM_FT_HTTP_500 },
     { 502, NGX_HTTP_UPSTREAM_FT_HTTP_502 },
@@ -3024,6 +3023,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
         r->cache->file.fd = NGX_INVALID_FILE;
     }
 
+	//检查是否命中no_cache指令
     switch (ngx_http_test_predicates(r, u->conf->no_cache)) {
 
 	    case NGX_ERROR:
