@@ -48,9 +48,11 @@ struct ngx_cycle_s
     ngx_uint_t                log_use_stderr;  		/* unsigned  log_use_stderr:1; */
 	//对于poll、rtsig这样的事件模块，会以有效文件句柄数来预先建立这些ngx_connection_t结构体，以加速事件的收集、分发。
 	//这时files就会保存所有ngx_connection_t的指针组成的数组，files_n就是指针的总数，而文件句柄的值用来访问files数组成员
-    ngx_connection_t        **files;				
-    ngx_connection_t         *free_connections;				//可用连接池，与free_connection_n配合使用
-    ngx_uint_t                free_connection_n;			//可用连接池中连接的总数
+    ngx_connection_t        **files;		
+	//可用连接池，与free_connection_n配合使用
+    ngx_connection_t         *free_connections;			
+	//可用连接池中连接的总数
+    ngx_uint_t                free_connection_n;			
 	//ngx_connection_t类型的双向链表容器，表示可重复使用的连接的队列
     ngx_queue_t               reusable_connections_queue; 	
 	//ngx_listening_t类型的动态数组，表示监听端口及相关参数
@@ -72,11 +74,11 @@ struct ngx_cycle_s
 	//预分配的connection_n个连接
 	//每个连接所需要的读/写事件都以相同的数组序号对应着read_events、write_events读/写事件数组，
 	//相同序号下这3个数组中的元素是配合使用的
-    ngx_connection_t         *connections;     	//指向当前进程中的所有连接对象，与connection_n成员配合使用
+    ngx_connection_t         *connections;     	
     //预分配的connection_n个读事件
-    ngx_event_t              *read_events;		//指向当前进程中的所有读事件对象，connection_n同时表示所有写事件的总数
+    ngx_event_t              *read_events;		
     //预分配的connection_n个写事件
-    ngx_event_t              *write_events;		//指向当前进程中的所有写事件对象，connection_n同时表示所有写事件的总数
+    ngx_event_t              *write_events;		
 	//旧的ngx_cycle_t对象用于引用上一个ngx_cycle_t对象中的成员。
 	//例如，ngx_init_cycle方法，在启动初期，需要建立一个临时的ngx_cycle_t对象保存一些变量，
 	//再调用ngx_init_cycle方法时就可以把旧的ngx_cycle_t对象传递进去，

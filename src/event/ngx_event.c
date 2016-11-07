@@ -30,9 +30,12 @@ static char *ngx_event_debug_connection(ngx_conf_t *cf, ngx_command_t *cmd, void
 static void *ngx_event_core_create_conf(ngx_cycle_t *cycle);
 static char *ngx_event_core_init_conf(ngx_cycle_t *cycle, void *conf);
 
-
+//ngx_core_module模块的timer_resolution命令指定的时间更新间隔
 static ngx_uint_t     ngx_timer_resolution;
 
+//ngx_event_timer_alarm是全局变量，当它设为1时表示需要更新时间
+//在ngx_event_action_t的process_events方法中，每一个事件驱动模块都需要在ngx_event_timer_alarm为1时
+//调用ngx_time_update方法更新系统时间，在更新系统时间结束后需要将ngx_event_timer_alarm设为0
 sig_atomic_t          ngx_event_timer_alarm;
 
 /*NGX_EVENT_MODULE类型模块的总个数*/
@@ -49,7 +52,7 @@ ngx_atomic_t         *ngx_connection_counter = &connection_counter;
 
 ngx_atomic_t         *ngx_accept_mutex_ptr;
 ngx_shmtx_t           ngx_accept_mutex;       	/*进程间的互斥锁*/
-ngx_uint_t            ngx_use_accept_mutex;
+ngx_uint_t            ngx_use_accept_mutex;		//使用accept_mutex负载均衡锁
 ngx_uint_t            ngx_accept_events;
 ngx_uint_t            ngx_accept_mutex_held;    /*监听套接字注册到事件循环中*/
 ngx_msec_t            ngx_accept_mutex_delay;
@@ -141,10 +144,9 @@ static ngx_command_t  ngx_event_core_commands[] =
 		0,
 		NULL 
     },
-	//语法: use [kqueue | rtsig | epoll | /dev/poll | select | poll | eventport];
 
 	/*
-	语法:	use method;
+	语法:	use [kqueue | rtsig | epoll | /dev/poll | select | poll | eventport];
 	默认值:	—
 	上下文:	events
 	//确定选择哪一个事件模块作为事件驱动机制
@@ -166,7 +168,7 @@ static ngx_command_t  ngx_event_core_commands[] =
 	关闭时，工作进程一次只会接入一个新连接。否则，工作进程一次会将所有新连接全部接入。
 	使用kqueue连接处理方式时，可忽略这条指令，因为kqueue可以报告有多少新连接等待接入。
 	使用rtsig连接处理方式将自动开启multi_accept。
-	对应于ngx_event_t事件的available字段
+	对应于ngx_event_t(事件定义)的available字段
 	*/
     { 
 		ngx_string("multi_accept"),
@@ -176,14 +178,12 @@ static ngx_command_t  ngx_event_core_commands[] =
 		offsetof(ngx_event_conf_t, multi_accept),
 		NULL 
 	},
-
-	//语法: accept_mutex [on | off];
-	//默认: accept_mutex on;
-	//确定是否使用accept_mutex负载均衡锁
+	
 	/*
 	语法:	accept_mutex on | off;
 	默认值:	accept_mutex on;
 	上下文:	events
+	确定是否使用accept_mutex负载均衡锁
 	如果使用，nginx的多个工作进程将以串行方式接入新连接。否则，新连接将通报给所有工作进程，
 	而且如果新连接数量较少，某些工作进程可能只是在浪费系统资源。必须开启accept_mutex才能使用rtsig连接处理方式。
 	*/
@@ -195,14 +195,13 @@ static ngx_command_t  ngx_event_core_commands[] =
 		offsetof(ngx_event_conf_t, accept_mutex),
 		NULL 
     },
-	//语法: accept_mutex_delay Nms;
-	//默认: accept_mutex_delay 500ms;
-	//启用accept_mutex负载均衡锁后，worker进程在拿不到锁时至少延迟accept_mutex_delay毫秒再重新获取负载均衡锁
+	
 	/*
 	语法:	accept_mutex_delay time;
 	默认值:	accept_mutex_delay 500ms;
 	上下文:	events
 	使用accept_mutex时，可以指定某个工作进程检测到其它工作进程正在接入新连接时，自身等待直到重新开始尝试接入新连接的最大时间间隔。
+	//启用accept_mutex负载均衡锁后，worker进程在拿不到锁时至少延迟accept_mutex_delay毫秒再重新获取负载均衡锁
 	*/
     { 
     	ngx_string("accept_mutex_delay"),
@@ -286,28 +285,18 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 #endif
     }
 
-    if (ngx_use_accept_mutex) 
-	{
-        if (ngx_accept_disabled > 0) 
-		{
+    if (ngx_use_accept_mutex) {
+        if (ngx_accept_disabled > 0) {
             ngx_accept_disabled--;
-        } 
-		else 
-		{
-            if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) 
-			{
+        } else {
+            if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
                 return;
             }
 
-            if (ngx_accept_mutex_held) 
-			{
+            if (ngx_accept_mutex_held) {
                 flags |= NGX_POST_EVENTS;
-
-            }
-			else
-			{
-                if (timer == NGX_TIMER_INFINITE || timer > ngx_accept_mutex_delay)
-                {
+            } else {
+                if (timer == NGX_TIMER_INFINITE || timer > ngx_accept_mutex_delay) {
                     timer = ngx_accept_mutex_delay;
                 }
             }
@@ -519,8 +508,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     cf = ngx_get_conf(cycle->conf_ctx, ngx_events_module);
     ecf = (*cf)[ngx_event_core_module.ctx_index];
 
-    if (!ngx_test_config && ngx_process <= NGX_PROCESS_MASTER) 
-	{
+    if (!ngx_test_config && ngx_process <= NGX_PROCESS_MASTER) {
         ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "using the \"%s\" event method", ecf->name);
     }
 
@@ -533,14 +521,11 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     ngx_int_t      limit;
     struct rlimit  rlmt;
 
-    if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) 
-	{
+    if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "getrlimit(RLIMIT_NOFILE) failed, ignored");
-    } 
-	else
-	{
-        if (ecf->connections > (ngx_uint_t)rlmt.rlim_cur && (ccf->rlimit_nofile == NGX_CONF_UNSET || ecf->connections > (ngx_uint_t) ccf->rlimit_nofile))
-        {
+    } else {
+        if (ecf->connections > (ngx_uint_t)rlmt.rlim_cur 
+			&& (ccf->rlimit_nofile == NGX_CONF_UNSET || ecf->connections > (ngx_uint_t) ccf->rlimit_nofile)) {
             limit = (ccf->rlimit_nofile == NGX_CONF_UNSET) ? (ngx_int_t) rlmt.rlim_cur : ccf->rlimit_nofile;
             ngx_log_error(NGX_LOG_WARN, cycle->log, 0, "%ui worker_connections exceed open file resource limit: %i", ecf->connections, limit);
         }
@@ -548,8 +533,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     }
 #endif /* !(NGX_WIN32) */
 
-    if (ccf->master == 0) 
-	{
+    if (ccf->master == 0) {
         return NGX_OK;
     }
 
@@ -584,8 +568,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     shm.name.data = (u_char *) "nginx_shared_zone";
     shm.log = cycle->log;
 
-    if (ngx_shm_alloc(&shm) != NGX_OK) 
-	{
+    if (ngx_shm_alloc(&shm) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -594,8 +577,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     ngx_accept_mutex_ptr = (ngx_atomic_t *) shared;
     ngx_accept_mutex.spin = (ngx_uint_t) -1;
 
-    if (ngx_shmtx_create(&ngx_accept_mutex, (ngx_shmtx_sh_t *) shared, cycle->lock_file.data) != NGX_OK)
-    {
+    if (ngx_shmtx_create(&ngx_accept_mutex, (ngx_shmtx_sh_t *) shared, cycle->lock_file.data) != NGX_OK) {
         return NGX_ERROR;
     }
 
@@ -632,9 +614,6 @@ ngx_event_module_init(ngx_cycle_t *cycle)
 static void
 ngx_timer_signal_handler(int signo)
 {
-	//ngx_event_timer_alarm是全局变量，当它设为1时表示需要更新时间
-	//在ngx_event_action_t的process_events方法中，每一个事件驱动模块都需要在ngx_event_timer_alarm为1时
-	//调用ngx_time_update方法更新系统时间，在更新系统时间结束后需要将ngx_event_timer_alarm设为0
     ngx_event_timer_alarm = 1;
 
 #if 1
@@ -659,16 +638,13 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
 
-	//当打开accept_mutex负载均衡锁，同时使用了master模式并且worker进程数量大于1时，
+	//当打开accept_mutex负载均衡锁配置，同时使用了master模式并且worker进程数量大于1时，
 	//才正式确定了进程将使用accept_mutex负载均衡锁
-    if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex)
-	{
+    if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
         ngx_accept_mutex_delay = ecf->accept_mutex_delay;
-    } 
-	else 
-	{
+    } else { //关闭负载均衡锁
         ngx_use_accept_mutex = 0;
     }
 
@@ -687,8 +663,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ngx_queue_init(&ngx_posted_events);
 
 	//初始化红黑树实现的定时器
-    if (ngx_event_timer_init(cycle->log) == NGX_ERROR) 
-	{
+    if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
     }
 
@@ -696,22 +671,18 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 	/*调用当前使用的io复用机制的init函数*/
 	//调用use配置项指定的事件模块中，在ngx_event_module_t接口下，
 	//ngx_event_actions_t中的init方法进行这个事件模块的初始化工作
-    for (m = 0; ngx_modules[m]; m++) 
-	{
-        if (ngx_modules[m]->type != NGX_EVENT_MODULE)
-		{
+    for (m = 0; ngx_modules[m]; m++) {
+        if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
             continue;
         }
 
-        if (ngx_modules[m]->ctx_index != ecf->use)
-		{
+        if (ngx_modules[m]->ctx_index != ecf->use) {
             continue;
         }
 
         module = ngx_modules[m]->ctx;
 
-        if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK)
-		{
+        if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
             /* fatal */
             exit(2);
         }
@@ -722,8 +693,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 #if !(NGX_WIN32)
 	//如果nginx.conf配置文件中设置了timer_resolution配置项，即表明需要控制时间精度，这时会调用setitimer方法，
 	//设置时间间隔为timer_resolution毫秒来回调ngx_timer_signal_handler方法
-    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT))
-	{
+    if (ngx_timer_resolution && !(ngx_event_flags & NGX_USE_TIMER_EVENT)) {
         struct sigaction  sa;
         struct itimerval  itv;
 
@@ -731,8 +701,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         sa.sa_handler = ngx_timer_signal_handler;
         sigemptyset(&sa.sa_mask);
 
-        if (sigaction(SIGALRM, &sa, NULL) == -1) 
-		{
+        if (sigaction(SIGALRM, &sa, NULL) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "sigaction(SIGALRM) failed");
             return NGX_ERROR;
         }
@@ -742,18 +711,15 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         itv.it_value.tv_sec = ngx_timer_resolution / 1000;
         itv.it_value.tv_usec = (ngx_timer_resolution % 1000 ) * 1000;
 
-        if (setitimer(ITIMER_REAL, &itv, NULL) == -1) 
-		{
+        if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "setitimer() failed");
         }
     }
 
-    if (ngx_event_flags & NGX_USE_FD_EVENT) 
-	{
+    if (ngx_event_flags & NGX_USE_FD_EVENT) {
         struct rlimit  rlmt;
 
-        if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1)
-		{
+        if (getrlimit(RLIMIT_NOFILE, &rlmt) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, "getrlimit(RLIMIT_NOFILE) failed");
             return NGX_ERROR;
         }
@@ -761,8 +727,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         cycle->files_n = (ngx_uint_t) rlmt.rlim_cur;
 
         cycle->files = ngx_calloc(sizeof(ngx_connection_t *) * cycle->files_n, cycle->log);
-        if (cycle->files == NULL) 
-		{
+        if (cycle->files == NULL) {
             return NGX_ERROR;
         }
     }
@@ -779,39 +744,40 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 #endif
 
 	/*预先分配、初始化和组织所有的connection*/
+
+	// 预分配ngx_connection_t数组作为连接池， 同时将ngx_cycle_t结构体中的connections成员指向该数组。 
     cycle->connections = ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
-    if (cycle->connections == NULL) 
-	{
+    if (cycle->connections == NULL) {
         return NGX_ERROR;
     }
 
     c = cycle->connections;
 
+	//预分配ngx_event_t事件数组作为读事件池， 同时将ngx_cycle_t结构体中的read_events成员指向该数组。
     cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n, cycle->log);
-    if (cycle->read_events == NULL)
-	{
+    if (cycle->read_events == NULL) {
         return NGX_ERROR;
     }
 
     rev = cycle->read_events;
-    for (i = 0; i < cycle->connection_n; i++) 
-	{
+    for (i = 0; i < cycle->connection_n; i++) {
         rev[i].closed = 1;
         rev[i].instance = 1;
     }
 
+	//预分配ngx_event_t事件数组作为写事件池， 同时将ngx_cycle_t结构体中的write_events成员指向该数组。
     cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n, cycle->log);
-    if (cycle->write_events == NULL) 
-	{
+    if (cycle->write_events == NULL) {
         return NGX_ERROR;
     }
 
     wev = cycle->write_events;
-    for (i = 0; i < cycle->connection_n; i++) 
-	{
+    for (i = 0; i < cycle->connection_n; i++) {
         wev[i].closed = 1;
     }
 
+	//按照序号， 将上述3个数组相应的读/写事件设置到每一个ngx_connection_t连接对象中， 同时把这些连接
+	//以ngx_connection_t中的data成员作为next指针串联成链表， 设置为空闲连接链表
     i = cycle->connection_n;
     next = NULL;
     do
@@ -829,20 +795,17 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 	//在刚刚建立好的连接池中，为所有监听对象中的connection成员分配连接，
 	//同时对监听端口的读事件设置处理方法为ngx_event_accept，也就是说，有新连接事件时将调用ngx_event_accept方法建立新连接
     ls = cycle->listening.elts;
-    for (i = 0; i < cycle->listening.nelts; i++) 
-	{
+    for (i = 0; i < cycle->listening.nelts; i++) {
 
 #if (NGX_HAVE_REUSEPORT)
-        if (ls[i].reuseport && ls[i].worker != ngx_worker) 
-		{
+        if (ls[i].reuseport && ls[i].worker != ngx_worker) {
             continue;
         }
 #endif
 
         c = ngx_get_connection(ls[i].fd, cycle->log);
 
-        if (c == NULL)
-		{
+        if (c == NULL) {
             return NGX_ERROR;
         }
 
@@ -935,8 +898,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             continue;
         }
 
-        if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR)
-		{
+        if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
             return NGX_ERROR;
         }
 
@@ -1120,7 +1082,6 @@ ngx_event_use(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         old_ecf = NULL;
     }
 
-
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
             continue;
@@ -1172,8 +1133,7 @@ ngx_event_debug_connection(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #if (NGX_HAVE_UNIX_DOMAIN)
 
-    if (ngx_strcmp(value[1].data, "unix:") == 0)
-	{
+    if (ngx_strcmp(value[1].data, "unix:") == 0) {
         cidr = ngx_array_push(&ecf->debug_connection);
         if (cidr == NULL) {
             return NGX_CONF_ERROR;
@@ -1189,9 +1149,7 @@ ngx_event_debug_connection(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     if (rc != NGX_ERROR) {
         if (rc == NGX_DONE) {
-            ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                               "low address bits of %V are meaningless",
-                               &value[1]);
+            ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "low address bits of %V are meaningless", &value[1]);
         }
 
         cidr = ngx_array_push(&ecf->debug_connection);
@@ -1247,8 +1205,7 @@ ngx_event_debug_connection(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 #else
 
-    ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
-                       "\"debug_connection\" is ignored, you need to rebuild "
+    ngx_conf_log_error(NGX_LOG_WARN, cf, 0, "\"debug_connection\" is ignored, you need to rebuild "
                        "nginx using --with-debug option to enable it");
 
 #endif

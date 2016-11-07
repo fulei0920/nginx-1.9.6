@@ -48,6 +48,7 @@ static ngx_command_t  ngx_core_commands[] =
 
 	//语法: master_process on|off
 	//默认: master_process on
+	//决定是否启动工作进程。这条指令是为nginx开发者设计的。
 	//是否以master/worker方式工作
     { 
 		ngx_string("master_process"),
@@ -65,6 +66,24 @@ static ngx_command_t  ngx_core_commands[] =
 	//但在目前的大多数内核中，如x86-64体系结构，gettimeofday只是一次vsyscall，仅仅对共享内存页中的数据做访问，
 	//并不是通常的系统调用，代价并不大，一般不必使用这个配置项。而且，如果希望日志文件中每行打印的时间更准确，
 	//也可以使用它
+
+	/*
+	语法:	timer_resolution interval;
+	默认值:	—
+	上下文:	main
+	在工作进程中降低定时器的精度，因此可以减少产生gettimeofday()系统调用的次数。 
+	默认情况下，每收到一个内核事件，nginx都会调用gettimeofday()。 
+	使用此指令后，nginx仅在每经过指定的interval时间间隔后调用一次gettimeofday()。
+
+	Example:
+	timer_resolution 100ms;
+	
+	时间间隔的内部实现取决于使用的方法：
+
+	使用kqueue时，会使用EVFILT_TIMER过滤器；
+	使用eventport时，会使用timer_create()；
+	否则会使用setitimer()
+	*/
 	{ 
 		ngx_string("timer_resolution"),
 		NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_TAKE1,
