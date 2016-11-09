@@ -33,8 +33,7 @@ static ngx_http_file_cache_node_t *
     ngx_http_file_cache_lookup(ngx_http_file_cache_t *cache, u_char *key);
 static void ngx_http_file_cache_rbtree_insert_value(ngx_rbtree_node_t *temp,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
-static void ngx_http_file_cache_vary(ngx_http_request_t *r, u_char *vary,
-    size_t len, u_char *hash);
+static void ngx_http_file_cache_vary(ngx_http_request_t *r, u_char *vary, size_t len, u_char *hash);
 static void ngx_http_file_cache_vary_header(ngx_http_request_t *r,
     ngx_md5_t *md5, ngx_str_t *name);
 static ngx_int_t ngx_http_file_cache_reopen(ngx_http_request_t *r, ngx_http_cache_t *c);
@@ -301,6 +300,8 @@ ngx_http_file_cache_open(ngx_http_request_t *r)
 
     } else { /* rc == NGX_DECLINED */
 
+		////cache loader进程已经将对应的缓存文件目录下的文件加载完成，直接返回
+		////cache loader进程没有将对应的缓存文件目录下的文件加载完成，直接查看是否有对应的文件
         test = cache->sh->cold ? 1 : 0;
 
         if (c->min_uses > 1) {
@@ -321,7 +322,7 @@ ngx_http_file_cache_open(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
-    if (!test) {
+    if (!test) {  
         goto done;
     }
 
@@ -536,9 +537,7 @@ ngx_http_file_cache_read(ngx_http_request_t *r, ngx_http_cache_t *c)
     key = c->keys.elts;
     for (i = 0; i < c->keys.nelts; i++) {
         if (ngx_memcmp(p, key[i].data, key[i].len) != 0) {
-            ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0,
-                          "cache file \"%s\" has md5 collision",
-                          c->file.name.data);
+            ngx_log_error(NGX_LOG_CRIT, r->connection->log, 0, "cache file \"%s\" has md5 collision", c->file.name.data);
             return NGX_DECLINED;
         }
 
@@ -663,8 +662,7 @@ ngx_http_file_cache_aio_read(ngx_http_request_t *r, ngx_http_cache_t *c)
         c->file.thread_handler = ngx_http_cache_thread_handler;
         c->file.thread_ctx = r;
 
-        n = ngx_thread_read(&c->thread_task, &c->file, c->buf->pos,
-                            c->body_start, 0, r->pool);
+        n = ngx_thread_read(&c->thread_task, &c->file, c->buf->pos, c->body_start, 0, r->pool);
 
         c->reading = (n == NGX_AGAIN);
 
@@ -896,8 +894,7 @@ ngx_http_file_cache_name(ngx_http_request_t *r, ngx_path_t *path)
         return NGX_OK;
     }
 
-    c->file.name.len = path->name.len + 1 + path->len
-                       + 2 * NGX_HTTP_CACHE_KEY_LEN;
+    c->file.name.len = path->name.len + 1 + path->len+ 2 * NGX_HTTP_CACHE_KEY_LEN;
 
     c->file.name.data = ngx_pnalloc(r->pool, c->file.name.len + 1);
     if (c->file.name.data == NULL) {
@@ -1006,8 +1003,7 @@ ngx_http_file_cache_rbtree_insert_value(ngx_rbtree_node_t *temp, ngx_rbtree_node
 
 
 static void
-ngx_http_file_cache_vary(ngx_http_request_t *r, u_char *vary, size_t len,
-    u_char *hash)
+ngx_http_file_cache_vary(ngx_http_request_t *r, u_char *vary, size_t len, u_char *hash)
 {
     u_char     *p, *last;
     ngx_str_t   name;
@@ -1055,8 +1051,7 @@ ngx_http_file_cache_vary(ngx_http_request_t *r, u_char *vary, size_t len,
 
 
 static void
-ngx_http_file_cache_vary_header(ngx_http_request_t *r, ngx_md5_t *md5,
-    ngx_str_t *name)
+ngx_http_file_cache_vary_header(ngx_http_request_t *r, ngx_md5_t *md5, ngx_str_t *name)
 {
     size_t            len;
     u_char           *p, *start, *last;
@@ -1067,22 +1062,13 @@ ngx_http_file_cache_vary_header(ngx_http_request_t *r, ngx_md5_t *md5,
     multiple = 0;
     normalize = 0;
 
-    if (name->len == sizeof("Accept-Charset") - 1
-        && ngx_strncasecmp(name->data, (u_char *) "Accept-Charset",
-                           sizeof("Accept-Charset") - 1) == 0)
-    {
+    if (name->len == sizeof("Accept-Charset") - 1 && ngx_strncasecmp(name->data, (u_char *) "Accept-Charset", sizeof("Accept-Charset") - 1) == 0) {
         normalize = 1;
 
-    } else if (name->len == sizeof("Accept-Encoding") - 1
-        && ngx_strncasecmp(name->data, (u_char *) "Accept-Encoding",
-                           sizeof("Accept-Encoding") - 1) == 0)
-    {
+    } else if (name->len == sizeof("Accept-Encoding") - 1 && ngx_strncasecmp(name->data, (u_char *) "Accept-Encoding", sizeof("Accept-Encoding") - 1) == 0) {
         normalize = 1;
 
-    } else if (name->len == sizeof("Accept-Language") - 1
-        && ngx_strncasecmp(name->data, (u_char *) "Accept-Language",
-                           sizeof("Accept-Language") - 1) == 0)
-    {
+    } else if (name->len == sizeof("Accept-Language") - 1 && ngx_strncasecmp(name->data, (u_char *) "Accept-Language", sizeof("Accept-Language") - 1) == 0) {
         normalize = 1;
     }
 

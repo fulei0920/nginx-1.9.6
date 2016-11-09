@@ -158,7 +158,7 @@ typedef struct {
     ngx_rbtree_t                     rbtree;		//红黑树，用于快速查找key对应的文件信息(file_cache_node)
     ngx_rbtree_node_t                sentinel;		//红黑树NIL结点
     ngx_queue_t                      queue;			//LRU队列
-    ngx_atomic_t                     cold;			//表示这个cache(对应目录下的文件)已经被cache loader进程加载完成
+    ngx_atomic_t                     cold;			//0表示这个cache(对应目录下的文件)已经被cache loader进程加载完成
     ngx_atomic_t                     loading;		///表示cache loader进程正在加载这个cache(对应目录下的文件)
     off_t                            size;			///所有的缓存文件大小总和
 } ngx_http_file_cache_sh_t;

@@ -496,6 +496,15 @@ static ngx_command_t  ngx_http_core_commands[] =
 	//当值为off时，用户请求中的HTTP包体一律存储到磁盘文件中，即使只有0个字节也会存储为文件。
 	//当请求结束时，如果配置为on，则这个文件不会被删除(该配置一般用于调试，定位问题)，但
 	//如果配置为clean，则会删除这个文件
+	/*
+	语法:	client_body_in_file_only on | clean | off;
+	默认值:	client_body_in_file_only off;
+	上下文:	http, server, location
+	决定nginx是否将客户端请求正文整个写入文件。
+	这条指令在调试时，或者使用$request_body_file变量时， 或者使用ngx_http_perl_module模块的 $r->request_body_file方法时都可以使用。
+	当指令值设置为on时，请求处理结束后不会删除临时文件。
+	当指令值设置为clean时，请求处理结束后会删除临时文件。
+	*/
     { 
     	ngx_string("client_body_in_file_only"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
@@ -1790,8 +1799,7 @@ ngx_http_update_location_config(ngx_http_request_t *r)
     if (clcf->client_body_in_file_only) {
         r->request_body_in_file_only = 1;
         r->request_body_in_persistent_file = 1;
-        r->request_body_in_clean_file =
-            clcf->client_body_in_file_only == NGX_HTTP_REQUEST_BODY_FILE_CLEAN;
+        r->request_body_in_clean_file = clcf->client_body_in_file_only == NGX_HTTP_REQUEST_BODY_FILE_CLEAN;
         r->request_body_file_log_level = NGX_LOG_NOTICE;
 
     } else {

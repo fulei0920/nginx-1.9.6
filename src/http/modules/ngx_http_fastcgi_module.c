@@ -169,8 +169,7 @@ static void ngx_http_fastcgi_finalize_request(ngx_http_request_t *r,
 static ngx_int_t ngx_http_fastcgi_add_variables(ngx_conf_t *cf);
 static void *ngx_http_fastcgi_create_main_conf(ngx_conf_t *cf);
 static void *ngx_http_fastcgi_create_loc_conf(ngx_conf_t *cf);
-static char *ngx_http_fastcgi_merge_loc_conf(ngx_conf_t *cf,
-    void *parent, void *child);
+static char *ngx_http_fastcgi_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child);
 static ngx_int_t ngx_http_fastcgi_init_params(ngx_conf_t *cf,
     ngx_http_fastcgi_loc_conf_t *conf, ngx_http_fastcgi_params_t *params,
     ngx_keyval_t *default_params);
@@ -505,7 +504,30 @@ static ngx_command_t  ngx_http_fastcgi_commands[] = {
       NGX_HTTP_LOC_CONF_OFFSET,
       offsetof(ngx_http_fastcgi_loc_conf_t, upstream.next_upstream_timeout),
       NULL },
+	/*
+	Syntax:	fastcgi_param parameter value [if_not_empty];
+Default:	¡ª
+Context:	http, server, location
+Sets a parameter that should be passed to the FastCGI server. The value can contain text, variables, and their combination. These directives are inherited from the previous level if and only if there are no fastcgi_param directives defined on the current level.
 
+The following example shows the minimum required settings for PHP:
+
+fastcgi_param SCRIPT_FILENAME /home/www/scripts/php$fastcgi_script_name;
+fastcgi_param QUERY_STRING    $query_string;
+The SCRIPT_FILENAME parameter is used in PHP for determining the script name, and the QUERY_STRING parameter is used to pass request parameters.
+
+For scripts that process POST requests, the following three parameters are also required:
+
+fastcgi_param REQUEST_METHOD  $request_method;
+fastcgi_param CONTENT_TYPE    $content_type;
+fastcgi_param CONTENT_LENGTH  $content_length;
+If PHP was built with the --enable-force-cgi-redirect configuration parameter, the REDIRECT_STATUS parameter should also be passed with the value ¡°200¡±:
+
+fastcgi_param REDIRECT_STATUS 200;
+If the directive is specified with if_not_empty (1.1.11) then such a parameter will not be passed to the server until its value is not empty:
+
+fastcgi_param HTTPS           $https if_not_empty;
+	*/
     { ngx_string("fastcgi_param"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE23,
       ngx_http_upstream_param_set_slot,

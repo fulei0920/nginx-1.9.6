@@ -575,8 +575,10 @@ struct ngx_http_request_s
     unsigned                          uri_changes:4;
 
     unsigned                          request_body_in_single_buf:1;
+	///是否将客户端请求正文整个写入文件
     unsigned                          request_body_in_file_only:1;
     unsigned                          request_body_in_persistent_file:1;
+	///请求结束后，删除临时存储客户端请求体的临时文件
     unsigned                          request_body_in_clean_file:1;
     unsigned                          request_body_file_group_access:1;
     unsigned                          request_body_file_log_level:3;

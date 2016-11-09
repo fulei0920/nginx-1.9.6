@@ -2928,8 +2928,7 @@ ngx_http_upstream_send_response(ngx_http_request_t *r, ngx_http_upstream_t *u)
      * 当该内存块已满，则暂停接收来自上游服务器的响应数据，
      * 等待把内存块的响应数据转发给下游服务器后有剩余内存空间再继续接收响应；
      */
-    if (!u->buffering) 
-	{
+    if (!u->buffering) {
 		//检查HTTP模块是否是实现了用于处理包体的input_filter方法，
 		//如果没有实现，则使用upstream定义的默认方法代替之
         if (u->input_filter == NULL) 

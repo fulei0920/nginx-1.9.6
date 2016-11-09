@@ -1677,8 +1677,7 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
         part = &r->headers_in.headers.part;
         header = part->elts;
 
-        for (i = 0; /* void */; i++) 
-		{
+        for (i = 0; /* void */; i++) {
 
             if (i >= part->nelts) 
 			{
@@ -1692,8 +1691,7 @@ ngx_http_proxy_create_request(ngx_http_request_t *r)
                 i = 0;
             }
 
-            if (ngx_hash_find(&headers->hash, header[i].hash, header[i].lowcase_key, header[i].key.len))
-            {
+            if (ngx_hash_find(&headers->hash, header[i].hash, header[i].lowcase_key, header[i].key.len)) {
                 continue;
             }
 
@@ -3578,8 +3576,7 @@ ngx_http_proxy_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
         conf->method.len++;
     }
 
-    ngx_conf_merge_value(conf->upstream.pass_request_headers,
-                              prev->upstream.pass_request_headers, 1);
+    ngx_conf_merge_value(conf->upstream.pass_request_headers, prev->upstream.pass_request_headers, 1);
     ngx_conf_merge_value(conf->upstream.pass_request_body, prev->upstream.pass_request_body, 1);
 
     ngx_conf_merge_value(conf->upstream.intercept_errors, prev->upstream.intercept_errors, 0);
